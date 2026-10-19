@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,14 +14,25 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
+import { ApiError } from '@/auth/apiError';
+import { useCountdown } from './useCountdown';
 import { toast } from '@/hooks/use-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validation-schemas';
 import { Loader2 } from 'lucide-react';
 
+const LOCKOUT_MESSAGE = 'Too many failed login attempts, try again later';
+const LOCKOUT_FALLBACK_SECONDS = 60;
+
+function isFieldName(name: string): name is keyof LoginFormData {
+  return name === 'email' || name === 'password';
+}
+
 export function Login(): React.ReactElement {
   const { t } = useTranslation('auth');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
+  const { login, user } = useAuth();
+  const { secondsLeft, start } = useCountdown();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,8 +41,49 @@ export function Login(): React.ReactElement {
     defaultValues: { email: '', password: '' },
   });
 
+  const from =
+    (location.state as { from?: { pathname?: string } } | null)?.from
+      ?.pathname ?? '/dashboard';
+
+  const showToast = (description: string): void => {
+    toast({
+      variant: 'destructive',
+      title: t('login.failureTitle'),
+      description,
+    });
+  };
+
+  const handleError = (error: unknown): void => {
+    if (!(error instanceof ApiError)) {
+      showToast(t('errors.generic'));
+      return;
+    }
+    if (error.status === 401) {
+      setFormError(t('errors.invalidCredentials'));
+      form.resetField('password');
+      return;
+    }
+    if (error.status === 429) {
+      if (error.messages[0] === LOCKOUT_MESSAGE) {
+        start(error.retryAfterSeconds() ?? LOCKOUT_FALLBACK_SECONDS);
+      } else {
+        showToast(t('errors.tooManyRequests'));
+      }
+      return;
+    }
+    const fields = Object.entries(error.fieldErrors()).filter(
+      (entry): entry is [keyof LoginFormData, string] => isFieldName(entry[0])
+    );
+    if (error.status === 400 && fields.length > 0) {
+      for (const [field, message] of fields) form.setError(field, { message });
+      return;
+    }
+    showToast(t('errors.generic'));
+  };
+
   const onSubmit = async (data: LoginFormData): Promise<void> => {
     setIsLoading(true);
+    setFormError(null);
     try {
       await login({ email: data.email, password: data.password });
       toast({
@@ -39,21 +91,15 @@ export function Login(): React.ReactElement {
         title: t('login.successTitle'),
         description: t('login.successDescription'),
       });
-      const from =
-        (location.state as { from?: { pathname?: string } } | null)?.from
-          ?.pathname ?? '/dashboard';
       void navigate(from, { replace: true });
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: t('login.failureTitle'),
-        description:
-          error instanceof Error ? error.message : t('login.failureTitle'),
-      });
+      handleError(error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (user) return <Navigate to={from} replace />;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">
@@ -106,7 +152,21 @@ export function Login(): React.ReactElement {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            {formError && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {formError}
+              </p>
+            )}
+            {secondsLeft > 0 && (
+              <p role="alert" className="text-sm font-medium text-destructive">
+                {t('errors.accountLocked', { seconds: secondsLeft })}
+              </p>
+            )}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || secondsLeft > 0}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
