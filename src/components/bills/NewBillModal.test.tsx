@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
+import { tokenStorage } from '@/auth/tokenStorage';
 import { NewBillModal } from './NewBillModal';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { Toaster } from '@/components/ui/toaster';
@@ -75,6 +76,7 @@ describe('NewBillModal', () => {
   });
 
   afterEach(() => {
+    tokenStorage.clear({ broadcast: false });
     mock.restore();
     useBillDraftStore.getState().clear();
   });
@@ -162,6 +164,10 @@ describe('NewBillModal', () => {
   });
 
   it('on 401 (session over) closes the modal without a toast', async () => {
+    tokenStorage.set(
+      { access_token: 'at', expires_in: 900, token_type: 'Bearer' },
+      { broadcast: false }
+    );
     mock.onPost('/bills/parse-photo').reply(401, { message: 'Unauthorized' });
     mock.onPost('/auth/refresh').reply(401, { message: 'Unauthorized' });
 
@@ -176,5 +182,25 @@ describe('NewBillModal', () => {
     });
     expect(screen.queryByText(/session/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/upload failed/i)).not.toBeInTheDocument();
+  });
+
+  it('on 401 when the session survives (refresh 5xx) → uploadFailed toast, modal stays open', async () => {
+    tokenStorage.set(
+      { access_token: 'at', expires_in: 900, token_type: 'Bearer' },
+      { broadcast: false }
+    );
+    mock.onPost('/bills/parse-photo').reply(401, { message: 'Unauthorized' });
+    mock.onPost('/auth/refresh').reply(503, { message: 'Unavailable' });
+
+    const { onOpenChange } = renderModal();
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error('file input not rendered');
+    await userEvent.upload(input, makeFile());
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+
+    expect(await screen.findByText(/upload failed/i)).toBeInTheDocument();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(tokenStorage.getAccessToken()).toBe('at');
   });
 });

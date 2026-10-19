@@ -112,13 +112,24 @@ export function AuthProvider({
       const detail = (e as CustomEvent<LogoutEventDetail>).detail;
       handleSignedOut(detail?.reason ?? 'expired');
     };
-    // Another tab signed in or refreshed: adopt its session if we have none.
+    // Another tab signed in or refreshed and its token is now ours: adopt its
+    // session if we have none, and switch user if it belongs to someone else
+    // (never show one account's data while requests run as another). A failed
+    // me() leaves state alone; the interceptor handles 401s.
     const onToken = (): void => {
-      if (userRef.current !== null) return;
+      if (userRef.current === undefined) return; // startup decides
       authApi
         .me()
         .then((profile) => {
-          if (userRef.current === null) setUser(profile);
+          const current = userRef.current;
+          if (current === null) {
+            setUser(profile);
+            return;
+          }
+          if (current === undefined || current.id === profile.id) return;
+          queryClient.clear();
+          setUser(profile);
+          void navigate('/dashboard', { replace: true });
         })
         .catch(() => undefined);
     };
@@ -128,7 +139,7 @@ export function AuthProvider({
       window.removeEventListener(AUTH_LOGOUT_EVENT, onLogout);
       window.removeEventListener(AUTH_TOKEN_EVENT, onToken);
     };
-  }, [handleSignedOut, setUser]);
+  }, [handleSignedOut, navigate, queryClient, setUser]);
 
   const login = useCallback(
     async (payload: LoginRequest): Promise<void> => {

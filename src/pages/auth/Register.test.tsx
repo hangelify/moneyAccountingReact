@@ -7,8 +7,9 @@ import { ApiError } from '@/auth/apiError';
 import { Register } from './Register';
 
 const registerMock = vi.fn();
+let currentUser: unknown = null;
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ register: registerMock }),
+  useAuth: () => ({ register: registerMock, user: currentUser }),
 }));
 const toastMock = vi.fn();
 vi.mock('@/hooks/use-toast', () => ({
@@ -39,6 +40,14 @@ describe('Register', () => {
   beforeEach(() => {
     registerMock.mockReset();
     toastMock.mockReset();
+    currentUser = null;
+  });
+
+  it('signed-in user is redirected to /dashboard', async () => {
+    currentUser = { id: '1' };
+    renderRegister();
+    expect(await screen.findByText('dashboard-page')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Register' })).toBeNull();
   });
 
   it('400 User already exists → email field error with a link to /login', async () => {
@@ -82,8 +91,14 @@ describe('Register', () => {
     );
   });
 
+  // The real register sets the user; the signed-in redirect navigates.
+  const signsIn = (): Promise<void> => {
+    currentUser = { id: '1' };
+    return Promise.resolve();
+  };
+
   it('success → checkInbox toast and navigate to /dashboard', async () => {
-    registerMock.mockResolvedValue(undefined);
+    registerMock.mockImplementation(signsIn);
     renderRegister();
     await fillAndSubmit();
     expect(await screen.findByText('dashboard-page')).toBeInTheDocument();
@@ -95,7 +110,7 @@ describe('Register', () => {
   });
 
   it('omits empty optional fields from the payload', async () => {
-    registerMock.mockResolvedValue(undefined);
+    registerMock.mockImplementation(signsIn);
     renderRegister();
     await fillAndSubmit();
     await screen.findByText('dashboard-page');

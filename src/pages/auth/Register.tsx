@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,25 +23,21 @@ import {
 } from '@/lib/validation-schemas';
 import { Loader2 } from 'lucide-react';
 import type { RegisterRequest } from '@/types/auth';
+import { fieldErrorsFor } from './formErrors';
 
-type FieldName = keyof RegisterFormData;
-const FIELD_NAMES: readonly string[] = [
+const FIELDS: readonly (keyof RegisterFormData)[] = [
   'email',
   'password',
   'first_name',
   'last_name',
   'username',
 ];
-function isFieldName(name: string): name is FieldName {
-  return FIELD_NAMES.includes(name);
-}
 
 export function Register(): React.ReactElement {
   const { t } = useTranslation('auth');
   const [isLoading, setIsLoading] = useState(false);
   const [userExists, setUserExists] = useState(false);
-  const { register: registerUser } = useAuth();
-  const navigate = useNavigate();
+  const { register: registerUser, user } = useAuth();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -79,9 +75,7 @@ export function Register(): React.ReactElement {
       form.setError('email', { message: t('errors.userExists') });
       return;
     }
-    const fields = Object.entries(error.fieldErrors()).filter(
-      (entry): entry is [FieldName, string] => isFieldName(entry[0])
-    );
+    const fields = fieldErrorsFor(error, FIELDS);
     if (error.status === 400 && fields.length > 0) {
       for (const [field, message] of fields) form.setError(field, { message });
       return;
@@ -107,13 +101,17 @@ export function Register(): React.ReactElement {
         title: t('register.successTitle'),
         description: t('register.checkInbox'),
       });
-      void navigate('/dashboard', { replace: true });
+      // register sets the user; the signed-in redirect below navigates.
     } catch (error) {
       handleError(error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Never create a second account from a signed-in tab: its token would be
+  // broadcast to tabs still showing the first account.
+  if (user) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16">

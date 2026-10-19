@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import '@/i18n';
 import { ApiError } from '@/auth/apiError';
+import type React from 'react';
 import { Login } from './Login';
 
 const loginMock = vi.fn();
@@ -18,20 +19,37 @@ vi.mock('@/hooks/use-toast', () => ({
 
 const LOCKED = 'Too many failed login attempts, try again later';
 
-function renderLogin(from?: string): void {
+function TransactionsPage(): React.ReactElement {
+  const { search, hash } = useLocation();
+  return (
+    <>
+      <div>transactions-page</div>
+      <div data-testid="search-hash">{search + hash}</div>
+    </>
+  );
+}
+
+interface From {
+  pathname: string;
+  search?: string;
+  hash?: string;
+}
+
+function renderLogin(from?: string | From): void {
+  const fromState = typeof from === 'string' ? { pathname: from } : from;
   render(
     <MemoryRouter
       initialEntries={[
         {
           pathname: '/login',
-          state: from ? { from: { pathname: from } } : null,
+          state: fromState ? { from: fromState } : null,
         },
       ]}
     >
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<div>dashboard-page</div>} />
-        <Route path="/transactions" element={<div>transactions-page</div>} />
+        <Route path="/transactions" element={<TransactionsPage />} />
       </Routes>
     </MemoryRouter>
   );
@@ -142,11 +160,39 @@ describe('Login', () => {
     ).toBeInTheDocument();
   });
 
+  // The real login sets the user; the signed-in redirect does the navigation.
+  const signsIn = (): Promise<void> => {
+    currentUser = { id: '1' };
+    return Promise.resolve();
+  };
+
   it('success → navigates to state.from', async () => {
-    loginMock.mockResolvedValue(undefined);
+    loginMock.mockImplementation(signsIn);
     renderLogin('/transactions');
     await fillAndSubmit(userEvent.setup());
     expect(await screen.findByText('transactions-page')).toBeInTheDocument();
+    expect(toastMock).toHaveBeenCalledWith(
+      expect.objectContaining({ variant: 'success' })
+    );
+  });
+
+  it('success → keeps the query string and hash of state.from', async () => {
+    loginMock.mockImplementation(signsIn);
+    renderLogin({
+      pathname: '/transactions',
+      search: '?month=5',
+      hash: '#top',
+    });
+    await fillAndSubmit(userEvent.setup());
+    expect(await screen.findByText('transactions-page')).toBeInTheDocument();
+    expect(screen.getByTestId('search-hash')).toHaveTextContent('?month=5#top');
+  });
+
+  it('already signed in → redirect keeps the query string of state.from', async () => {
+    currentUser = { id: '1' };
+    renderLogin({ pathname: '/transactions', search: '?month=5' });
+    expect(await screen.findByText('transactions-page')).toBeInTheDocument();
+    expect(screen.getByTestId('search-hash')).toHaveTextContent('?month=5');
   });
 
   it('already signed in → redirects to state.from', async () => {

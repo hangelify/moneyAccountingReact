@@ -50,4 +50,22 @@ describe('useCountdown', () => {
     expect(result.current.secondsLeft).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('start(0) or a negative value starts no interval', () => {
+    const { result } = renderHook(() => useCountdown());
+    act(() => result.current.start(0));
+    expect(result.current.secondsLeft).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+    act(() => result.current.start(-5));
+    expect(result.current.secondsLeft).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('start(0) stops a running countdown', () => {
+    const { result } = renderHook(() => useCountdown());
+    act(() => result.current.start(5));
+    act(() => result.current.start(0));
+    expect(result.current.secondsLeft).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });

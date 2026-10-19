@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, type Location } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/auth/apiError';
 import { useCountdown } from './useCountdown';
+import { fieldErrorsFor } from './formErrors';
 import { toast } from '@/hooks/use-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validation-schemas';
 import { Loader2 } from 'lucide-react';
@@ -23,9 +24,7 @@ import { Loader2 } from 'lucide-react';
 const LOCKOUT_MESSAGE = 'Too many failed login attempts, try again later';
 const LOCKOUT_FALLBACK_SECONDS = 60;
 
-function isFieldName(name: string): name is keyof LoginFormData {
-  return name === 'email' || name === 'password';
-}
+const FIELDS: readonly (keyof LoginFormData)[] = ['email', 'password'];
 
 export function Login(): React.ReactElement {
   const { t } = useTranslation('auth');
@@ -33,7 +32,6 @@ export function Login(): React.ReactElement {
   const [formError, setFormError] = useState<string | null>(null);
   const { login, user } = useAuth();
   const { secondsLeft, start } = useCountdown();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const form = useForm<LoginFormData>({
@@ -41,9 +39,13 @@ export function Login(): React.ReactElement {
     defaultValues: { email: '', password: '' },
   });
 
-  const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from
-      ?.pathname ?? '/dashboard';
+  const fromLocation = (location.state as { from?: Partial<Location> } | null)
+    ?.from;
+  const from = fromLocation?.pathname
+    ? fromLocation.pathname +
+      (fromLocation.search ?? '') +
+      (fromLocation.hash ?? '')
+    : '/dashboard';
 
   const showToast = (description: string): void => {
     toast({
@@ -71,9 +73,7 @@ export function Login(): React.ReactElement {
       }
       return;
     }
-    const fields = Object.entries(error.fieldErrors()).filter(
-      (entry): entry is [keyof LoginFormData, string] => isFieldName(entry[0])
-    );
+    const fields = fieldErrorsFor(error, FIELDS);
     if (error.status === 400 && fields.length > 0) {
       for (const [field, message] of fields) form.setError(field, { message });
       return;
@@ -91,7 +91,7 @@ export function Login(): React.ReactElement {
         title: t('login.successTitle'),
         description: t('login.successDescription'),
       });
-      void navigate(from, { replace: true });
+      // login sets the user; the signed-in redirect below navigates.
     } catch (error) {
       handleError(error);
     } finally {

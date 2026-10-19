@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StrictMode, useEffect, type ReactElement } from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './AuthContext';
 import { tokenStorage } from '@/auth/tokenStorage';
@@ -79,15 +79,21 @@ function Probe(): ReactElement {
   return <div>hello {user.first_name}</div>;
 }
 
-function renderAuth(opts: { strict?: boolean } = {}): {
+function PathProbe(): ReactElement {
+  const { pathname } = useLocation();
+  return <div data-testid="path">{pathname}</div>;
+}
+
+function renderAuth(opts: { strict?: boolean; path?: string } = {}): {
   queryClient: QueryClient;
 } {
   const queryClient = new QueryClient();
   const tree = (
-    <MemoryRouter initialEntries={['/dashboard']}>
+    <MemoryRouter initialEntries={[opts.path ?? '/dashboard']}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Capture />
+          <PathProbe />
           <Routes>
             <Route path="/login" element={<div>login-page</div>} />
             <Route path="*" element={<Probe />} />
@@ -100,10 +106,12 @@ function renderAuth(opts: { strict?: boolean } = {}): {
   return { queryClient };
 }
 
-async function renderSignedIn(): Promise<{ queryClient: QueryClient }> {
+async function renderSignedIn(
+  opts: { path?: string } = {}
+): Promise<{ queryClient: QueryClient }> {
   refreshMock.mockResolvedValue(undefined);
   api.me.mockResolvedValue(profile);
-  const r = renderAuth();
+  const r = renderAuth(opts);
   expect(await screen.findByText('hello A')).toBeInTheDocument();
   return r;
 }
@@ -140,7 +148,7 @@ describe('AuthProvider startup', () => {
     expect(toastMock).not.toHaveBeenCalled();
   });
 
-  it('StrictMode double mount → one refresh, signed in', async () => {
+  it('StrictMode double mount → one refresh, first me sets the user, a later failure does not undo it', async () => {
     // The real refreshAccessToken is single-flight: both mounts share one
     // in-flight promise (one network refresh).
     let resolveRefresh!: () => void;
@@ -148,19 +156,25 @@ describe('AuthProvider startup', () => {
       resolveRefresh = res;
     });
     refreshMock.mockReturnValue(shared);
-    api.me.mockResolvedValue(profile);
+    // First mount's chain gets the profile; the remounted chain's me fails.
+    // A per-effect `cancelled` flag would drop the first result and let the
+    // failure sign the user out.
+    api.me
+      .mockResolvedValueOnce(profile)
+      .mockRejectedValueOnce(new ApiError(500, undefined, {}, 'boom'));
 
     renderAuth({ strict: true });
     expect(screen.getByText('loading')).toBeInTheDocument();
     expect(refreshMock).toHaveBeenCalledTimes(2);
-    expect(refreshMock).toHaveNthReturnedWith(1, shared);
-    expect(refreshMock).toHaveNthReturnedWith(2, shared);
 
     await act(async () => {
       resolveRefresh();
       await shared;
     });
     expect(await screen.findByText('hello A')).toBeInTheDocument();
+    expect(api.me).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText('logged-out')).not.toBeInTheDocument();
+    expect(getAuth().user).toEqual(profile);
   });
 });
 
@@ -325,5 +339,35 @@ describe('AuthProvider session events', () => {
 
     expect(await screen.findByText('hello A')).toBeInTheDocument();
     expect(api.me).toHaveBeenCalledTimes(1);
+  });
+
+  it('auth:token while signed in as another user → loads me, clears query cache, switches user', async () => {
+    const { queryClient } = await renderSignedIn({ path: '/transactions' });
+    const clearSpy = vi.spyOn(queryClient, 'clear');
+    api.me.mockResolvedValue({ ...profile, id: '2', first_name: 'B' });
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(AUTH_TOKEN_EVENT));
+    });
+
+    expect(await screen.findByText('hello B')).toBeInTheDocument();
+    expect(api.me).toHaveBeenCalledTimes(2);
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('path')).toHaveTextContent('/dashboard');
+  });
+
+  it('auth:token while signed in as the same user → no cache clear', async () => {
+    const { queryClient } = await renderSignedIn({ path: '/transactions' });
+    const clearSpy = vi.spyOn(queryClient, 'clear');
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(AUTH_TOKEN_EVENT));
+      await Promise.resolve();
+    });
+
+    expect(api.me).toHaveBeenCalledTimes(2);
+    expect(clearSpy).not.toHaveBeenCalled();
+    expect(screen.getByText('hello A')).toBeInTheDocument();
+    expect(screen.getByTestId('path')).toHaveTextContent('/transactions');
   });
 });
