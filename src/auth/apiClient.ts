@@ -1,4 +1,9 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosHeaders,
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+  type RawAxiosHeaders,
+} from 'axios';
 import { tokenStorage } from './tokenStorage';
 import { ApiError } from './apiError';
 import { env } from '@/lib/env';
@@ -8,6 +13,18 @@ export const apiClient = axios.create({
   baseURL: env.apiUrl,
   headers: { 'Content-Type': 'application/json' },
 });
+
+function normaliseHeaders(headers: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (typeof headers !== 'object' || headers === null) return out;
+  const entries = AxiosHeaders.from(headers as RawAxiosHeaders).toJSON();
+  for (const [k, v] of Object.entries(entries)) {
+    if (typeof v === 'string') out[k.toLowerCase()] = v;
+    else if (typeof v === 'number' || typeof v === 'boolean')
+      out[k.toLowerCase()] = String(v);
+  }
+  return out;
+}
 
 apiClient.interceptors.request.use((config) => {
   const t = tokenStorage.getAccessToken();
@@ -64,13 +81,15 @@ apiClient.interceptors.response.use(
       }
     }
 
-    const body = err.response?.data as
-      | { message?: string; code?: string }
-      | undefined;
     // Note: when refresh failed above, we still reject here using the
     // original 401's body — not the refresh failure. Intentional.
     return Promise.reject(
-      new ApiError(status, body?.code, body?.message ?? err.message, body)
+      new ApiError(
+        status,
+        err.response?.data,
+        normaliseHeaders(err.response?.headers),
+        err.message
+      )
     );
   }
 );

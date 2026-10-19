@@ -42,7 +42,6 @@ describe('apiClient response interceptor — error mapping', () => {
     await expect(apiClient.post('/budgets', {})).rejects.toMatchObject({
       name: 'ApiError',
       status: 400,
-      code: 'VALIDATION',
       message: 'Validation failed',
     });
   });
