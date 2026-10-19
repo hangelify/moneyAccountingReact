@@ -1,4 +1,5 @@
 {
+  "loading": "Loading...",
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
