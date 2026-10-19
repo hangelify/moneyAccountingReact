@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
+import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
 import {
   registerSchema,
@@ -23,9 +24,22 @@ import {
 import { Loader2 } from 'lucide-react';
 import type { RegisterRequest } from '@/types/auth';
 
+type FieldName = keyof RegisterFormData;
+const FIELD_NAMES: readonly string[] = [
+  'email',
+  'password',
+  'first_name',
+  'last_name',
+  'username',
+];
+function isFieldName(name: string): name is FieldName {
+  return FIELD_NAMES.includes(name);
+}
+
 export function Register(): React.ReactElement {
   const { t } = useTranslation('auth');
   const [isLoading, setIsLoading] = useState(false);
+  const [userExists, setUserExists] = useState(false);
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
@@ -40,8 +54,44 @@ export function Register(): React.ReactElement {
     },
   });
 
+  const showToast = (description: string): void => {
+    toast({
+      variant: 'destructive',
+      title: t('register.failureTitle'),
+      description,
+    });
+  };
+
+  const handleError = (error: unknown): void => {
+    if (!(error instanceof ApiError)) {
+      showToast(t('errors.generic'));
+      return;
+    }
+    if (error.status === 429) {
+      showToast(t('errors.tooManyRequests'));
+      return;
+    }
+    if (
+      error.status === 400 &&
+      error.messages.includes('User already exists')
+    ) {
+      setUserExists(true);
+      form.setError('email', { message: t('errors.userExists') });
+      return;
+    }
+    const fields = Object.entries(error.fieldErrors()).filter(
+      (entry): entry is [FieldName, string] => isFieldName(entry[0])
+    );
+    if (error.status === 400 && fields.length > 0) {
+      for (const [field, message] of fields) form.setError(field, { message });
+      return;
+    }
+    showToast(t('errors.generic'));
+  };
+
   const onSubmit = async (data: RegisterFormData): Promise<void> => {
     setIsLoading(true);
+    setUserExists(false);
     try {
       const payload: RegisterRequest = {
         email: data.email,
@@ -55,16 +105,11 @@ export function Register(): React.ReactElement {
       toast({
         variant: 'success',
         title: t('register.successTitle'),
-        description: t('register.successDescription'),
+        description: t('register.checkInbox'),
       });
       void navigate('/dashboard', { replace: true });
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: t('register.failureTitle'),
-        description:
-          error instanceof Error ? error.message : t('register.failureTitle'),
-      });
+      handleError(error);
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +145,14 @@ export function Register(): React.ReactElement {
                     />
                   </FormControl>
                   <FormMessage />
+                  {userExists && (
+                    <Link
+                      to="/login"
+                      className="text-sm font-medium text-primary underline"
+                    >
+                      {t('errors.signInInstead')}
+                    </Link>
+                  )}
                 </FormItem>
               )}
             />

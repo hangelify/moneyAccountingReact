@@ -9,23 +9,21 @@ export const emailSchema = z
   .email('Please enter a valid email address');
 
 /**
- * Strict password schema (for registration)
- * Requirements:
+ * Sign-up password schema.
+ * Requirements (match the API):
  * - Minimum 8 characters
- * - At least one uppercase letter
- * - At least one lowercase letter
- * - At least one symbol
+ * - At most 72 bytes when UTF-8 encoded (bcrypt limit)
  */
-const strictPasswordSchema = z
+const MAX_PASSWORD_BYTES = 72;
+const MAX_NAME_LENGTH = 255;
+
+const signUpPasswordSchema = z
   .string()
   .min(1, 'Password is required')
   .min(8, 'Password must be at least 8 characters long')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(
-    /[!@#$%^&*()_+\-=\\[\]{};':"\\|,.<>\\/?]/,
-    'Password must contain at least one symbol'
-  );
+  .refine((pw) => new TextEncoder().encode(pw).length <= MAX_PASSWORD_BYTES, {
+    message: 'Password must be at most 72 bytes long',
+  });
 
 const loginPasswordSchema = z.string().min(1, 'Password is required');
 
@@ -34,8 +32,9 @@ const loginPasswordSchema = z.string().min(1, 'Password is required');
  */
 export const firstNameSchema = z
   .string()
+  .trim()
   .min(1, 'First name is required')
-  .min(2, 'First name must be at least 2 characters');
+  .max(MAX_NAME_LENGTH, 'First name must be at most 255 characters');
 
 /**
  * Login form schema
@@ -50,10 +49,16 @@ export const loginSchema = z.object({
  */
 export const registerSchema = z.object({
   email: emailSchema,
-  password: strictPasswordSchema,
+  password: signUpPasswordSchema,
   first_name: firstNameSchema,
-  last_name: z.string().optional(),
-  username: z.string().optional(),
+  last_name: z
+    .string()
+    .max(MAX_NAME_LENGTH, 'Last name must be at most 255 characters')
+    .optional(),
+  username: z
+    .string()
+    .max(MAX_NAME_LENGTH, 'Username must be at most 255 characters')
+    .optional(),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
