@@ -68,7 +68,7 @@ export function NewBillModal({
           return;
         }
         if (err.status === 401) {
-          toast({ variant: 'destructive', title: t('errors:sessionExpired') });
+          // AuthProvider redirects to sign-in and shows the session toast.
           onOpenChange(false);
           return;
         }

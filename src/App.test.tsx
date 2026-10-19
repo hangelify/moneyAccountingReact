@@ -1,10 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import '@/i18n';
+import type * as ApiClientModule from '@/auth/apiClient';
 import App from './App';
+
+// Startup refresh: no session cookie in tests, so start signed out without
+// touching the network.
+vi.mock('@/auth/apiClient', async (importOriginal) => {
+  const actual = await importOriginal<typeof ApiClientModule>();
+  return {
+    ...actual,
+    refreshAccessToken: vi.fn(() => Promise.reject(new Error('no session'))),
+  };
+});
 
 // Create a test query client
 const createTestQueryClient = () =>

@@ -3,9 +3,6 @@ export const AUTH_ENDPOINTS = {
   REGISTER: '/auth/register',
   REFRESH: '/auth/refresh',
   LOGOUT: '/auth/logout',
+  REVOKE: '/auth/revoke',
   ME: '/auth/me',
-} as const;
-
-export const STORAGE_KEYS = {
-  REFRESH_TOKEN: 'accounting_app_refresh_token',
 } as const;

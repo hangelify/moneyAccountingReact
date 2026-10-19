@@ -4,5 +4,6 @@
     "description": "Please try again. Ref: {{requestId}}"
   },
   "uploadFailed": "Upload failed. Please try again.",
-  "sessionExpired": "Session expired"
+  "sessionExpired": "Your session ended, please sign in again",
+  "signedOutElsewhere": "You were signed out"
 }

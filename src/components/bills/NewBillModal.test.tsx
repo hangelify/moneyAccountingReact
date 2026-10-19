@@ -160,4 +160,21 @@ describe('NewBillModal', () => {
       expect(screen.getByText(/req-123/)).toBeInTheDocument();
     });
   });
+
+  it('on 401 (session over) closes the modal without a toast', async () => {
+    mock.onPost('/bills/parse-photo').reply(401, { message: 'Unauthorized' });
+    mock.onPost('/auth/refresh').reply(401, { message: 'Unauthorized' });
+
+    const { onOpenChange } = renderModal();
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!;
+    await userEvent.upload(input, makeFile());
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+    expect(screen.queryByText(/session/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/upload failed/i)).not.toBeInTheDocument();
+  });
 });

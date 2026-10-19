@@ -2,21 +2,30 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
   type ReactElement,
 } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { tokenStorage } from '@/auth/tokenStorage';
-import { AUTH_LOGOUT_EVENT } from '@/auth/apiClient';
+import {
+  AUTH_LOGOUT_EVENT,
+  AUTH_TOKEN_EVENT,
+  refreshAccessToken,
+  signOut,
+} from '@/auth/apiClient';
+import type { SignOutReason } from '@/auth/authChannel';
 import { authApi } from '@/pages/auth/api';
+import { toast } from '@/hooks/use-toast';
 import type {
   UserProfileDto,
   LoginRequest,
   RegisterRequest,
 } from '@/types/auth';
-
-const REFRESH_KEY = 'accounting_app_refresh_token';
 
 interface AuthContextValue {
   user: UserProfileDto | null | undefined;
@@ -26,6 +35,17 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
+type LogoutEventDetail = { reason?: SignOutReason } | null | undefined;
+
+const TOAST_KEY_BY_REASON: Record<
+  SignOutReason,
+  'sessionExpired' | 'signedOutElsewhere' | null
+> = {
+  expired: 'sessionExpired',
+  revoked: 'signedOutElsewhere',
+  user: null,
+};
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({
@@ -33,75 +53,122 @@ export function AuthProvider({
 }: {
   children: ReactNode;
 }): ReactElement {
-  const [user, setUser] = useState<UserProfileDto | null | undefined>(
+  const [user, setUserState] = useState<UserProfileDto | null | undefined>(
     undefined
   );
+  // Event listeners and async continuations read the latest values here.
+  const userRef = useRef<UserProfileDto | null | undefined>(undefined);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationRef = useRef(location);
+  const queryClient = useQueryClient();
+  const { t } = useTranslation('errors');
 
   useEffect(() => {
-    if (!tokenStorage.getRefreshToken()) {
+    locationRef.current = location;
+  }, [location]);
+
+  const setUser = useCallback((next: UserProfileDto | null): void => {
+    userRef.current = next;
+    setUserState(next);
+  }, []);
+
+  /**
+   * Local side of a sign-out: drop the user and cached data, and send a
+   * previously signed-in user to /login. Idempotent once the user is null.
+   */
+  const handleSignedOut = useCallback(
+    (reason: SignOutReason): void => {
+      const wasSignedIn = userRef.current != null;
       setUser(null);
-      return;
-    }
-    let cancelled = false;
-    authApi
-      .me()
-      .then((p) => {
-        if (!cancelled) setUser(p);
+      queryClient.clear();
+      if (!wasSignedIn) return;
+      void navigate('/login', {
+        replace: true,
+        state: { from: locationRef.current, reason },
+      });
+      const key = TOAST_KEY_BY_REASON[reason];
+      if (key) toast({ variant: 'destructive', title: t(key) });
+    },
+    [navigate, queryClient, setUser, t]
+  );
+
+  // Startup: the refresh cookie is HttpOnly, so always try it. In StrictMode
+  // both mounts share refreshAccessToken's in-flight promise; whichever
+  // resolves first sets the user, unless a sign-in/out already decided it.
+  useEffect(() => {
+    refreshAccessToken()
+      .then(() => authApi.me())
+      .then((profile) => {
+        if (userRef.current === undefined) setUser(profile);
       })
       .catch(() => {
-        if (cancelled) return;
-        tokenStorage.clear();
-        setUser(null);
+        if (userRef.current === undefined) setUser(null);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
-    const onLogout = (): void => setUser(null);
-    const onStorage = (e: StorageEvent): void => {
-      if (e.key === REFRESH_KEY && e.newValue === null) {
-        tokenStorage.clearAccessToken();
-        setUser(null);
-      }
+    const onLogout = (e: Event): void => {
+      const detail = (e as CustomEvent<LogoutEventDetail>).detail;
+      handleSignedOut(detail?.reason ?? 'expired');
+    };
+    // Another tab signed in or refreshed: adopt its session if we have none.
+    const onToken = (): void => {
+      if (userRef.current !== null) return;
+      authApi
+        .me()
+        .then((profile) => {
+          if (userRef.current === null) setUser(profile);
+        })
+        .catch(() => undefined);
     };
     window.addEventListener(AUTH_LOGOUT_EVENT, onLogout);
-    window.addEventListener('storage', onStorage);
+    window.addEventListener(AUTH_TOKEN_EVENT, onToken);
     return () => {
       window.removeEventListener(AUTH_LOGOUT_EVENT, onLogout);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(AUTH_TOKEN_EVENT, onToken);
     };
-  }, []);
+  }, [handleSignedOut, setUser]);
 
-  const login = useCallback(async (payload: LoginRequest): Promise<void> => {
-    const tokens = await authApi.login(payload);
-    tokenStorage.setTokenResponse(tokens);
-    const profile = await authApi.me();
-    setUser(profile);
-  }, []);
-
-  const register = useCallback(
-    async (payload: RegisterRequest): Promise<void> => {
-      const tokens = await authApi.register(payload);
-      tokenStorage.setTokenResponse(tokens);
+  const login = useCallback(
+    async (payload: LoginRequest): Promise<void> => {
+      const res = await authApi.login(payload);
+      tokenStorage.set(res);
       const profile = await authApi.me();
       setUser(profile);
     },
-    []
+    [setUser]
+  );
+
+  const register = useCallback(
+    async (payload: RegisterRequest): Promise<void> => {
+      const res = await authApi.register(payload);
+      tokenStorage.set(res);
+      const profile = await authApi.me();
+      setUser(profile);
+    },
+    [setUser]
   );
 
   const logout = useCallback(async (): Promise<void> => {
     try {
-      const refresh_token = tokenStorage.getRefreshToken();
-      await authApi.logout(refresh_token ? { refresh_token } : {});
-    } catch {
-      // best-effort
+      if (tokenStorage.getAccessToken()) {
+        try {
+          await authApi.logout();
+        } catch {
+          // The access token may be stale; end the session by cookie instead.
+          await authApi.revoke().catch(() => undefined);
+        }
+      } else {
+        await authApi.revoke().catch(() => undefined);
+      }
     } finally {
-      tokenStorage.clear();
-      setUser(null);
+      // signOut is a no-op when already signed out at this token version, so
+      // the local cleanup and redirect must not depend on its event.
+      signOut('user');
+      handleSignedOut('user');
     }
-  }, []);
+  }, [handleSignedOut]);
 
   return (
     <AuthContext.Provider
