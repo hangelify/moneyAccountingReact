@@ -6,8 +6,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { BillDetailContent } from './BillDetailContent';
-import type { ReactElement, ReactNode } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { HouseholdTestProvider } from '@/test/household';
+import type { BillDetailResponseDto } from '@/types/bills';
+import { toDraft } from '../billDetailDraft';
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({
@@ -104,7 +106,15 @@ describe('BillDetailContent', () => {
     await waitFor(() => screen.getByText('N-1 Supermarket'));
   });
 
-  const editableBill = {
+  // Owns the draft the way the drawer does while editing.
+  function Editing({ bill }: { bill: BillDetailResponseDto }): ReactElement {
+    const [draft, setDraft] = useState(() => toDraft(bill));
+    return (
+      <BillDetailContent id={bill.id} draft={draft} onDraftChange={setDraft} />
+    );
+  }
+
+  const editableBill: BillDetailResponseDto = {
     id: 'e1',
     bill_date: '2026-05-19T00:00:00Z',
     total_amount: 52.3,
@@ -112,8 +122,11 @@ describe('BillDetailContent', () => {
     description: null,
     market: { id: 'm1', name: 'Lidl', city: null },
     created_at: '2026-05-19T10:00:00Z',
+    amount_mismatch: false,
     items: [
       {
+        id: 'l1',
+        raw_name: 'MILK',
         sub_category: { id: 's1', name: 'milk', category_name: 'Dairy' },
         product_count: 2,
         amount: 14.5,
@@ -132,7 +145,7 @@ describe('BillDetailContent', () => {
 
   it('renders market, date, total and item inputs in edit mode', async () => {
     mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
-    render(wrap(<BillDetailContent id="e1" isEditing />));
+    render(wrap(<Editing bill={editableBill} />));
     await waitFor(() => screen.getByLabelText('Market'));
     expect(screen.getByLabelText('Market')).toHaveValue('Lidl');
     expect(screen.getByLabelText('Date')).toHaveValue('2026-05-19');
@@ -162,7 +175,7 @@ describe('BillDetailContent', () => {
         updated_at: '2026-01-01T00:00:00Z',
       },
     ]);
-    render(wrap(<BillDetailContent id="e1" isEditing />));
+    render(wrap(<Editing bill={editableBill} />));
     const select = await screen.findByLabelText('Item 1 category');
     await waitFor(() => expect(select).toBeEnabled());
     expect(select).toHaveValue('s1');

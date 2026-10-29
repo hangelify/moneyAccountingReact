@@ -1,20 +1,25 @@
-import { useState, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { ApiError } from '@/auth/apiError';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
-import type { BillDetailResponseDto, SubCategoryRef } from '@/types/bills';
+import type { BillDetailResponseDto } from '@/types/bills';
+import type { BillDetailDraft } from '../billDetailDraft';
 
 export interface BillDetailContentProps {
   id: string;
-  isEditing?: boolean;
+  // Edit mode is on while a draft is given; the parent owns it so that
+  // Confirm can send the edited values.
+  draft?: BillDetailDraft | null;
+  onDraftChange?: (draft: BillDetailDraft) => void;
 }
 
 export function BillDetailContent({
   id,
-  isEditing = false,
+  draft = null,
+  onDraftChange = () => undefined,
 }: BillDetailContentProps): ReactElement {
   const { t } = useTranslation('bills');
   const q = useBillDetail(id);
@@ -49,8 +54,11 @@ export function BillDetailContent({
   }
 
   const bill = q.data!;
-  // Mounted only while editing, so leaving edit mode drops the draft.
-  if (isEditing) return <BillDetailEditForm bill={bill} />;
+  if (draft) {
+    return (
+      <BillDetailEditForm bill={bill} draft={draft} onChange={onDraftChange} />
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -136,50 +144,27 @@ export function BillDetailContent({
   );
 }
 
-interface BillDetailDraft {
-  market: string;
-  date: string;
-  total: string;
-  items: {
-    subCategory: SubCategoryRef | null;
-    amount: string;
-    count: string;
-    weight: string;
-  }[];
-}
-
-function toDraft(bill: BillDetailResponseDto): BillDetailDraft {
-  return {
-    market: bill.market?.name ?? bill.market_name_raw ?? '',
-    date: bill.bill_date.slice(0, 10),
-    total: String(bill.total_amount),
-    items: bill.items.map((item) => ({
-      subCategory: item.sub_category,
-      amount: String(item.amount),
-      count: String(item.product_count),
-      weight: item.product_weight == null ? '' : String(item.product_weight),
-    })),
-  };
-}
-
 function BillDetailEditForm({
   bill,
+  draft,
+  onChange: setDraft,
 }: {
   bill: BillDetailResponseDto;
+  draft: BillDetailDraft;
+  onChange: (draft: BillDetailDraft) => void;
 }): ReactElement {
   const { t } = useTranslation('bills');
-  const [draft, setDraft] = useState(() => toDraft(bill));
 
   const setItem = (
     index: number,
     patch: Partial<BillDetailDraft['items'][number]>
   ): void => {
-    setDraft((d) => ({
-      ...d,
-      items: d.items.map((item, i) =>
+    setDraft({
+      ...draft,
+      items: draft.items.map((item, i) =>
         i === index ? { ...item, ...patch } : item
       ),
-    }));
+    });
   };
 
   return (
