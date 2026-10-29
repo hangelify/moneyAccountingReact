@@ -181,4 +181,72 @@ describe('ConfirmedBills (integration)', () => {
       mock.history.get.some((r) => r.url === '/households/hh-2/bills')
     ).toBe(true);
   });
+
+  const onePage = (id: string): [number, unknown] => [
+    200,
+    {
+      data: [fixture(id, 10)],
+      meta: { total: 1, page: 1, limit: 20, total_pages: 1 },
+    },
+  ];
+
+  it("never shows the previous household's rows after a switch", async () => {
+    let release: () => void = () => undefined;
+    const hh2Reply = new Promise<[number, unknown]>((resolve) => {
+      release = () => resolve(onePage('hh2-row'));
+    });
+    mock.onGet('/households/hh-1/bills').reply(() => onePage('hh1-row'));
+    mock.onGet('/households/hh-2/bills').reply(() => hh2Reply);
+    mock.onGet('/households/hh-2/markets').reply(200, []);
+
+    const { switchTo } = renderApp('/bills/confirmed');
+    await waitFor(() => screen.getByText('bill hh1-row'));
+
+    switchTo('hh-2');
+
+    expect(screen.queryByText('bill hh1-row')).toBeNull();
+    release();
+    await waitFor(() => screen.getByText('bill hh2-row'));
+  });
+
+  it('clears the rows when no household is active', async () => {
+    mock.onGet('/households/hh-1/bills').reply(() => onePage('hh1-row'));
+
+    const { switchTo } = renderApp('/bills/confirmed');
+    await waitFor(() => screen.getByText('bill hh1-row'));
+
+    switchTo('none');
+
+    expect(screen.queryByText('bill hh1-row')).toBeNull();
+  });
+
+  it('keeps the current rows while a filter change loads', async () => {
+    let release: () => void = () => undefined;
+    const filtered = new Promise<[number, unknown]>((resolve) => {
+      release = () => resolve(onePage('a-1'));
+    });
+    mock.onGet('/households/hh-1/bills').reply((config) => {
+      const p = config.params as Record<string, unknown>;
+      return p.amount_range === 'gt_100' ? filtered : onePage('b1');
+    });
+
+    renderApp('/bills/confirmed');
+    await waitFor(() => screen.getByText('bill b1'));
+
+    await userEvent.type(screen.getByLabelText(/min amount/i), '100');
+    await waitFor(() =>
+      expect(
+        mock.history.get.some(
+          (r) =>
+            (r.params as Record<string, unknown> | undefined)?.amount_range ===
+            'gt_100'
+        )
+      ).toBe(true)
+    );
+
+    expect(screen.getByText('bill b1')).toBeInTheDocument();
+    release();
+    await waitFor(() => screen.getByText('bill a-1'));
+    expect(screen.queryByText('bill b1')).toBeNull();
+  });
 });

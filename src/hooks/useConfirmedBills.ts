@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  type UseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { billsApi } from '@/pages/bills/api';
 import type { ConfirmedBillsFilters } from '@/pages/bills/buildBillsQueryParams';
@@ -19,6 +15,8 @@ export function useConfirmedBills(
     queryKey: ['households', hid, 'bills', filters, page, limit],
     queryFn: () => billsApi.list(hid!, filters, page, limit),
     enabled: hid !== null,
-    placeholderData: keepPreviousData,
+    // Keep previous rows only within one household, never across a switch.
+    placeholderData: (prev, prevQuery) =>
+      prevQuery?.queryKey[1] === hid ? prev : undefined,
   });
 }
