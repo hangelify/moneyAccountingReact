@@ -147,6 +147,8 @@ export interface DraftBillDto extends BillResponseDto {
 }
 
 export interface BillDetailItem {
+  id: string;
+  raw_name: string;
   sub_category: SubCategoryRef | null;
   product_count: number;
   amount: number;

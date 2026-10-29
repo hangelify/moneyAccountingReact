@@ -148,6 +148,8 @@
       "weight": "{{value}} kg",
       "uncategorized": "Uncategorized",
       "confirm": "Confirm",
+      "confirmed": "Bill confirmed",
+      "confirmFailed": "Couldn't confirm the bill.",
       "remove": "Remove",
       "edit": "Edit",
       "cancel": "Cancel",
