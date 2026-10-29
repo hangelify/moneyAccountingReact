@@ -7,12 +7,17 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { BillDetailContent } from './BillDetailContent';
 import type { ReactElement, ReactNode } from 'react';
+import { HouseholdTestProvider } from '@/test/household';
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  return <QueryClientProvider client={qc}>{ui}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={qc}>
+      <HouseholdTestProvider>{ui}</HouseholdTestProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('BillDetailContent', () => {
@@ -25,7 +30,7 @@ describe('BillDetailContent', () => {
   });
 
   it('renders summary and items on success', async () => {
-    mock.onGet('/bills/b1').reply(200, {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
       id: 'b1',
       bill_date: '2026-05-19T00:00:00Z',
       total_amount: 52.3,
@@ -56,16 +61,18 @@ describe('BillDetailContent', () => {
   });
 
   it('shows "Bill not found" on 404', async () => {
-    mock.onGet('/bills/missing').reply(404, { message: 'Bill not found' });
+    mock
+      .onGet('/households/hh-1/bills/missing')
+      .reply(404, { message: 'Bill not found' });
     render(wrap(<BillDetailContent id="missing" />));
     await waitFor(() => screen.getByText(/bill not found/i));
   });
 
   it('shows generic error + retry on 500', async () => {
-    mock.onGet('/bills/x').reply(500);
+    mock.onGet('/households/hh-1/bills/x').reply(500);
     render(wrap(<BillDetailContent id="x" />));
     await waitFor(() => screen.getByRole('button', { name: /retry/i }));
-    mock.onGet('/bills/x').reply(200, {
+    mock.onGet('/households/hh-1/bills/x').reply(200, {
       id: 'x',
       bill_date: '2026-05-19',
       total_amount: 10,

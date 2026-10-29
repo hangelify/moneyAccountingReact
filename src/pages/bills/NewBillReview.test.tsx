@@ -10,6 +10,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { apiClient } from '@/auth/apiClient';
 import { NewBillReview } from './NewBillReview';
 import { useBillDraftStore } from '@/stores/billDraftStore';
+import { HouseholdTestProvider } from '@/test/household';
 
 function LocationProbe(): null {
   const loc = useLocation();
@@ -36,7 +37,11 @@ function Providers({ children }: { children: ReactNode }): ReactElement {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <HouseholdTestProvider>{children}</HouseholdTestProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('NewBillReview', () => {
@@ -44,7 +49,7 @@ describe('NewBillReview', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(apiClient);
-    mock.onGet('/sub-categories').reply(200, []);
+    mock.onGet('/households/hh-1/sub-categories').reply(200, []);
     Object.defineProperty(URL, 'createObjectURL', {
       value: vi.fn(() => 'blob:fake'),
       configurable: true,

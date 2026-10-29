@@ -12,8 +12,8 @@ describe('marketsApi.list', () => {
     mock.restore();
   });
 
-  it('GETs /markets and returns the list verbatim', async () => {
-    mock.onGet('/markets').reply(200, [
+  it('GETs /households/hh-1/markets and returns the list verbatim', async () => {
+    mock.onGet('/households/hh-1/markets').reply(200, [
       {
         id: '1',
         name: 'Lidl',
@@ -33,7 +33,7 @@ describe('marketsApi.list', () => {
         bill_count: 3,
       },
     ]);
-    const r = await marketsApi.list();
+    const r = await marketsApi.list('hh-1');
     expect(r).toHaveLength(2);
     expect(r[0]?.name).toBe('Lidl');
     expect(r[1]?.bill_count).toBe(3);

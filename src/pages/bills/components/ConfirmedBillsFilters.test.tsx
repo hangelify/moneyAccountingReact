@@ -8,6 +8,7 @@ import { apiClient } from '@/auth/apiClient';
 import { ConfirmedBillsFilters } from './ConfirmedBillsFilters';
 import type { ConfirmedBillsFilters as Filters } from '@/pages/bills/buildBillsQueryParams';
 import type { ReactElement, ReactNode } from 'react';
+import { HouseholdTestProvider } from '@/test/household';
 
 const empty: Filters = {
   date_from: null,
@@ -20,14 +21,18 @@ const empty: Filters = {
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={qc}>{ui}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={qc}>
+      <HouseholdTestProvider>{ui}</HouseholdTestProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('ConfirmedBillsFilters', () => {
   let mock: MockAdapter;
   beforeEach(() => {
     mock = new MockAdapter(apiClient);
-    mock.onGet('/markets').reply(200, []);
+    mock.onGet('/households/hh-1/markets').reply(200, []);
   });
   afterEach(() => {
     mock.restore();

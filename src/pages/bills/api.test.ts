@@ -97,19 +97,19 @@ describe('billsApi.list', () => {
   };
 
   it('GETs /bills with default page=1 and limit=20', async () => {
-    mock.onGet('/bills').reply((config) => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
       expect(config.params).toMatchObject({ page: '1', limit: '20' });
       return [
         200,
         { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
       ];
     });
-    const r = await billsApi.list(empty, 1, 20);
+    const r = await billsApi.list('hh-1', empty, 1, 20);
     expect(r.data).toEqual([]);
   });
 
   it('serializes every filter into request params', async () => {
-    mock.onGet('/bills').reply((config) => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
       expect(config.params).toMatchObject({
         date_from: '2026-01-01',
         date_to: '2026-06-30',
@@ -125,6 +125,7 @@ describe('billsApi.list', () => {
       ];
     });
     await billsApi.list(
+      'hh-1',
       {
         date_from: '2026-01-01',
         date_to: '2026-06-30',
@@ -139,7 +140,7 @@ describe('billsApi.list', () => {
   });
 
   it('serializes market_names as repeated keys in the URL', async () => {
-    mock.onGet('/bills').reply((config) => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
       // Axios 1.x normalises a plain function to { serialize: fn }, so we
       // unwrap accordingly. Fall back to empty string if absent.
       const serializer = config.paramsSerializer;
@@ -160,6 +161,7 @@ describe('billsApi.list', () => {
       ];
     });
     await billsApi.list(
+      'hh-1',
       { ...empty, market_names: ['Lidl', 'Kaufland'] },
       1,
       20
@@ -177,7 +179,7 @@ describe('billsApi.detail', () => {
   });
 
   it('GETs /bills/:id and returns BillDetailResponseDto', async () => {
-    mock.onGet('/bills/abc-123').reply(200, {
+    mock.onGet('/households/hh-1/bills/abc-123').reply(200, {
       id: 'abc-123',
       bill_date: '2026-05-19T00:00:00Z',
       total_amount: 52.3,
@@ -187,15 +189,19 @@ describe('billsApi.detail', () => {
       created_at: '2026-05-19T10:00:00Z',
       items: [],
     });
-    const r = await billsApi.detail('abc-123');
+    const r = await billsApi.detail('hh-1', 'abc-123');
     expect(r.id).toBe('abc-123');
     expect(r.items).toEqual([]);
   });
 
   it('throws ApiError on 404', async () => {
-    mock.onGet('/bills/missing').reply(404, { message: 'Bill not found' });
-    await expect(billsApi.detail('missing')).rejects.toBeInstanceOf(ApiError);
-    await expect(billsApi.detail('missing')).rejects.toMatchObject({
+    mock
+      .onGet('/households/hh-1/bills/missing')
+      .reply(404, { message: 'Bill not found' });
+    await expect(billsApi.detail('hh-1', 'missing')).rejects.toBeInstanceOf(
+      ApiError
+    );
+    await expect(billsApi.detail('hh-1', 'missing')).rejects.toMatchObject({
       status: 404,
       message: 'Bill not found',
     });

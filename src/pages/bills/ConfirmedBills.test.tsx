@@ -11,6 +11,12 @@ import { BillDetailDrawer } from './BillDetailDrawer';
 import type { BillResponseDto } from '@/types/bills';
 import type { ReactElement } from 'react';
 import '@/i18n';
+import {
+  HouseholdTestProvider,
+  TEST_HID,
+  TEST_HOUSEHOLDS,
+  makeHouseholdValue,
+} from '@/test/household';
 
 function LocationProbe(): ReactElement {
   const loc = useLocation();
@@ -22,22 +28,33 @@ function LocationProbe(): ReactElement {
   );
 }
 
-function renderApp(initial: string): void {
+function renderApp(
+  initial: string,
+  hid: string = TEST_HID
+): { switchTo: (next: string) => void } {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  render(
+  const tree = (id: string): ReactElement => (
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[initial]}>
-        <LocationProbe />
-        <Routes>
-          <Route path="/bills/confirmed" element={<ConfirmedBills />}>
-            <Route path=":id" element={<BillDetailDrawer />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <HouseholdTestProvider
+        value={makeHouseholdValue({
+          activeHousehold: TEST_HOUSEHOLDS.find((h) => h.id === id) ?? null,
+        })}
+      >
+        <MemoryRouter initialEntries={[initial]}>
+          <LocationProbe />
+          <Routes>
+            <Route path="/bills/confirmed" element={<ConfirmedBills />}>
+              <Route path=":id" element={<BillDetailDrawer />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </HouseholdTestProvider>
     </QueryClientProvider>
   );
+  const { rerender } = render(tree(hid));
+  return { switchTo: (next) => rerender(tree(next)) };
 }
 
 function fixture(id: string, total: number): BillResponseDto {
@@ -56,7 +73,7 @@ describe('ConfirmedBills (integration)', () => {
   let mock: MockAdapter;
   beforeEach(() => {
     mock = new MockAdapter(apiClient);
-    mock.onGet('/markets').reply(200, [
+    mock.onGet('/households/hh-1/markets').reply(200, [
       {
         id: '1',
         name: 'Lidl',
@@ -80,7 +97,7 @@ describe('ConfirmedBills (integration)', () => {
   afterEach(() => mock.restore());
 
   it('loads, filters by amount, opens drawer, paginates', async () => {
-    mock.onGet('/bills').reply((config) => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
       const p = config.params as Record<string, unknown>;
       if (p.page === '2') {
         return [
@@ -108,7 +125,7 @@ describe('ConfirmedBills (integration)', () => {
         },
       ];
     });
-    mock.onGet('/bills/a-1').reply(200, {
+    mock.onGet('/households/hh-1/bills/a-1').reply(200, {
       ...fixture('a-1', 150),
       items: [],
     });
@@ -139,5 +156,29 @@ describe('ConfirmedBills (integration)', () => {
       expect(screen.getByTestId('loc')).toHaveTextContent('amount_range=gt_100')
     );
     expect(screen.queryByText(/bill details/i)).toBeNull();
+  });
+
+  it('refetches for the new household after a switch', async () => {
+    const page = (id: string): unknown => [
+      200,
+      {
+        data: [fixture(id, 10)],
+        meta: { total: 1, page: 1, limit: 20, total_pages: 1 },
+      },
+    ];
+    mock.onGet('/households/hh-1/bills').reply(() => page('hh1-row') as never);
+    mock.onGet('/households/hh-2/bills').reply(() => page('hh2-row') as never);
+    mock.onGet('/households/hh-2/markets').reply(200, []);
+
+    const { switchTo } = renderApp('/bills/confirmed');
+    await waitFor(() => screen.getByText('bill hh1-row'));
+
+    switchTo('hh-2');
+
+    await waitFor(() => screen.getByText('bill hh2-row'));
+    expect(screen.queryByText('bill hh1-row')).toBeNull();
+    expect(
+      mock.history.get.some((r) => r.url === '/households/hh-2/bills')
+    ).toBe(true);
   });
 });

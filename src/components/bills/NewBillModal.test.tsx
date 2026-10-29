@@ -11,6 +11,7 @@ import { NewBillModal } from './NewBillModal';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { Toaster } from '@/components/ui/toaster';
 import '@/i18n';
+import { HouseholdTestProvider } from '@/test/household';
 
 function LocationProbe(): null {
   const loc = useLocation();
@@ -30,19 +31,21 @@ function renderModal(onOpenChange = vi.fn()): {
   render(
     <MemoryRouter initialEntries={['/']}>
       <QueryClientProvider client={queryClient}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <NewBillModal open onOpenChange={onOpenChange} />
-                <LocationProbe />
-              </>
-            }
-          />
-          <Route path="/bills/review" element={<LocationProbe />} />
-        </Routes>
-        <Toaster />
+        <HouseholdTestProvider>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <NewBillModal open onOpenChange={onOpenChange} />
+                  <LocationProbe />
+                </>
+              }
+            />
+            <Route path="/bills/review" element={<LocationProbe />} />
+          </Routes>
+          <Toaster />
+        </HouseholdTestProvider>
       </QueryClientProvider>
     </MemoryRouter>
   );

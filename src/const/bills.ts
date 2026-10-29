@@ -2,6 +2,7 @@ export const BILLS_ENDPOINTS = {
   PARSE_PHOTO: '/bills/parse-photo',
   LIST: '/bills',
   DETAIL: (id: string): string => `/bills/${id}`,
+  CONFIRM: (id: string): string => `/bills/${id}/confirm`,
 } as const;
 
 export const BILL_IMAGE_MIME_TYPES = [

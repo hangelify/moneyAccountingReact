@@ -8,12 +8,17 @@ import type { ReactElement, ReactNode } from 'react';
 import { apiClient } from '@/auth/apiClient';
 import { SubCategorySelect } from './SubCategorySelect';
 import type { SubCategoryRef } from '@/types/bills';
+import { HouseholdTestProvider } from '@/test/household';
 
 function Wrapper({ children }: { children: ReactNode }): ReactElement {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <HouseholdTestProvider>{children}</HouseholdTestProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('SubCategorySelect', () => {
@@ -28,7 +33,7 @@ describe('SubCategorySelect', () => {
   });
 
   it('renders grouped options once loaded', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '1',
         name: 'milk',
@@ -60,7 +65,7 @@ describe('SubCategorySelect', () => {
   });
 
   it('emits a SubCategoryRef when a sub-category is picked', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '1',
         name: 'milk',
@@ -98,7 +103,7 @@ describe('SubCategorySelect', () => {
   });
 
   it('emits null when the placeholder is selected', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '1',
         name: 'milk',
@@ -132,7 +137,7 @@ describe('SubCategorySelect', () => {
   });
 
   it('disables and shows error state with a retry button on failure', async () => {
-    mock.onGet('/sub-categories').reply(500);
+    mock.onGet('/households/hh-1/sub-categories').reply(500);
 
     render(
       <Wrapper>
@@ -154,7 +159,7 @@ describe('SubCategorySelect', () => {
 
   it('renders a transient option for the saved value while loading', async () => {
     // Delay the response so we can observe the pending state.
-    mock.onGet('/sub-categories').reply(
+    mock.onGet('/households/hh-1/sub-categories').reply(
       () =>
         new Promise<[number, unknown]>((res) => {
           setTimeout(() => res([200, []]), 30);

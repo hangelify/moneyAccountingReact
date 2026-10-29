@@ -5,8 +5,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
 import { apiClient } from '@/auth/apiClient';
 import { useSubCategories } from './useSubCategories';
+import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 
-function makeWrapper(): {
+function makeWrapper(value = makeHouseholdValue()): {
   Wrapper: ({ children }: { children: ReactNode }) => ReactElement;
   client: QueryClient;
 } {
@@ -16,7 +17,9 @@ function makeWrapper(): {
   return {
     client,
     Wrapper: ({ children }) => (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      <QueryClientProvider client={client}>
+        <HouseholdTestProvider value={value}>{children}</HouseholdTestProvider>
+      </QueryClientProvider>
     ),
   };
 }
@@ -33,7 +36,7 @@ describe('useSubCategories', () => {
   });
 
   it('groups by category_name and sorts groups + items A-Z', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '2',
         name: 'milk',
@@ -77,7 +80,7 @@ describe('useSubCategories', () => {
   });
 
   it('exposes loading then error status on failure', async () => {
-    mock.onGet('/sub-categories').reply(500);
+    mock.onGet('/households/hh-1/sub-categories').reply(500);
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useSubCategories(), {
@@ -86,5 +89,18 @@ describe('useSubCategories', () => {
 
     await waitFor(() => expect(result.current.status).toBe('error'));
     expect(result.current.groups).toEqual([]);
+  });
+
+  it('does not fetch without an active household', async () => {
+    const { Wrapper } = makeWrapper(
+      makeHouseholdValue({ activeHousehold: null, status: 'loading' })
+    );
+    const { result } = renderHook(() => useSubCategories(), {
+      wrapper: Wrapper,
+    });
+
+    await new Promise((r) => setTimeout(r, 20));
+    expect(mock.history.get).toHaveLength(0);
+    expect(result.current.status).toBe('pending');
   });
 });

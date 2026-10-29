@@ -1,5 +1,6 @@
 import { apiClient } from '@/auth/apiClient';
 import { BILLS_ENDPOINTS } from '@/const/bills';
+import { householdPath } from '@/const/households';
 import type {
   BillDetailResponseDto,
   BillResponseDto,
@@ -45,12 +46,13 @@ export const billsApi = {
   },
 
   list: async (
+    hid: string,
     filters: ConfirmedBillsFilters,
     page: number,
     limit: number
   ): Promise<Paginated<BillResponseDto>> => {
     const { data } = await apiClient.get<Paginated<BillResponseDto>>(
-      BILLS_ENDPOINTS.LIST,
+      householdPath(hid, BILLS_ENDPOINTS.LIST),
       {
         params: buildBillsQueryParams(filters, page, limit),
         paramsSerializer: billsParamsSerializer,
@@ -59,9 +61,9 @@ export const billsApi = {
     return data;
   },
 
-  detail: async (id: string): Promise<BillDetailResponseDto> => {
+  detail: async (hid: string, id: string): Promise<BillDetailResponseDto> => {
     const { data } = await apiClient.get<BillDetailResponseDto>(
-      BILLS_ENDPOINTS.DETAIL(id)
+      householdPath(hid, BILLS_ENDPOINTS.DETAIL(id))
     );
     return data;
   },

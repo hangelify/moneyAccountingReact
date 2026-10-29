@@ -3,6 +3,7 @@ import {
   useQuery,
   type UseQueryResult,
 } from '@tanstack/react-query';
+import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { billsApi } from '@/pages/bills/api';
 import type { ConfirmedBillsFilters } from '@/pages/bills/buildBillsQueryParams';
 import type { Paginated } from '@/types/pagination';
@@ -13,9 +14,11 @@ export function useConfirmedBills(
   page: number,
   limit: number
 ): UseQueryResult<Paginated<BillResponseDto>> {
+  const hid = useActiveHouseholdId();
   return useQuery({
-    queryKey: ['confirmedBills', filters, page, limit],
-    queryFn: () => billsApi.list(filters, page, limit),
+    queryKey: ['households', hid, 'bills', filters, page, limit],
+    queryFn: () => billsApi.list(hid!, filters, page, limit),
+    enabled: hid !== null,
     placeholderData: keepPreviousData,
   });
 }
