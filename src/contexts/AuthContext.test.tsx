@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StrictMode, useEffect, type ReactElement } from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './AuthContext';
@@ -353,7 +353,10 @@ describe('AuthProvider session events', () => {
     expect(await screen.findByText('hello B')).toBeInTheDocument();
     expect(api.me).toHaveBeenCalledTimes(2);
     expect(clearSpy).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId('path')).toHaveTextContent('/dashboard');
+    // navigate() runs in a transition, so the path can commit after the user update.
+    await waitFor(() => {
+      expect(screen.getByTestId('path')).toHaveTextContent('/dashboard');
+    });
   });
 
   it('auth:token while signed in as the same user → no cache clear', async () => {
