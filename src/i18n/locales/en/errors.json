@@ -1,4 +1,5 @@
 {
+  "saveFailed": "Could not save the bill. Please try again.",
   "uploadFailed": "Upload failed. Please try again.",
   "sessionExpired": "Your session ended, please sign in again",
   "signedOutElsewhere": "You were signed out",
