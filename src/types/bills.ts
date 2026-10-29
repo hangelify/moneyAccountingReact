@@ -154,5 +154,8 @@ export interface BillDetailItem {
 }
 
 export interface BillDetailResponseDto extends BillResponseDto {
+  // Drafts only: the receipt's status and unmatched market name.
+  status?: 'draft' | 'confirmed';
+  market_name_raw?: string;
   items: BillDetailItem[];
 }

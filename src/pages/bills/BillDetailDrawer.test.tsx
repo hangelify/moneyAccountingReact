@@ -37,6 +37,9 @@ function renderAt(path: string): void {
             <Route path="/bills/confirmed" element={<LocationProbe />}>
               <Route path=":id" element={<BillDetailDrawer />} />
             </Route>
+            <Route path="/bills/drafts" element={<LocationProbe />}>
+              <Route path=":id" element={<BillDetailDrawer />} />
+            </Route>
           </Routes>
         </MemoryRouter>
       </HouseholdTestProvider>
@@ -85,5 +88,44 @@ describe('BillDetailDrawer', () => {
     await waitFor(() =>
       expect(screen.getByTestId('loc')).toHaveTextContent('/bills/confirmed')
     );
+  });
+
+  it('shows Confirm and Remove actions for a draft bill', async () => {
+    mock.onGet('/households/hh-1/bills/d1').reply(200, {
+      id: 'd1',
+      bill_date: '2026-10-29',
+      total_amount: 3,
+      amount_mismatch: false,
+      created_at: '2026-10-29T14:03:44.885Z',
+      status: 'draft',
+      market_name_raw: 'N-1 Supermarket',
+      items: [],
+    });
+    renderAt('/bills/drafts/d1');
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /confirm/i })
+      ).toBeInTheDocument()
+    );
+    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+  });
+
+  it('hides Confirm for an already confirmed bill', async () => {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
+      id: 'b1',
+      bill_date: '2026-05-19T00:00:00Z',
+      total_amount: 10,
+      amount_mismatch: false,
+      created_at: '2026-05-19T10:00:00Z',
+      market: null,
+      items: [],
+    });
+    renderAt('/bills/confirmed/b1');
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /remove/i })
+      ).toBeInTheDocument()
+    );
+    expect(screen.queryByRole('button', { name: /confirm/i })).toBeNull();
   });
 });

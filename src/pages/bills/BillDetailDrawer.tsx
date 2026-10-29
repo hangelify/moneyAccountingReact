@@ -8,6 +8,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { useBillDetail } from '@/hooks/useBillDetail';
+import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { BillDetailContent } from './components/BillDetailContent';
 
@@ -17,6 +20,7 @@ export function BillDetailDrawer(): ReactElement | null {
   const location = useLocation();
   const { t } = useTranslation('bills');
   const isDesktop = useMediaQuery('(min-width: 768px)');
+  const bill = useBillDetail(id).data;
 
   if (!id) return null;
 
@@ -28,10 +32,27 @@ export function BillDetailDrawer(): ReactElement | null {
     <Sheet open onOpenChange={handleOpenChange}>
       <SheetContent
         side={isDesktop ? 'right' : 'bottom'}
-        className="flex max-h-[90vh] flex-col gap-4 overflow-y-auto sm:max-w-md"
+        // Only the bottom sheet is capped; the side sheet spans full height.
+        className={cn(
+          'flex flex-col gap-4 overflow-y-auto sm:max-w-md',
+          !isDesktop && 'max-h-[90vh]'
+        )}
       >
         <SheetHeader>
           <SheetTitle>{t('confirmed.detail.title')}</SheetTitle>
+          {bill && (
+            // Actions are wired in a follow-up; disabled until then.
+            <div className="flex gap-2 pr-6">
+              {bill.status === 'draft' && (
+                <Button size="sm" disabled>
+                  {t('confirmed.detail.confirm')}
+                </Button>
+              )}
+              <Button size="sm" variant="destructive" disabled>
+                {t('confirmed.detail.remove')}
+              </Button>
+            </div>
+          )}
         </SheetHeader>
         <BillDetailContent id={id} />
       </SheetContent>

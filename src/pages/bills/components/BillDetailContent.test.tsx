@@ -85,4 +85,22 @@ describe('BillDetailContent', () => {
     await userEvent.click(screen.getByRole('button', { name: /retry/i }));
     await waitFor(() => screen.getByText(/this bill has no line items/i));
   });
+
+  it('falls back to market_name_raw when the bill has no linked market', async () => {
+    mock.onGet('/households/hh-1/bills/d1').reply(200, {
+      id: 'd1',
+      bill_date: '2026-10-29',
+      total_amount: 3,
+      currency: 'MDL',
+      amount_mismatch: false,
+      description: null,
+      created_at: '2026-10-29T14:03:44.885Z',
+      status: 'draft',
+      market_name_raw: 'N-1 Supermarket',
+      bill_date_inferred: true,
+      items: [],
+    });
+    render(wrap(<BillDetailContent id="d1" />));
+    await waitFor(() => screen.getByText('N-1 Supermarket'));
+  });
 });

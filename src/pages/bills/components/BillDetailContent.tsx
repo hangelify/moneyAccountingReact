@@ -66,7 +66,11 @@ export function BillDetailContent({
           <dt className="text-muted-foreground">
             {t('confirmed.table.market')}
           </dt>
-          <dd>{bill.market?.name ?? t('confirmed.table.noMarket')}</dd>
+          <dd>
+            {bill.market?.name ??
+              bill.market_name_raw ??
+              t('confirmed.table.noMarket')}
+          </dd>
         </div>
         <div className="col-span-2">
           <dt className="text-muted-foreground">
