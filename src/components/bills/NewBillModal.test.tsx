@@ -390,6 +390,17 @@ describe('NewBillModal', () => {
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
   });
 
+  it('shows the timeout copy when recognition times out', async () => {
+    mock.onPost(URL_HH1).timeout();
+    renderModal();
+    await pickAndSend();
+    expect(
+      await screen.findByText(
+        'Recognition is taking too long. Try again in a moment — a repeat send continues the same draft.'
+      )
+    ).toBeInTheDocument();
+  });
+
   it('shows the reference code', async () => {
     mock
       .onPost(URL_HH1)
