@@ -58,6 +58,49 @@ describe('BillCard', () => {
     expect(screen.getByText(/don't add up/i)).toBeInTheDocument();
   });
 
+  it('for drafts, counts items and falls back to the raw market name', () => {
+    const { items_count: _count, market: _market, ...summary } = bill;
+    render(
+      <BillCard
+        bill={{
+          ...summary,
+          market_name_raw: 'MEGA IMAGE SRL',
+          bill_date_inferred: false,
+          items: [
+            {
+              id: 'i1',
+              raw_name: 'BUN',
+              sub_category: null,
+              product_count: 1,
+              amount: 1,
+            },
+            {
+              id: 'i2',
+              raw_name: 'MILK',
+              sub_category: null,
+              product_count: 2,
+              amount: 2,
+            },
+          ],
+        }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText('MEGA IMAGE SRL')).toBeInTheDocument();
+    expect(screen.getByText('2 items')).toBeInTheDocument();
+    expect(screen.queryByText(/date is a guess/i)).toBeNull();
+  });
+
+  it('flags an inferred bill date', () => {
+    render(
+      <BillCard
+        bill={{ ...bill, bill_date_inferred: true, items: [] }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/date is a guess/i)).toBeInTheDocument();
+  });
+
   it('is a button that reports its bill id on click', async () => {
     const onClick = vi.fn();
     render(<BillCard bill={bill} onClick={onClick} />);

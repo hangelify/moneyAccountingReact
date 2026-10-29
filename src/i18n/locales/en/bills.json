@@ -76,7 +76,20 @@
     "noMarket": "No market",
     "itemsCount_one": "{{count}} item",
     "itemsCount_other": "{{count}} items",
-    "mismatch": "Items don't add up to the total"
+    "mismatch": "Items don't add up to the total",
+    "dateInferred": "Date is a guess"
+  },
+  "tabs": {
+    "label": "Bill lists",
+    "confirmed": "Bills",
+    "drafts": "To review",
+    "draftsCount_one": "To review ({{count}})",
+    "draftsCount_other": "To review ({{count}})"
+  },
+  "drafts": {
+    "empty": "No bills waiting for review.",
+    "toReview_one": "You have {{count}} bill to review",
+    "toReview_other": "You have {{count}} bills to review"
   },
   "confirmed": {
     "title": "Confirmed bills",

@@ -6,6 +6,7 @@ import type {
   BillResponseDto,
   ConfirmBillRequest,
   CreateBillRequest,
+  DraftBillDto,
   ParsePhotoResponse,
 } from '@/types/bills';
 import type { Paginated } from '@/types/pagination';
@@ -65,6 +66,19 @@ export const billsApi = {
         params: buildBillsQueryParams(filters, page, limit),
         paramsSerializer: billsParamsSerializer,
       }
+    );
+    return data;
+  },
+
+  // Drafts accept only page and limit; any other param is a 400.
+  listDrafts: async (
+    hid: string,
+    page: number,
+    limit: number
+  ): Promise<Paginated<DraftBillDto>> => {
+    const { data } = await apiClient.get<Paginated<DraftBillDto>>(
+      householdPath(hid, BILLS_ENDPOINTS.DRAFTS),
+      { params: { page, limit } }
     );
     return data;
   },

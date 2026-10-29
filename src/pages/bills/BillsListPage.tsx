@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,10 @@ import type { BillResponseDto } from '@/types/bills';
 
 export interface BillsListPageProps {
   title: string;
+  // Shown between the title and the filters (e.g. tabs).
+  header?: ReactNode;
+  // Replaces the default "no bills yet" state when nothing is filtered.
+  emptyNoBills?: ReactNode;
   // Renders the current page of bills; openBill opens the nested detail route.
   renderBills: (
     bills: BillResponseDto[],
@@ -22,6 +26,8 @@ export interface BillsListPageProps {
 // empty state, pagination and the nested detail <Outlet />.
 export function BillsListPage({
   title,
+  header,
+  emptyNoBills,
   renderBills,
 }: BillsListPageProps): ReactElement {
   const { t } = useTranslation('bills');
@@ -63,6 +69,7 @@ export function BillsListPage({
     <>
       <div className="container mx-auto flex flex-col gap-4 px-4 py-6 sm:py-8">
         <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
+        {header}
 
         <ConfirmedBillsFilters
           value={filters}
@@ -91,7 +98,9 @@ export function BillsListPage({
           </div>
         )}
 
-        {q.data?.data.length === 0 && (
+        {q.data?.data.length === 0 && !hasActiveFilters && emptyNoBills}
+
+        {q.data?.data.length === 0 && (hasActiveFilters || !emptyNoBills) && (
           <div className="flex flex-col items-start gap-3 rounded-lg border bg-card p-6">
             <p className="text-sm">
               {hasActiveFilters

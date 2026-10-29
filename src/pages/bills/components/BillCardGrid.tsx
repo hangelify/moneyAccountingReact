@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
-import type { BillResponseDto } from '@/types/bills';
-import { BillCard } from './BillCard';
+import { BillCard, type BillCardBill } from './BillCard';
 
 export interface BillCardGridProps {
-  bills: BillResponseDto[];
+  bills: BillCardBill[];
   onCardClick: (id: string) => void;
 }
 
