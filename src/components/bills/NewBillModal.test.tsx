@@ -18,6 +18,11 @@ import {
 } from '@/test/household';
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
 
+const auth: { user: { id: string } | null } = { user: { id: 'u1' } };
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: auth.user, isAuthenticated: auth.user !== null }),
+}));
+
 function LocationProbe(): null {
   const loc = useLocation();
   useEffect(() => {
@@ -61,6 +66,7 @@ function renderModal(
   queryClient: QueryClient;
   onOpenChange: ReturnType<typeof vi.fn>;
   rerenderWith: (v: HouseholdContextValue) => void;
+  unmount: () => void;
 } {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -68,7 +74,7 @@ function renderModal(
   const utils = render(tree(value, queryClient, onOpenChange));
   const rerenderWith = (v: HouseholdContextValue): void =>
     utils.rerender(tree(v, queryClient, onOpenChange));
-  return { queryClient, onOpenChange, rerenderWith };
+  return { queryClient, onOpenChange, rerenderWith, unmount: utils.unmount };
 }
 
 function makeFile(
@@ -96,6 +102,7 @@ describe('NewBillModal', () => {
     });
     useBillDraftStore.getState().clear();
     __resetNewBillModalState();
+    auth.user = { id: 'u1' };
   });
 
   afterEach(() => {
@@ -417,6 +424,46 @@ describe('NewBillModal', () => {
     });
     expect(screen.getByText('receipt.jpg')).toBeInTheDocument();
     expect(screen.queryByText(/upload failed/i)).not.toBeInTheDocument();
+  });
+
+  it('drops a late reply that arrives after unmount', async () => {
+    let release: () => void = () => undefined;
+    mock.onPost(URL_HH1).reply(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve([200, okBody]);
+        })
+    );
+    const { unmount } = renderModal();
+    await pickAndSend();
+    await waitFor(() => expect(mock.history.post).toHaveLength(1));
+
+    unmount();
+    await act(async () => {
+      release();
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(useBillDraftStore.getState().parsed).toBeNull();
+    expect(document.body.dataset.pathname).not.toBe('/bills/review');
+  });
+
+  it('aborts the upload when the signed-in user changes', async () => {
+    let signal: AbortSignal | undefined;
+    mock.onPost(URL_HH1).reply((config) => {
+      signal = config.signal as AbortSignal | undefined;
+      return new Promise(() => undefined);
+    });
+    const { rerenderWith } = renderModal();
+    await pickAndSend();
+    await waitFor(() => expect(signal).toBeDefined());
+    expect(signal?.aborted).toBe(false);
+
+    auth.user = { id: 'u2' };
+    rerenderWith(makeHouseholdValue());
+
+    await waitFor(() => expect(signal?.aborted).toBe(true));
+    expect(useBillDraftStore.getState().parsed).toBeNull();
   });
 
   it('disables Send until households are loaded', async () => {

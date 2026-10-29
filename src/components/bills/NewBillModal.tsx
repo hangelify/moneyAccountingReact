@@ -20,6 +20,7 @@ import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { tokenStorage } from '@/auth/tokenStorage';
+import { useAuth } from '@/contexts/AuthContext';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import { toParsePhotoFailure } from '@/pages/bills/parsePhotoError';
 import { HouseholdSelect } from './HouseholdSelect';
@@ -43,6 +44,8 @@ function secondsUntil(deadline: number | null): number {
 interface SendVars {
   file: File;
   hid: string;
+  /** Per request, so a late reply can tell it was aborted. */
+  controller: AbortController;
 }
 
 interface NewBillModalProps {
@@ -66,6 +69,7 @@ export function NewBillModal({
   } = useHouseholds();
   const hid = status === 'ready' ? (activeHousehold?.id ?? null) : null;
   const setDraft = useBillDraftStore((s) => s.setDraft);
+  const userId = useAuth().user?.id ?? null;
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -77,6 +81,23 @@ export function NewBillModal({
   );
   const [unavailable, setUnavailable] = useState(scanDisabled);
   const abortRef = useRef<AbortController | null>(null);
+
+  // A scan must not outlive the modal or the session that started it.
+  useEffect(() => () => abortRef.current?.abort(), []);
+  // A different user doesn't inherit the rate limit or "not available".
+  const lastUserId = useRef(userId);
+  useEffect(() => {
+    if (lastUserId.current === userId) return;
+    lastUserId.current = userId;
+    abortRef.current?.abort();
+    __resetNewBillModalState();
+  }, [userId]);
+  const [shownUserId, setShownUserId] = useState(userId);
+  if (shownUserId !== userId) {
+    setShownUserId(userId);
+    setSecondsLeft(0);
+    setUnavailable(false);
+  }
 
   const counting = secondsLeft > 0;
   useEffect(() => {
@@ -104,15 +125,15 @@ export function NewBillModal({
   };
 
   const mutation = useMutation({
-    mutationFn: async ({ file: f, hid: sendHid }: SendVars) => {
-      const controller = new AbortController();
+    mutationFn: async ({ file: f, hid: sendHid, controller }: SendVars) => {
       abortRef.current = controller;
       const parsed = await billsApi.parsePhoto(sendHid, f, {
         signal: controller.signal,
       });
       return { parsed, hid: sendHid };
     },
-    onSuccess: ({ parsed, hid: sentHid }, { file: f }) => {
+    onSuccess: ({ parsed, hid: sentHid }, { file: f, controller }) => {
+      if (controller.signal.aborted) return;
       setDraft({ file: f, parsed, hid: sentHid, mode: 'confirm' });
       if (parsed.duplicate) {
         toast({ title: t('bills:newBillModal.duplicate') });
@@ -121,7 +142,8 @@ export function NewBillModal({
       onOpenChange(false);
       void navigate('/bills/review');
     },
-    onError: (err, { file: f, hid: sentHid }) => {
+    onError: (err, { file: f, hid: sentHid, controller }) => {
+      if (controller.signal.aborted) return;
       const failure = toParsePhotoFailure(err);
       const reference = (requestId: string | null): string | undefined =>
         requestId ? t('errors:reference', { requestId }) : undefined;
@@ -317,7 +339,15 @@ export function NewBillModal({
             </Button>
             <Button
               type="button"
-              onClick={() => file && hid && mutation.mutate({ file, hid })}
+              onClick={() =>
+                file &&
+                hid &&
+                mutation.mutate({
+                  file,
+                  hid,
+                  controller: new AbortController(),
+                })
+              }
               disabled={!canSend}
             >
               {mutation.isPending && (
