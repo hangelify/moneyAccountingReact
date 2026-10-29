@@ -20,6 +20,7 @@ import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { tokenStorage } from '@/auth/tokenStorage';
+import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 
 interface NewBillModalProps {
   open: boolean;
@@ -32,6 +33,7 @@ export function NewBillModal({
 }: NewBillModalProps): ReactElement {
   const { t } = useTranslation(['bills', 'common', 'errors']);
   const navigate = useNavigate();
+  const hid = useActiveHouseholdId();
   const setDraft = useBillDraftStore((s) => s.setDraft);
 
   const [file, setFile] = useState<File | null>(null);
@@ -55,7 +57,10 @@ export function NewBillModal({
   };
 
   const mutation = useMutation({
-    mutationFn: (f: File) => billsApi.parsePhoto(f),
+    mutationFn: (f: File) => {
+      if (!hid) throw new Error('No active household');
+      return billsApi.parsePhoto(hid, f);
+    },
     onSuccess: (parsed, f) => {
       setDraft(f, parsed);
       resetLocal();
@@ -136,7 +141,7 @@ export function NewBillModal({
     attemptClose();
   };
 
-  const canSend = file !== null && !mutation.isPending;
+  const canSend = file !== null && hid !== null && !mutation.isPending;
 
   return (
     <>

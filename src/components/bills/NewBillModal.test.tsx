@@ -127,13 +127,15 @@ describe('NewBillModal', () => {
   });
 
   it('successful upload writes to store and navigates to /bills/review', async () => {
-    mock.onPost('/bills/parse-photo').reply(200, {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(200, {
+      draft_id: 'd1',
+      request_id: 'r1',
+      duplicate: false,
       market_name: 'Lidl',
       bill_date: '2026-05-07',
       currency: 'EUR',
       total_amount: 10,
       items: [],
-      raw_extracted_text: 'LIDL',
     });
 
     renderModal();
@@ -149,7 +151,7 @@ describe('NewBillModal', () => {
   });
 
   it('surfaces requestId on 502 response', async () => {
-    mock.onPost('/bills/parse-photo').reply(502, {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(502, {
       message: 'AI providers failed',
       requestId: 'req-123',
     });
@@ -171,7 +173,9 @@ describe('NewBillModal', () => {
       { access_token: 'at', expires_in: 900, token_type: 'Bearer' },
       { broadcast: false }
     );
-    mock.onPost('/bills/parse-photo').reply(401, { message: 'Unauthorized' });
+    mock
+      .onPost('/households/hh-1/bills/parse-photo')
+      .reply(401, { message: 'Unauthorized' });
     mock.onPost('/auth/refresh').reply(401, { message: 'Unauthorized' });
 
     const { onOpenChange } = renderModal();
@@ -192,7 +196,9 @@ describe('NewBillModal', () => {
       { access_token: 'at', expires_in: 900, token_type: 'Bearer' },
       { broadcast: false }
     );
-    mock.onPost('/bills/parse-photo').reply(401, { message: 'Unauthorized' });
+    mock
+      .onPost('/households/hh-1/bills/parse-photo')
+      .reply(401, { message: 'Unauthorized' });
     mock.onPost('/auth/refresh').reply(503, { message: 'Unavailable' });
 
     const { onOpenChange } = renderModal();

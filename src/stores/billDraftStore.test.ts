@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useBillDraftStore } from './billDraftStore';
-import type { ParsedBillResponse } from '@/types/bills';
+import type { ParsedBill } from '@/types/bills';
 
 function makeFile(name = 'r.jpg'): File {
   return new File(['x'], name, { type: 'image/jpeg' });
 }
 
-function makeParsed(
-  overrides: Partial<ParsedBillResponse> = {}
-): ParsedBillResponse {
+function makeParsed(overrides: Partial<ParsedBill> = {}): ParsedBill {
   return {
+    draft_id: 'd1',
     market_name: 'Lidl',
     bill_date: '2026-05-07',
     currency: 'EUR',
@@ -26,7 +25,6 @@ function makeParsed(
         category_confidence: 0.9,
       },
     ],
-    raw_extracted_text: 'LIDL',
     ...overrides,
   };
 }

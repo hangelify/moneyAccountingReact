@@ -20,12 +20,13 @@ describe('billsApi.parsePhoto', () => {
     return new File(['hello'], 'receipt.jpg', { type: 'image/jpeg' });
   }
 
-  it('POSTs multipart/form-data with an "image" field to /bills/parse-photo', async () => {
-    mock.onPost('/bills/parse-photo').reply((config) => {
+  it('POSTs only an "image" field to /households/hh-1/bills/parse-photo', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply((config) => {
       const body = config.data as FormData;
       expect(body).toBeInstanceOf(FormData);
-      expect(body.get('image')).toBeInstanceOf(File);
+      expect([...body.keys()]).toEqual(['image']);
       expect((body.get('image') as File).name).toBe('receipt.jpg');
+      expect(config.timeout).toBe(120000);
       // axios should let the browser set the Content-Type with a boundary.
       // We assert we did NOT override it to plain 'application/json'.
       const contentType = (config.headers?.['Content-Type'] ??
@@ -34,47 +35,122 @@ describe('billsApi.parsePhoto', () => {
       return [
         200,
         {
+          draft_id: 'd1',
+          request_id: 'r1',
+          duplicate: false,
           market_name: 'Lidl',
           bill_date: '2026-05-07',
           currency: 'EUR',
           total_amount: 23.45,
           items: [],
-          raw_extracted_text: 'LIDL',
         },
       ];
     });
 
-    const result = await billsApi.parsePhoto(makeFile());
+    const result = await billsApi.parsePhoto('hh-1', makeFile());
 
+    expect(result.draft_id).toBe('d1');
     expect(result.market_name).toBe('Lidl');
     expect(result.items).toEqual([]);
   });
 
+  it('passes the abort signal', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(200, {});
+    const controller = new AbortController();
+    controller.abort();
+
+    const promise = billsApi.parsePhoto('hh-1', makeFile(), {
+      signal: controller.signal,
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(ApiError);
+    await expect(promise).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+  });
+
   it('maps 400 responses to ApiError with the server message', async () => {
-    mock.onPost('/bills/parse-photo').reply(400, {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(400, {
       message: 'File too large',
       statusCode: 400,
     });
 
-    await expect(billsApi.parsePhoto(makeFile())).rejects.toMatchObject({
-      status: 400,
-      message: 'File too large',
-    });
-    await expect(billsApi.parsePhoto(makeFile())).rejects.toBeInstanceOf(
-      ApiError
+    await expect(billsApi.parsePhoto('hh-1', makeFile())).rejects.toMatchObject(
+      {
+        status: 400,
+        message: 'File too large',
+      }
     );
+    await expect(
+      billsApi.parsePhoto('hh-1', makeFile())
+    ).rejects.toBeInstanceOf(ApiError);
   });
 
   it('maps 502 responses to ApiError and exposes the requestId in body', async () => {
-    mock.onPost('/bills/parse-photo').reply(502, {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(502, {
       message: 'AI providers failed',
       requestId: 'req-abc-123',
     });
 
-    await expect(billsApi.parsePhoto(makeFile())).rejects.toMatchObject({
-      status: 502,
-      body: { requestId: 'req-abc-123' },
+    await expect(billsApi.parsePhoto('hh-1', makeFile())).rejects.toMatchObject(
+      {
+        status: 502,
+        body: { requestId: 'req-abc-123' },
+      }
+    );
+  });
+});
+
+describe('billsApi.confirm / create / remove', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const detail = {
+    id: 'b1',
+    bill_date: '2026-05-19T00:00:00Z',
+    total_amount: 10,
+    currency: 'EUR',
+    description: null,
+    market: null,
+    created_at: '2026-05-19T10:00:00Z',
+    items: [],
+  };
+
+  it('confirm POSTs the body to /households/hh-1/bills/d1/confirm', async () => {
+    const body = {
+      bill_date: '2026-05-19',
+      total_amount: 10,
+      items: [{ product_count: 1, amount: 10 }],
+    };
+    mock.onPost('/households/hh-1/bills/d1/confirm').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [201, detail];
     });
+    const r = await billsApi.confirm('hh-1', 'd1', body);
+    expect(r.id).toBe('b1');
+  });
+
+  it('create POSTs to /households/hh-1/bills', async () => {
+    const body = {
+      bill_date: '2026-05-19',
+      total_amount: 10,
+      items: [{ sub_category_id: 's1', product_count: 1, amount: 10 }],
+    };
+    mock.onPost('/households/hh-1/bills').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [201, detail];
+    });
+    const r = await billsApi.create('hh-1', body);
+    expect(r.id).toBe('b1');
+  });
+
+  it('remove DELETEs /households/hh-1/bills/d1', async () => {
+    mock.onDelete('/households/hh-1/bills/d1').reply(204);
+    await expect(billsApi.remove('hh-1', 'd1')).resolves.toBeUndefined();
+    expect(mock.history.delete).toHaveLength(1);
   });
 });
 

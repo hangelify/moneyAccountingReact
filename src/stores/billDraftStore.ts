@@ -3,15 +3,15 @@ import type {
   BillEdits,
   BillEditItem,
   ParsedBillItem,
-  ParsedBillResponse,
+  ParsedBill,
 } from '@/types/bills';
 
 interface BillDraftState {
   file: File | null;
   previewUrl: string | null;
-  parsed: ParsedBillResponse | null;
+  parsed: ParsedBill | null;
   edits: BillEdits;
-  setDraft: (file: File, parsed: ParsedBillResponse) => void;
+  setDraft: (file: File, parsed: ParsedBill) => void;
   updateEdits: (patch: Partial<BillEdits>) => void;
   updateItem: (index: number, patch: Partial<BillEditItem>) => void;
   addItem: () => number;
@@ -43,7 +43,7 @@ function toEditItem(item: ParsedBillItem): BillEditItem {
   };
 }
 
-function toEdits(parsed: ParsedBillResponse): BillEdits {
+function toEdits(parsed: ParsedBill): BillEdits {
   return {
     market_name: parsed.market_name ?? '',
     bill_date: parsed.bill_date ?? '',
