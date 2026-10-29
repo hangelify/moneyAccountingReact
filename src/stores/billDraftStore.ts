@@ -9,9 +9,17 @@ import type {
 interface BillDraftState {
   file: File | null;
   previewUrl: string | null;
+  hid: string | null;
+  draftId: string | null; // null in 'create' mode
+  mode: 'confirm' | 'create' | null;
   parsed: ParsedBill | null;
   edits: BillEdits;
-  setDraft: (file: File, parsed: ParsedBill) => void;
+  setDraft: (args: {
+    file: File;
+    parsed: ParsedBill;
+    hid: string;
+    mode: 'confirm' | 'create';
+  }) => void;
   updateEdits: (patch: Partial<BillEdits>) => void;
   updateItem: (index: number, patch: Partial<BillEditItem>) => void;
   addItem: () => number;
@@ -29,6 +37,7 @@ const EMPTY_EDITS: BillEdits = {
 
 function toEditItem(item: ParsedBillItem): BillEditItem {
   return {
+    ...(item.id !== undefined ? { id: item.id } : {}),
     name: item.name,
     quantity: item.quantity ?? 0,
     unit: item.unit ?? '',
@@ -56,14 +65,25 @@ function toEdits(parsed: ParsedBill): BillEdits {
 export const useBillDraftStore = create<BillDraftState>((set, get) => ({
   file: null,
   previewUrl: null,
+  hid: null,
+  draftId: null,
+  mode: null,
   parsed: null,
   edits: EMPTY_EDITS,
 
-  setDraft: (file, parsed) => {
+  setDraft: ({ file, parsed, hid, mode }) => {
     const existing = get().previewUrl;
     if (existing) URL.revokeObjectURL(existing);
     const previewUrl = URL.createObjectURL(file);
-    set({ file, previewUrl, parsed, edits: toEdits(parsed) });
+    set({
+      file,
+      previewUrl,
+      hid,
+      draftId: mode === 'confirm' ? parsed.draft_id : null,
+      mode,
+      parsed,
+      edits: toEdits(parsed),
+    });
   },
 
   updateEdits: (patch) => {
@@ -111,6 +131,9 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
     set({
       file: null,
       previewUrl: null,
+      hid: null,
+      draftId: null,
+      mode: null,
       parsed: null,
       edits: EMPTY_EDITS,
     });

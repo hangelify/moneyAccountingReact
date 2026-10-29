@@ -57,12 +57,12 @@ export function NewBillModal({
   };
 
   const mutation = useMutation({
-    mutationFn: (f: File) => {
+    mutationFn: async (f: File) => {
       if (!hid) throw new Error('No active household');
-      return billsApi.parsePhoto(hid, f);
+      return { parsed: await billsApi.parsePhoto(hid, f), hid };
     },
-    onSuccess: (parsed, f) => {
-      setDraft(f, parsed);
+    onSuccess: ({ parsed, hid: sentHid }, f) => {
+      setDraft({ file: f, parsed, hid: sentHid, mode: 'confirm' });
       resetLocal();
       onOpenChange(false);
       void navigate('/bills/review');

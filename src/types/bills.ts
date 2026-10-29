@@ -84,6 +84,7 @@ export interface CreateBillRequest {
 }
 
 export interface BillEditItem {
+  id?: string;
   name: string;
   quantity: number;
   unit: BillUnit | '';

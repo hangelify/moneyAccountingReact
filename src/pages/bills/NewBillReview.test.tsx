@@ -23,13 +23,18 @@ function LocationProbe(): null {
 function seedDraft(): void {
   const file = new File(['x'], 'r.jpg', { type: 'image/jpeg' });
   Object.defineProperty(file, 'size', { value: 1024 });
-  useBillDraftStore.getState().setDraft(file, {
-    draft_id: 'd1',
-    market_name: 'Lidl',
-    bill_date: '2026-05-07',
-    currency: 'EUR',
-    total_amount: 10,
-    items: [],
+  useBillDraftStore.getState().setDraft({
+    file,
+    parsed: {
+      draft_id: 'd1',
+      market_name: 'Lidl',
+      bill_date: '2026-05-07',
+      currency: 'EUR',
+      total_amount: 10,
+      items: [],
+    },
+    hid: 'h1',
+    mode: 'confirm',
   });
 }
 
