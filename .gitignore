@@ -50,3 +50,6 @@ coverage
 CLAUDE.md
 
 /docs
+
+# Git worktrees
+.worktrees

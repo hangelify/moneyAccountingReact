@@ -31,12 +31,88 @@
         "name": "Name",
         "quantity": "Qty",
         "unit": "Unit",
+        "weightKg": "Weight (kg)",
+        "pricePerKg": "Price / kg",
         "finalPrice": "Price",
         "category": "Category"
       },
-      "lowConfidence": "Low category confidence"
+      "lowConfidence": "Low category confidence",
+      "categoryReasoningHeading": "Why this category?",
+      "subCategoryPlaceholder": "—",
+      "subCategoryLoading": "Loading categories…",
+      "subCategoryError": "Couldn't load categories",
+      "subCategoryRetry": "Retry",
+      "deleteAria": "Delete item",
+      "deleteTitle": "Delete this item?",
+      "deleteDescription": "This will remove \"{{name}}\" from the bill.",
+      "deleteUnnamed": "this item",
+      "addRow": "Add item",
+      "totalsMismatch": {
+        "heading": "Items don't match the bill total",
+        "itemsSum": "Items sum: {{value}} {{currency}}",
+        "headerTotal": "Header total: {{value}} {{currency}}",
+        "difference": "Difference: {{value}} {{currency}}"
+      }
     },
     "discardTitle": "Discard this bill?",
     "discardDescription": "Your edits will be lost."
+  },
+  "confirmed": {
+    "title": "Confirmed bills",
+    "empty": {
+      "noBills": "Once you confirm a bill, it will appear here.",
+      "noMatches": "No bills match these filters.",
+      "clear": "Clear filters",
+      "newBill": "New bill"
+    },
+    "filters": {
+      "heading": "Filters",
+      "open": "Filters",
+      "apply": "Apply",
+      "clear": "Clear",
+      "retry": "Retry",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "dateInvalid": "End date is before start date.",
+      "amountMin": "Min amount",
+      "amountMax": "Max amount",
+      "amountInvalid": "Minimum cannot be greater than maximum.",
+      "currency": "Currency",
+      "currencyAll": "All currencies",
+      "markets": "Markets",
+      "marketsAll": "All markets",
+      "marketsCount": "{{count}} markets",
+      "marketsLoading": "Loading markets…",
+      "marketsError": "Couldn't load markets",
+      "marketsEmpty": "Add a market on your next bill."
+    },
+    "table": {
+      "date": "Date",
+      "total": "Total",
+      "currency": "Currency",
+      "market": "Market",
+      "description": "Description",
+      "created": "Created",
+      "noMarket": "—",
+      "loadError": "Couldn't load bills.",
+      "rowAction": "View bill"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "detail": {
+      "title": "Bill details",
+      "items": "Items",
+      "noItems": "This bill has no line items.",
+      "loading": "Loading bill…",
+      "loadError": "Couldn't load this bill.",
+      "notFound": "Bill not found.",
+      "back": "Back to list",
+      "amount": "{{value}} {{currency}}",
+      "weight": "{{value}} kg",
+      "uncategorized": "Uncategorized"
+    }
   }
 }

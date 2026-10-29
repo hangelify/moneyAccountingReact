@@ -3,7 +3,8 @@
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
-    "newBill": "New Bill"
+    "newBill": "New Bill",
+    "confirmedBills": "Confirmed bills"
   },
   "menu": {
     "openMenu": "Open menu",

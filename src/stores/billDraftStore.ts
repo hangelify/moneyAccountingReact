@@ -14,6 +14,8 @@ interface BillDraftState {
   setDraft: (file: File, parsed: ParsedBillResponse) => void;
   updateEdits: (patch: Partial<BillEdits>) => void;
   updateItem: (index: number, patch: Partial<BillEditItem>) => void;
+  addItem: () => number;
+  removeItem: (index: number) => void;
   clear: () => void;
 }
 
@@ -72,6 +74,33 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
     set((s) => {
       const items = s.edits.items.slice();
       if (items[index]) items[index] = { ...items[index], ...patch };
+      return { edits: { ...s.edits, items } };
+    });
+  },
+
+  addItem: () => {
+    const newItem: BillEditItem = {
+      name: '',
+      quantity: 1,
+      unit: 'piece',
+      weight_kg: null,
+      price_per_kg: null,
+      final_price: 0,
+      sub_category: null,
+      category_confidence: 1,
+    };
+    const newIndex = get().edits.items.length;
+    set((s) => ({
+      edits: { ...s.edits, items: [...s.edits.items, newItem] },
+    }));
+    return newIndex;
+  },
+
+  removeItem: (index) => {
+    set((s) => {
+      if (index < 0 || index >= s.edits.items.length) return {};
+      const items = s.edits.items.slice();
+      items.splice(index, 1);
       return { edits: { ...s.edits, items } };
     });
   },

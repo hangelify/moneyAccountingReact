@@ -1,3 +1,5 @@
+import type { Currency } from '@/const/currency';
+
 export type BillUnit = 'kg' | 'g' | 'l' | 'ml' | 'piece';
 
 export interface SubCategoryRef {
@@ -36,7 +38,7 @@ export interface BillEditItem {
   final_price: number;
   sub_category: SubCategoryRef | null;
   category_confidence: number;
-  category_reasoning?: string;
+  category_reasoning?: string | undefined;
 }
 
 export interface BillEdits {
@@ -45,4 +47,31 @@ export interface BillEdits {
   currency: string;
   total_amount: number;
   items: BillEditItem[];
+}
+
+export interface MarketRef {
+  id: string;
+  name: string;
+  city: string | null;
+}
+
+export interface BillResponseDto {
+  id: string;
+  bill_date: string;
+  total_amount: number;
+  currency: Currency | null;
+  description: string | null;
+  market: MarketRef | null;
+  created_at: string;
+}
+
+export interface BillDetailItem {
+  sub_category: SubCategoryRef | null;
+  product_count: number;
+  amount: number;
+  product_weight: number | null;
+}
+
+export interface BillDetailResponseDto extends BillResponseDto {
+  items: BillDetailItem[];
 }

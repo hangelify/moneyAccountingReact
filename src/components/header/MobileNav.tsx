@@ -58,6 +58,9 @@ export function MobileNav({ onOpenNewBill }: MobileNavProps): ReactElement {
           <NavLink to="/dashboard" className={linkClass} onClick={close}>
             {t('nav.dashboard')}
           </NavLink>
+          <NavLink to="/bills/confirmed" className={linkClass} onClick={close}>
+            {t('nav.confirmedBills')}
+          </NavLink>
           <button
             type="button"
             onClick={handleNewBill}

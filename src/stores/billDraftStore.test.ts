@@ -117,6 +117,45 @@ describe('billDraftStore', () => {
     expect(useBillDraftStore.getState().edits.items[0]!.name).toBe('Sourdough');
   });
 
+  it('addItem appends a default item and returns its index', () => {
+    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+
+    const i = useBillDraftStore.getState().addItem();
+
+    const items = useBillDraftStore.getState().edits.items;
+    expect(i).toBe(items.length - 1);
+    expect(items[i]).toMatchObject({
+      name: '',
+      quantity: 1,
+      unit: 'piece',
+      weight_kg: null,
+      price_per_kg: null,
+      final_price: 0,
+      sub_category: null,
+      category_confidence: 1,
+    });
+  });
+
+  it('removeItem splices the item at index', () => {
+    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().addItem();
+    expect(useBillDraftStore.getState().edits.items).toHaveLength(2);
+
+    useBillDraftStore.getState().removeItem(0);
+
+    const items = useBillDraftStore.getState().edits.items;
+    expect(items).toHaveLength(1);
+    expect(items[0]!.name).toBe(''); // the appended one
+  });
+
+  it('removeItem is a no-op for out-of-bounds indices', () => {
+    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+
+    useBillDraftStore.getState().removeItem(99);
+
+    expect(useBillDraftStore.getState().edits.items).toHaveLength(1);
+  });
+
   it('clear revokes preview URL and nulls slots', () => {
     useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
 

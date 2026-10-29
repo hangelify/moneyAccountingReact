@@ -1,26 +1,41 @@
-import type { ReactElement } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { useState, type ReactElement } from 'react';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import type { BillEditItem } from '@/types/bills';
+import { BillItemRow } from './BillItemRow';
+import { BillItemCard } from './BillItemCard';
 
 interface BillItemsTableProps {
   items: BillEditItem[];
   onUpdateItem: (index: number, patch: Partial<BillEditItem>) => void;
+  onRemoveItem: (index: number) => void;
+  onAddItem: () => number;
 }
-
-const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
 
 export function BillItemsTable({
   items,
   onUpdateItem,
+  onRemoveItem,
+  onAddItem,
 }: BillItemsTableProps): ReactElement {
   const { t } = useTranslation('bills');
   const cols = t('review.items.columns', { returnObjects: true }) as Record<
     string,
     string
   >;
+  const [pendingDelete, setPendingDelete] = useState<{
+    index: number;
+    name: string;
+  } | null>(null);
+
+  const requestDelete = (index: number, item: BillEditItem): void => {
+    setPendingDelete({
+      index,
+      name: item.name || t('review.items.deleteUnnamed'),
+    });
+  };
 
   return (
     <section className="space-y-3">
@@ -34,72 +49,22 @@ export function BillItemsTable({
               <th className="px-3 py-2">{cols.name}</th>
               <th className="px-3 py-2">{cols.quantity}</th>
               <th className="px-3 py-2">{cols.unit}</th>
+              <th className="px-3 py-2">{cols.weightKg}</th>
+              <th className="px-3 py-2">{cols.pricePerKg}</th>
               <th className="px-3 py-2">{cols.finalPrice}</th>
               <th className="px-3 py-2">{cols.category}</th>
+              <th className="px-3 py-2 w-12" />
             </tr>
           </thead>
           <tbody>
             {items.map((item, i) => (
-              <tr key={i} className="border-t">
-                <td className="px-3 py-2">
-                  <Input
-                    value={item.name}
-                    onChange={(e) => onUpdateItem(i, { name: e.target.value })}
-                  />
-                </td>
-                <td className="px-3 py-2 w-28">
-                  <Input
-                    type="number"
-                    step="0.001"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      onUpdateItem(i, { quantity: Number(e.target.value) })
-                    }
-                  />
-                </td>
-                <td className="px-3 py-2 w-28">
-                  <select
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
-                    value={item.unit}
-                    onChange={(e) =>
-                      onUpdateItem(i, {
-                        unit: e.target.value as BillEditItem['unit'],
-                      })
-                    }
-                  >
-                    {UNITS.map((u) => (
-                      <option key={u} value={u}>
-                        {u || '—'}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2 w-32">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={item.final_price}
-                    onChange={(e) =>
-                      onUpdateItem(i, { final_price: Number(e.target.value) })
-                    }
-                  />
-                </td>
-                <td className="px-3 py-2 text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    {item.category_confidence < 0.5 && (
-                      <AlertTriangle
-                        className="h-4 w-4 text-yellow-600"
-                        aria-label={t('review.items.lowConfidence')}
-                      />
-                    )}
-                    <span>
-                      {item.sub_category
-                        ? `${item.sub_category.category_name} / ${item.sub_category.name}`
-                        : '—'}
-                    </span>
-                  </div>
-                </td>
-              </tr>
+              <BillItemRow
+                key={i}
+                item={item}
+                index={i}
+                onChange={(patch) => onUpdateItem(i, patch)}
+                onDelete={() => requestDelete(i, item)}
+              />
             ))}
           </tbody>
         </table>
@@ -108,77 +73,61 @@ export function BillItemsTable({
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
         {items.map((item, i) => (
-          <div key={i} className="rounded-md border p-3 space-y-2">
-            <div className="space-y-1">
-              <Label htmlFor={`item-${i}-name`}>{cols.name}</Label>
-              <Input
-                id={`item-${i}-name`}
-                value={item.name}
-                onChange={(e) => onUpdateItem(i, { name: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor={`item-${i}-qty`}>{cols.quantity}</Label>
-                <Input
-                  id={`item-${i}-qty`}
-                  type="number"
-                  step="0.001"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    onUpdateItem(i, { quantity: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor={`item-${i}-unit`}>{cols.unit}</Label>
-                <select
-                  id={`item-${i}-unit`}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
-                  value={item.unit}
-                  onChange={(e) =>
-                    onUpdateItem(i, {
-                      unit: e.target.value as BillEditItem['unit'],
-                    })
-                  }
-                >
-                  {UNITS.map((u) => (
-                    <option key={u} value={u}>
-                      {u || '—'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor={`item-${i}-price`}>{cols.finalPrice}</Label>
-              <Input
-                id={`item-${i}-price`}
-                type="number"
-                step="0.01"
-                value={item.final_price}
-                onChange={(e) =>
-                  onUpdateItem(i, { final_price: Number(e.target.value) })
-                }
-              />
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              {item.category_confidence < 0.5 && (
-                <AlertTriangle
-                  className="h-4 w-4 text-yellow-600"
-                  aria-label={t('review.items.lowConfidence')}
-                />
-              )}
-              <span>
-                {cols.category}:{' '}
-                {item.sub_category
-                  ? `${item.sub_category.category_name} / ${item.sub_category.name}`
-                  : '—'}
-              </span>
-            </div>
-          </div>
+          <BillItemCard
+            key={i}
+            item={item}
+            index={i}
+            onChange={(patch) => onUpdateItem(i, patch)}
+            onDelete={() => requestDelete(i, item)}
+          />
         ))}
       </div>
+
+      {pendingDelete && (
+        <ConfirmDialog
+          open
+          onOpenChange={(o) => !o && setPendingDelete(null)}
+          title={t('review.items.deleteTitle')}
+          description={t('review.items.deleteDescription', {
+            name: pendingDelete.name,
+          })}
+          variant="destructive"
+          onConfirm={() => {
+            onRemoveItem(pendingDelete.index);
+            setPendingDelete(null);
+          }}
+        />
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        className="self-start"
+        onClick={() => {
+          const newIndex = onAddItem();
+          // The desktop row and the mobile card both render the new input
+          // with the same `data-row-name`, but only one is visible per
+          // viewport — focusing a `display:none` element is a no-op. Pick
+          // the rendered one via offsetParent.
+          queueMicrotask(() => {
+            const els = document.querySelectorAll<HTMLInputElement>(
+              `[data-row-name="${newIndex}"]`
+            );
+            for (const el of els) {
+              if (el.offsetParent !== null) {
+                el.focus();
+                return;
+              }
+            }
+            // Fallback for environments (e.g. jsdom) that don't compute
+            // layout — focus the first one so tests still observe focus.
+            els[0]?.focus();
+          });
+        }}
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        {t('review.items.addRow')}
+      </Button>
     </section>
   );
 }
