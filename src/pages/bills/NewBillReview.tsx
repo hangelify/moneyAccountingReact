@@ -176,7 +176,7 @@ export function NewBillReview(): ReactElement | null {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="container mx-auto px-4 py-6">
+      <div className="w-full px-4 py-6">
         <header className="mb-6">
           <h1 className="text-2xl font-bold">{t('bills:review.title')}</h1>
           <p className="text-muted-foreground">
@@ -184,17 +184,7 @@ export function NewBillReview(): ReactElement | null {
           </p>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="md:sticky md:top-20 md:self-start">
-            <a href={previewUrl} target="_blank" rel="noreferrer">
-              <img
-                src={previewUrl}
-                alt="Uploaded bill"
-                className="max-h-80 w-full rounded-md border object-contain md:max-h-[70vh]"
-              />
-            </a>
-          </div>
-
+        <div className="space-y-6">
           <div className="space-y-6">
             <BillReviewFields
               edits={edits}
@@ -260,6 +250,19 @@ export function NewBillReview(): ReactElement | null {
               </Button>
             </div>
           </div>
+
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="block"
+          >
+            <img
+              src={previewUrl}
+              alt="Uploaded bill"
+              className="mx-auto max-h-[80vh] w-full rounded-md border object-contain"
+            />
+          </a>
         </div>
 
         <ConfirmDialog
