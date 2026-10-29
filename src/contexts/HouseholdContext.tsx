@@ -27,7 +27,8 @@ export interface HouseholdContextValue {
   households: Household[];
   activeHousehold: Household | null;
   setActiveHouseholdId: (id: string) => void;
-  handleForbidden: () => Promise<void>;
+  /** Pass the 403 error when known so the central cache hook skips it. */
+  handleForbidden: (err?: unknown) => Promise<void>;
   refetch: () => Promise<void>;
 }
 
@@ -103,20 +104,25 @@ export function HouseholdProvider({
 
   // Parallel 403s share one refetch and one toast.
   const inFlight = useRef<Promise<void> | null>(null);
-  const handleForbidden = useCallback((): Promise<void> => {
-    inFlight.current ??= (async () => {
-      try {
-        await refetchList();
-        toast({
-          variant: 'destructive',
-          title: i18n.t('households:accessLost'),
-        });
-      } finally {
-        inFlight.current = null;
-      }
-    })();
-    return inFlight.current;
-  }, [refetchList]);
+  const handled = useRef(new WeakSet<object>());
+  const handleForbidden = useCallback(
+    (err?: unknown): Promise<void> => {
+      if (typeof err === 'object' && err !== null) handled.current.add(err);
+      inFlight.current ??= (async () => {
+        try {
+          await refetchList();
+          toast({
+            variant: 'destructive',
+            title: i18n.t('households:accessLost'),
+          });
+        } finally {
+          inFlight.current = null;
+        }
+      })();
+      return inFlight.current;
+    },
+    [refetchList]
+  );
 
   // Central 403 hook for every household query and mutation. The list query
   // itself is skipped: GET /households is not a household-scoped path.
@@ -124,7 +130,9 @@ export function HouseholdProvider({
   handleForbiddenRef.current = handleForbidden;
   useEffect(() => {
     const check = (error: unknown): void => {
-      if (isHouseholdForbidden(error)) void handleForbiddenRef.current();
+      if (!isHouseholdForbidden(error)) return;
+      if (handled.current.has(error as object)) return;
+      void handleForbiddenRef.current(error);
     };
     const unsubQueries = queryClient.getQueryCache().subscribe((event) => {
       if (event.type !== 'updated' || event.action.type !== 'error') return;

@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
+import type * as UseToastModule from '@/hooks/use-toast';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import {
   QueryClient,
   QueryClientProvider,
+  useMutation,
   useQuery,
 } from '@tanstack/react-query';
 import { HouseholdProvider, useHouseholds } from './HouseholdContext';
 import { householdsApi } from '@/pages/households/api';
 import { ApiError } from '@/auth/apiError';
+import { toast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { TEST_HOUSEHOLDS } from '@/test/household';
 import '@/i18n';
@@ -22,7 +25,28 @@ vi.mock('@/pages/households/api', () => ({
   householdsApi: { list: vi.fn() },
 }));
 
+vi.mock('@/hooks/use-toast', async (importOriginal) => {
+  const actual = await importOriginal<typeof UseToastModule>();
+  return { ...actual, toast: vi.fn(actual.toast) };
+});
+
 const list = vi.mocked(householdsApi.list);
+const toastSpy = vi.mocked(toast);
+const forbidden = (): ApiError =>
+  new ApiError(403, null, {}, 'Forbidden', { url: '/households/hh-1/x' });
+
+function Mutator({ explicit }: { explicit: boolean }): null {
+  const { handleForbidden } = useHouseholds();
+  const m = useMutation({
+    mutationFn: () => Promise.reject(forbidden()),
+    ...(explicit && { onError: (e: unknown) => handleForbidden(e) }),
+  });
+  useEffect(() => {
+    m.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
 
 const ctx: { current: ReturnType<typeof useHouseholds> | null } = {
   current: null,
@@ -77,6 +101,7 @@ describe('HouseholdProvider', () => {
     localStorage.clear();
     list.mockReset();
     list.mockResolvedValue(TEST_HOUSEHOLDS);
+    toastSpy.mockClear();
   });
 
   it('does not fetch while signed out', () => {
@@ -152,5 +177,29 @@ describe('HouseholdProvider', () => {
     expect(
       screen.getAllByText('You no longer have access to this household.')
     ).toHaveLength(1);
+  });
+
+  it('ignores a 403 on the households list query itself', async () => {
+    list.mockRejectedValue(
+      new ApiError(403, null, {}, 'Forbidden', { url: '/households' })
+    );
+    render(tree(makeClient()));
+    await waitFor(() => expect(status()).toBe('error'));
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(toastSpy).not.toHaveBeenCalled();
+  });
+
+  it('handles a household 403 from a mutation once', async () => {
+    render(tree(makeClient(), <Mutator explicit={false} />));
+    await waitFor(() => expect(toastSpy).toHaveBeenCalledTimes(1));
+    expect(list).toHaveBeenCalledTimes(2);
+  });
+
+  it('dedupes an explicit onError call and the central hook', async () => {
+    render(tree(makeClient(), <Mutator explicit />));
+    await waitFor(() => expect(toastSpy).toHaveBeenCalledTimes(1));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(toastSpy).toHaveBeenCalledTimes(1);
+    expect(list).toHaveBeenCalledTimes(2);
   });
 });
