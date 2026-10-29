@@ -67,7 +67,7 @@ describe('MarketMultiSelect', () => {
         <MarketMultiSelect value={[]} onChange={vi.fn()} aria-label="Markets" />
       )
     );
-    expect(screen.getByText(/marketsAll/i)).toBeInTheDocument();
+    expect(screen.getByText('All markets')).toBeInTheDocument();
   });
 
   it('summarizes 1-2 selected names, shows count for 3+', () => {
@@ -91,7 +91,7 @@ describe('MarketMultiSelect', () => {
         />
       )
     );
-    expect(screen.getByText(/marketsCount/i)).toBeInTheDocument();
+    expect(screen.getByText('4 markets')).toBeInTheDocument();
   });
 
   it('renders a retry button on error', async () => {
