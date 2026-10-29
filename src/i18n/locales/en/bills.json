@@ -26,6 +26,7 @@
     "description": "Verify the extracted details and edit any fields before saving.",
     "noDraftRedirect": "No bill in progress",
     "otherHousehold": "This draft belongs to {{name}}. Switch to that household to save it.",
+    "otherHouseholdUnknown": "This draft belongs to a household you can no longer access.",
     "saved": "Bill saved",
     "categoriseAll": "Pick a category for every line before saving.",
     "marketNotSaved": "The shop name can't be saved for this bill.",

@@ -58,6 +58,10 @@ export function NewBillReview(): ReactElement | null {
       void queryClient.invalidateQueries({
         queryKey: ['households', savedHid, 'bills'],
       });
+      // A save can create a market.
+      void queryClient.invalidateQueries({
+        queryKey: ['households', savedHid, 'markets'],
+      });
       toast({ title: t('bills:review.saved') });
       void navigate('/bills/confirmed');
     },
@@ -154,8 +158,7 @@ export function NewBillReview(): ReactElement | null {
   };
 
   const otherHousehold = hid !== activeHousehold?.id;
-  const otherHouseholdName =
-    households.find((h) => h.id === hid)?.name ?? hid ?? '';
+  const otherHouseholdName = households.find((h) => h.id === hid)?.name;
   const createMode = mode === 'create';
   const uncategorised =
     createMode && edits.items.some((item) => item.sub_category === null);
@@ -210,9 +213,11 @@ export function NewBillReview(): ReactElement | null {
             />
             {otherHousehold && (
               <p role="alert" className="text-sm text-destructive">
-                {t('bills:review.otherHousehold', {
-                  name: otherHouseholdName,
-                })}
+                {otherHouseholdName === undefined
+                  ? t('bills:review.otherHouseholdUnknown')
+                  : t('bills:review.otherHousehold', {
+                      name: otherHouseholdName,
+                    })}
               </p>
             )}
             {uncategorised && (
@@ -222,8 +227,9 @@ export function NewBillReview(): ReactElement | null {
             )}
             {saveErrors.length > 0 && (
               <ul role="alert" className="space-y-1 text-sm text-destructive">
-                {saveErrors.map((m) => (
-                  <li key={m}>{m}</li>
+                {saveErrors.map((m, i) => (
+                  // The server can repeat a message, so the index is the key.
+                  <li key={i}>{m}</li>
                 ))}
               </ul>
             )}

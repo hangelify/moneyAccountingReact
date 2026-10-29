@@ -250,7 +250,7 @@ describe('NewBillReview', () => {
       expect(await screen.findByText('Bill saved')).toBeInTheDocument();
     });
 
-    it('invalidates the household bills cache after save', async () => {
+    it('invalidates the household bills and markets caches after save', async () => {
       const spy = vi.spyOn(client, 'invalidateQueries');
       seedDraft({ items: [item(CAT)] });
       mock.onPost('/households/hh-1/bills/d1/confirm').reply(201, {});
@@ -260,6 +260,9 @@ describe('NewBillReview', () => {
         expect(spy).toHaveBeenCalledWith({
           queryKey: ['households', 'hh-1', 'bills'],
         });
+      });
+      expect(spy).toHaveBeenCalledWith({
+        queryKey: ['households', 'hh-1', 'markets'],
       });
     });
 
@@ -299,6 +302,35 @@ describe('NewBillReview', () => {
         screen.getByText(/This draft belongs to Family Budget\./)
       ).toBeInTheDocument();
       expect(saveButton()).toBeDisabled();
+    });
+
+    it("doesn't show a raw id when the draft's household is unknown", () => {
+      seedDraft({ hid: 'hh-gone', items: [item(CAT)] });
+      renderReview();
+      expect(
+        screen.getByText(
+          'This draft belongs to a household you can no longer access.'
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/hh-gone/)).toBeNull();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('renders repeated validation messages without a key clash', async () => {
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+      seedDraft({ items: [item(CAT)] });
+      mock
+        .onPost('/households/hh-1/bills/d1/confirm')
+        .reply(400, { message: ['bad line', 'bad line'] });
+      renderReview();
+      await userEvent.click(saveButton());
+      await waitFor(() => {
+        expect(screen.getAllByText('bad line')).toHaveLength(2);
+      });
+      expect(consoleError).not.toHaveBeenCalled();
+      consoleError.mockRestore();
     });
 
     it('shows validation messages on 400 and keeps the store', async () => {
