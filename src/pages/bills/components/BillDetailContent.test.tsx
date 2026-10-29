@@ -103,4 +103,70 @@ describe('BillDetailContent', () => {
     render(wrap(<BillDetailContent id="d1" />));
     await waitFor(() => screen.getByText('N-1 Supermarket'));
   });
+
+  const editableBill = {
+    id: 'e1',
+    bill_date: '2026-05-19T00:00:00Z',
+    total_amount: 52.3,
+    currency: 'EUR',
+    description: null,
+    market: { id: 'm1', name: 'Lidl', city: null },
+    created_at: '2026-05-19T10:00:00Z',
+    items: [
+      {
+        sub_category: { id: 's1', name: 'milk', category_name: 'Dairy' },
+        product_count: 2,
+        amount: 14.5,
+        product_weight: 1,
+      },
+    ],
+  };
+
+  it('renders no inputs in view mode', async () => {
+    mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
+    render(wrap(<BillDetailContent id="e1" />));
+    await waitFor(() => screen.getByText('Lidl'));
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+  });
+
+  it('renders market, date, total and item inputs in edit mode', async () => {
+    mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
+    render(wrap(<BillDetailContent id="e1" isEditing />));
+    await waitFor(() => screen.getByLabelText('Market'));
+    expect(screen.getByLabelText('Market')).toHaveValue('Lidl');
+    expect(screen.getByLabelText('Date')).toHaveValue('2026-05-19');
+    expect(screen.getByLabelText('Total')).toHaveValue(52.3);
+    expect(screen.getByLabelText('Item 1 amount')).toHaveValue(14.5);
+    expect(screen.getByLabelText('Item 1 count')).toHaveValue(2);
+    expect(screen.getByLabelText('Item 1 weight (kg)')).toHaveValue(1);
+  });
+
+  it('lets the item sub-category be changed from the fetched list', async () => {
+    mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
+      {
+        id: 's1',
+        name: 'milk',
+        category_id: 'c1',
+        category_name: 'Dairy',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+      {
+        id: 's2',
+        name: 'cheese',
+        category_id: 'c1',
+        category_name: 'Dairy',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ]);
+    render(wrap(<BillDetailContent id="e1" isEditing />));
+    const select = await screen.findByLabelText('Item 1 category');
+    await waitFor(() => expect(select).toBeEnabled());
+    expect(select).toHaveValue('s1');
+    await userEvent.selectOptions(select, 's2');
+    expect(select).toHaveValue('s2');
+  });
 });

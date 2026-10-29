@@ -1,5 +1,5 @@
 // src/pages/bills/BillDetailDrawer.tsx
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -21,6 +21,9 @@ export function BillDetailDrawer(): ReactElement | null {
   const { t } = useTranslation('bills');
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const bill = useBillDetail(id).data;
+  // Keyed by bill id so opening another bill leaves edit mode.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const isEditing = editingId !== null && editingId === id;
 
   if (!id) return null;
 
@@ -41,20 +44,31 @@ export function BillDetailDrawer(): ReactElement | null {
         <SheetHeader>
           <SheetTitle>{t('confirmed.detail.title')}</SheetTitle>
           {bill && (
-            // Actions are wired in a follow-up; disabled until then.
+            // Confirm and Remove are wired in a follow-up; disabled until then.
             <div className="flex gap-2 pr-6">
               {bill.status === 'draft' && (
                 <Button size="sm" disabled>
                   {t('confirmed.detail.confirm')}
                 </Button>
               )}
-              <Button size="sm" variant="destructive" disabled>
-                {t('confirmed.detail.remove')}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingId(isEditing ? null : id)}
+              >
+                {isEditing
+                  ? t('confirmed.detail.cancel')
+                  : t('confirmed.detail.edit')}
               </Button>
             </div>
           )}
         </SheetHeader>
-        <BillDetailContent id={id} />
+        <BillDetailContent id={id} isEditing={isEditing} />
+        {bill && (
+          <Button variant="destructive" className="mt-auto w-full" disabled>
+            {t('confirmed.detail.remove')}
+          </Button>
+        )}
       </SheetContent>
     </Sheet>
   );

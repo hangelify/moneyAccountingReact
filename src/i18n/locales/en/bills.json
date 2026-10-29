@@ -148,7 +148,16 @@
       "weight": "{{value}} kg",
       "uncategorized": "Uncategorized",
       "confirm": "Confirm",
-      "remove": "Remove"
+      "remove": "Remove",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "itemCategory": "Item {{index}} category",
+      "itemAmount": "Item {{index}} amount",
+      "itemCount": "Item {{index}} count",
+      "itemWeight": "Item {{index}} weight (kg)",
+      "amountColumn": "Amount",
+      "countColumn": "Count",
+      "weightColumn": "Weight (kg)"
     }
   }
 }

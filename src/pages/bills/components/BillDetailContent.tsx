@@ -1,15 +1,20 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { ApiError } from '@/auth/apiError';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
+import type { BillDetailResponseDto, SubCategoryRef } from '@/types/bills';
 
 export interface BillDetailContentProps {
   id: string;
+  isEditing?: boolean;
 }
 
 export function BillDetailContent({
   id,
+  isEditing = false,
 }: BillDetailContentProps): ReactElement {
   const { t } = useTranslation('bills');
   const q = useBillDetail(id);
@@ -44,6 +49,8 @@ export function BillDetailContent({
   }
 
   const bill = q.data!;
+  // Mounted only while editing, so leaving edit mode drops the draft.
+  if (isEditing) return <BillDetailEditForm bill={bill} />;
   return (
     <div className="flex flex-col gap-4">
       <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -122,6 +129,173 @@ export function BillDetailContent({
                 </div>
               </li>
             ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+interface BillDetailDraft {
+  market: string;
+  date: string;
+  total: string;
+  items: {
+    subCategory: SubCategoryRef | null;
+    amount: string;
+    count: string;
+    weight: string;
+  }[];
+}
+
+function toDraft(bill: BillDetailResponseDto): BillDetailDraft {
+  return {
+    market: bill.market?.name ?? bill.market_name_raw ?? '',
+    date: bill.bill_date.slice(0, 10),
+    total: String(bill.total_amount),
+    items: bill.items.map((item) => ({
+      subCategory: item.sub_category,
+      amount: String(item.amount),
+      count: String(item.product_count),
+      weight: item.product_weight == null ? '' : String(item.product_weight),
+    })),
+  };
+}
+
+function BillDetailEditForm({
+  bill,
+}: {
+  bill: BillDetailResponseDto;
+}): ReactElement {
+  const { t } = useTranslation('bills');
+  const [draft, setDraft] = useState(() => toDraft(bill));
+
+  const setItem = (
+    index: number,
+    patch: Partial<BillDetailDraft['items'][number]>
+  ): void => {
+    setDraft((d) => ({
+      ...d,
+      items: d.items.map((item, i) =>
+        i === index ? { ...item, ...patch } : item
+      ),
+    }));
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <label className="flex flex-col gap-1">
+          <span className="text-muted-foreground">
+            {t('confirmed.table.date')}
+          </span>
+          <Input
+            type="date"
+            value={draft.date}
+            onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-muted-foreground">
+            {t('confirmed.table.total')}
+          </span>
+          <Input
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            className="font-mono"
+            value={draft.total}
+            onChange={(e) => setDraft({ ...draft, total: e.target.value })}
+          />
+        </label>
+        <label className="col-span-2 flex flex-col gap-1">
+          <span className="text-muted-foreground">
+            {t('confirmed.table.market')}
+          </span>
+          <Input
+            value={draft.market}
+            onChange={(e) => setDraft({ ...draft, market: e.target.value })}
+          />
+        </label>
+        <div className="col-span-2 flex flex-col gap-1">
+          <span className="text-muted-foreground">
+            {t('confirmed.table.description')}
+          </span>
+          <span>{bill.description ?? '—'}</span>
+        </div>
+      </div>
+
+      <section>
+        <h3 className="mb-2 text-sm font-semibold">
+          {t('confirmed.detail.items')}
+        </h3>
+        {bill.items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {t('confirmed.detail.noItems')}
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y rounded-md border">
+            {draft.items.map((item, i) => {
+              // Key by the loaded item so changing the category keeps the row.
+              const sub = bill.items[i]?.sub_category;
+              return (
+                <li
+                  key={`${sub?.id ?? 'none'}-${i}`}
+                  className="flex flex-col gap-2 px-3 py-2 text-sm"
+                >
+                  <SubCategorySelect
+                    aria-label={t('confirmed.detail.itemCategory', {
+                      index: i + 1,
+                    })}
+                    value={item.subCategory}
+                    onChange={(next) => setItem(i, { subCategory: next })}
+                  />
+                  <div
+                    aria-hidden
+                    className="-mb-1 grid grid-cols-3 gap-2 text-xs text-muted-foreground"
+                  >
+                    <span>{t('confirmed.detail.amountColumn')}</span>
+                    <span>{t('confirmed.detail.countColumn')}</span>
+                    <span>{t('confirmed.detail.weightColumn')}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      inputMode="decimal"
+                      className="font-mono"
+                      aria-label={t('confirmed.detail.itemAmount', {
+                        index: i + 1,
+                      })}
+                      value={item.amount}
+                      onChange={(e) => setItem(i, { amount: e.target.value })}
+                    />
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      inputMode="numeric"
+                      aria-label={t('confirmed.detail.itemCount', {
+                        index: i + 1,
+                      })}
+                      value={item.count}
+                      onChange={(e) => setItem(i, { count: e.target.value })}
+                    />
+                    <Input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      inputMode="decimal"
+                      aria-label={t('confirmed.detail.itemWeight', {
+                        index: i + 1,
+                      })}
+                      value={item.weight}
+                      onChange={(e) => setItem(i, { weight: e.target.value })}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
