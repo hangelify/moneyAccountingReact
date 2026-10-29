@@ -95,14 +95,23 @@ export function NewBillReview(): ReactElement | null {
     },
   });
 
+  // StrictMode unmounts and remounts right away in dev; clearing then would
+  // wipe the draft and bounce to /. So the clear waits a microtask, and a
+  // remount cancels it.
+  const clearCancelled = useRef<{ cancelled: boolean } | null>(null);
   useEffect(() => {
+    if (clearCancelled.current) clearCancelled.current.cancelled = true;
     setMounted(true);
     return () => {
       // Runs on every unmount. When we unmounted via the <Navigate>
       // redirect path below, the store is already empty, so clear() is
       // a harmless no-op. On the normal leave path (Cancel, logout,
       // nav away), this revokes the preview URL and resets state.
-      clear();
+      const pending = { cancelled: false };
+      clearCancelled.current = pending;
+      queueMicrotask(() => {
+        if (!pending.cancelled) clear();
+      });
     };
     // clear is stable by reference; intentional empty deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
