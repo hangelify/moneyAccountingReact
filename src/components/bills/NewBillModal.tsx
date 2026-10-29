@@ -19,6 +19,7 @@ import { validateBillImage } from '@/lib/imageValidation';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
+import { tokenStorage } from '@/auth/tokenStorage';
 
 interface NewBillModalProps {
   open: boolean;
@@ -67,8 +68,13 @@ export function NewBillModal({
           setServerError(err.message);
           return;
         }
-        if (err.status === 401) {
-          toast({ variant: 'destructive', title: t('errors:sessionExpired') });
+        // The interceptor has already tried a refresh. If that ended the
+        // session (token cleared), AuthProvider redirects and shows the
+        // session toast. Otherwise (refresh failed with a network/5xx error)
+        // fall through to the upload-failed toast and keep the photo.
+        // tokenStorage is read rather than useAuth(): the sign-out event
+        // fired synchronously, but React has not re-rendered yet here.
+        if (err.status === 401 && !tokenStorage.getAccessToken()) {
           onOpenChange(false);
           return;
         }

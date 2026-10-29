@@ -5,9 +5,10 @@
  */
 
 export const env = {
-  apiUrl:
+  apiUrl: (
     (import.meta.env.VITE_API_URL as string | undefined) ??
-    'http://localhost:3000/api',
+    'http://localhost:3000'
+  ).replace(/\/$/, ''),
   apiTimeout: Number(
     (import.meta.env.VITE_API_TIMEOUT as string | undefined) ?? '30000'
   ),

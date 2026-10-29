@@ -3,8 +3,6 @@ import { AUTH_ENDPOINTS } from '@/const/auth';
 import type {
   LoginRequest,
   RegisterRequest,
-  RefreshTokenRequest,
-  LogoutRequest,
   TokenResponseDto,
   UserProfileDto,
 } from '@/types/auth';
@@ -18,12 +16,17 @@ export const authApi = {
     apiClient
       .post<TokenResponseDto>(AUTH_ENDPOINTS.REGISTER, p)
       .then((r) => r.data),
-  refresh: (p: RefreshTokenRequest): Promise<TokenResponseDto> =>
+  /** Refresh token travels in the HttpOnly cookie; no body. */
+  refresh: (): Promise<TokenResponseDto> =>
     apiClient
-      .post<TokenResponseDto>(AUTH_ENDPOINTS.REFRESH, p)
+      .post<TokenResponseDto>(AUTH_ENDPOINTS.REFRESH)
       .then((r) => r.data),
-  logout: (p?: LogoutRequest): Promise<void> =>
-    apiClient.post<void>(AUTH_ENDPOINTS.LOGOUT, p ?? {}).then(() => undefined),
+  /** Ends the session identified by the access token; no body. */
+  logout: (): Promise<void> =>
+    apiClient.post<void>(AUTH_ENDPOINTS.LOGOUT).then(() => undefined),
+  /** Ends the session identified by the refresh cookie; no body. */
+  revoke: (): Promise<void> =>
+    apiClient.post<void>(AUTH_ENDPOINTS.REVOKE).then(() => undefined),
   me: (): Promise<UserProfileDto> =>
     apiClient.get<UserProfileDto>(AUTH_ENDPOINTS.ME).then((r) => r.data),
 };

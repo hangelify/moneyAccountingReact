@@ -22,6 +22,7 @@ const profile = {
   email: 'a@b.c',
   first_name: 'A',
   currency: 'USD',
+  email_verified: true,
   created_at: '2026-01-01',
   updated_at: '2026-01-01',
 } as const;
@@ -45,24 +46,12 @@ function renderAt(initial: string): void {
 }
 
 describe('RequireAuth', () => {
-  it('renders nothing while user is undefined (bootstrapping)', () => {
+  it('shows loading fallback while user is undefined', () => {
     (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: undefined });
-    const { container } = render(
-      <MemoryRouter initialEntries={['/dashboard']}>
-        <Routes>
-          <Route path="/login" element={<div>login-page</div>} />
-          <Route
-            path="/dashboard"
-            element={
-              <RequireAuth>
-                <div>secret</div>
-              </RequireAuth>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
-    expect(container.textContent).toBe('');
+    renderAt('/dashboard');
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.queryByText('secret')).not.toBeInTheDocument();
+    expect(screen.queryByText('login-page')).not.toBeInTheDocument();
   });
 
   it('redirects to /login when user is null', () => {

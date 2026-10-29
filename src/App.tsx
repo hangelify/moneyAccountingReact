@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { Header } from '@/components/Header';
 import { RequireAuth } from '@/auth/RequireAuth';
+import { LoadingFallback } from '@/components/common/LoadingFallback';
 
 // Lazy load pages
 const Home = lazy(() =>
@@ -32,16 +33,6 @@ const BillDetailDrawer = lazy(() =>
     default: m.BillDetailDrawer,
   }))
 );
-
-function LoadingFallback(): ReactElement {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    </div>
-  );
-}
 
 function App(): ReactElement {
   return (
