@@ -67,8 +67,9 @@ export function HouseholdProvider({
 
   let status: HouseholdContextValue['status'];
   if (!isAuthenticated) status = 'idle';
-  else if (query.isError) status = 'error';
-  else if (query.data === undefined) status = 'loading';
+  // Cached data wins: a failed background refetch keeps `data` and `isError`.
+  else if (query.data === undefined)
+    status = query.isError ? 'error' : 'loading';
   else status = households.length === 0 ? 'empty' : 'ready';
 
   // Write the resolved (re-validated) id back so a stale one is replaced.

@@ -77,6 +77,16 @@ function Forbidden({ name }: { name: string }): null {
   return null;
 }
 
+// Renders once the list query's refetch error reaches its observers.
+function ListError(): React.JSX.Element {
+  const { isError } = useQuery({
+    queryKey: ['households'],
+    queryFn: householdsApi.list,
+    enabled: false,
+  });
+  return <span data-testid="list-error">{String(isError)}</span>;
+}
+
 const makeClient = () =>
   new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -160,6 +170,23 @@ describe('HouseholdProvider', () => {
     list.mockRejectedValue(new ApiError(500, null, {}, 'boom'));
     render(tree(makeClient()));
     await waitFor(() => expect(status()).toBe('error'));
+  });
+
+  it('keeps cached households when a refetch fails', async () => {
+    localStorage.setItem('activeHouseholdId', 'hh-2');
+    render(tree(makeClient(), <ListError />));
+    await waitFor(() => expect(active()).toBe('hh-2'));
+
+    list.mockRejectedValue(new ApiError(500, null, {}, 'boom'));
+    await act(async () => {
+      await ctx.current?.refetch();
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('list-error').textContent).toBe('true')
+    );
+    expect(status()).toBe('ready');
+    expect(active()).toBe('hh-2');
   });
 
   it('handleForbidden refetches once for parallel 403s', async () => {
