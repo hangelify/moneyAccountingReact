@@ -126,6 +126,7 @@ export function NewBillReview(): ReactElement | null {
   // Deletes the server draft (confirm mode only) without waiting for it;
   // the backend expires stale drafts anyway.
   const leave = (): void => {
+    if (saveMutation.isPending) return;
     if (hid !== null && draftId !== null) {
       void billsApi.remove(hid, draftId).catch(() => undefined);
     }
@@ -227,7 +228,12 @@ export function NewBillReview(): ReactElement | null {
               </ul>
             )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={handleCancel}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={saveMutation.isPending}
+              >
                 {t('common:actions.cancel')}
               </Button>
               <Button

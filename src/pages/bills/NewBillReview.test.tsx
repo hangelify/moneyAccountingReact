@@ -378,6 +378,20 @@ describe('NewBillReview', () => {
     });
   });
 
+  it('Cancel is disabled while saving', async () => {
+    seedDraft({ items: [item(CAT)] });
+    mock
+      .onPost('/households/hh-1/bills/d1/confirm')
+      .reply(() => new Promise(() => undefined));
+    renderReview();
+    await userEvent.click(saveButton());
+    const cancel = screen.getByRole('button', { name: /cancel/i });
+    await waitFor(() => {
+      expect(cancel).toBeDisabled();
+    });
+    expect(mock.history.delete).toHaveLength(0);
+  });
+
   describe('discarding', () => {
     beforeEach(() => {
       delete document.body.dataset.pathname;
