@@ -70,6 +70,14 @@
     "discardTitle": "Discard this bill?",
     "discardDescription": "Your edits will be lost."
   },
+  "cards": {
+    "title": "Bills",
+    "open": "View bill",
+    "noMarket": "No market",
+    "itemsCount_one": "{{count}} item",
+    "itemsCount_other": "{{count}} items",
+    "mismatch": "Items don't add up to the total"
+  },
   "confirmed": {
     "title": "Confirmed bills",
     "empty": {

@@ -26,6 +26,9 @@ export function DesktopNav({ onOpenNewBill }: DesktopNavProps): ReactElement {
       <NavLink to="/dashboard" className={navLinkClass}>
         {t('nav.dashboard')}
       </NavLink>
+      <NavLink to="/bills" end className={navLinkClass}>
+        {t('nav.bills')}
+      </NavLink>
       <NavLink to="/bills/confirmed" className={navLinkClass}>
         {t('nav.confirmedBills')}
       </NavLink>

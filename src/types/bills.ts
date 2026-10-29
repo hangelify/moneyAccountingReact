@@ -114,10 +114,13 @@ export interface BillResponseDto {
   id: string;
   bill_date: string;
   total_amount: number;
+  amount_mismatch: boolean;
   currency: Currency | null;
   description: string | null;
   market: MarketRef | null;
   created_at: string;
+  // Number of line items. Requested from the backend; absent until it ships.
+  items_count?: number;
 }
 
 export interface BillDetailItem {

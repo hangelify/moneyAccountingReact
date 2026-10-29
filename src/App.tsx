@@ -28,6 +28,11 @@ const ConfirmedBills = lazy(() =>
     default: m.ConfirmedBills,
   }))
 );
+const BillsCards = lazy(() =>
+  import('@/pages/bills/BillsCards').then((m) => ({
+    default: m.BillsCards,
+  }))
+);
 const BillDetailDrawer = lazy(() =>
   import('@/pages/bills/BillDetailDrawer').then((m) => ({
     default: m.BillDetailDrawer,
@@ -63,6 +68,16 @@ function App(): ReactElement {
               element={
                 <RequireAuth>
                   <ConfirmedBills />
+                </RequireAuth>
+              }
+            >
+              <Route path=":id" element={<BillDetailDrawer />} />
+            </Route>
+            <Route
+              path="/bills"
+              element={
+                <RequireAuth>
+                  <BillsCards />
                 </RequireAuth>
               }
             >
