@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useOutlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { ConfirmedBillsFilters } from './components/ConfirmedBillsFilters';
 import { Pagination } from './components/Pagination';
 import { useConfirmedBillsFilters } from '@/hooks/useConfirmedBillsFilters';
@@ -65,6 +66,11 @@ export function BillsListPage({
     void navigate({ pathname: `./${id}`, search: location.search });
   };
 
+  // On desktop an open bill is a page of its own, so the list steps aside.
+  const outlet = useOutlet();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  if (isDesktop && outlet) return outlet;
+
   return (
     <>
       <div className="container mx-auto flex flex-col gap-4 px-4 py-6 sm:py-8">
@@ -126,7 +132,7 @@ export function BillsListPage({
           </>
         )}
       </div>
-      <Outlet />
+      {outlet}
     </>
   );
 }

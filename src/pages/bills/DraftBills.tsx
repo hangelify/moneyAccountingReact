@@ -1,13 +1,14 @@
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import {
-  Outlet,
   useLocation,
   useNavigate,
+  useOutlet,
   useSearchParams,
 } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { useDraftBills } from '@/hooks/useDraftBills';
 import { DEFAULT_LIMIT } from '@/types/pagination';
 import { parseBillsSearchParams } from './parseBillsSearchParams';
@@ -32,6 +33,11 @@ export function DraftBills(): ReactElement {
   const openBill = (id: string): void => {
     void navigate({ pathname: `./${id}`, search: location.search });
   };
+
+  // On desktop an open bill is a page of its own, so the list steps aside.
+  const outlet = useOutlet();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  if (isDesktop && outlet) return outlet;
 
   return (
     <>
@@ -73,7 +79,7 @@ export function DraftBills(): ReactElement {
           </>
         )}
       </div>
-      <Outlet />
+      {outlet}
     </>
   );
 }
