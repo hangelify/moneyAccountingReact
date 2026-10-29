@@ -146,7 +146,9 @@
       "back": "Back to list",
       "amount": "{{value}} {{currency}}",
       "weight": "{{value}} kg",
-      "uncategorized": "Uncategorized"
+      "uncategorized": "Uncategorized",
+      "confirm": "Confirm",
+      "remove": "Remove"
     }
   }
 }
