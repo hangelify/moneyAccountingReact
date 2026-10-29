@@ -283,3 +283,28 @@ describe('billsApi.detail', () => {
     });
   });
 });
+
+describe('billsApi.listDrafts', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('GETs /bills/drafts with only page and limit', async () => {
+    mock.onGet('/households/hh-1/bills/drafts').reply((config) => {
+      expect(config.params).toEqual({ page: 2, limit: 20 });
+      return [
+        200,
+        {
+          data: [],
+          meta: { total: 0, page: 2, limit: 20, total_pages: 0 },
+        },
+      ];
+    });
+    const r = await billsApi.listDrafts('hh-1', 2, 20);
+    expect(r.meta.page).toBe(2);
+  });
+});

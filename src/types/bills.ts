@@ -114,10 +114,36 @@ export interface BillResponseDto {
   id: string;
   bill_date: string;
   total_amount: number;
-  currency: Currency | null;
-  description: string | null;
-  market: MarketRef | null;
+  amount_mismatch: boolean;
+  // The API omits these keys when empty; older responses sent null.
+  currency?: Currency | null;
+  description?: string | null;
+  market?: MarketRef | null;
   created_at: string;
+  // Number of line items. Requested from the backend; absent until it ships.
+  items_count?: number;
+}
+
+export interface DraftBillItem {
+  id: string;
+  raw_name: string;
+  sub_category: SubCategoryRef | null;
+  product_count: number;
+  amount: number;
+  product_weight?: number;
+  unit?: BillUnit;
+  price_per_unit?: number;
+  category_confidence?: number;
+  category_reasoning?: string;
+}
+
+// A row of GET /bills/drafts: the summary plus receipt fields and items.
+export interface DraftBillDto extends BillResponseDto {
+  status: 'draft' | 'confirmed';
+  market_name_raw?: string;
+  // true = no date on the receipt; bill_date is the upload day.
+  bill_date_inferred: boolean;
+  items: DraftBillItem[];
 }
 
 export interface BillDetailItem {

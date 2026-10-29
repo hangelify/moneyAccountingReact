@@ -62,6 +62,7 @@ function fixture(id: string, total: number): BillResponseDto {
     id,
     bill_date: '2026-05-19',
     total_amount: total,
+    amount_mismatch: false,
     currency: 'EUR',
     description: `bill ${id}`,
     market: { id: 'm1', name: 'Lidl', city: 'Bucharest' },

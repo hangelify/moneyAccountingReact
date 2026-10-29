@@ -1,6 +1,7 @@
 export const BILLS_ENDPOINTS = {
   PARSE_PHOTO: '/bills/parse-photo',
   LIST: '/bills',
+  DRAFTS: '/bills/drafts',
   DETAIL: (id: string): string => `/bills/${id}`,
   CONFIRM: (id: string): string => `/bills/${id}/confirm`,
 } as const;
