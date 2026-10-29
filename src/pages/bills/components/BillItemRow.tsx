@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
+import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
   Tooltip,
   TooltipContent,
@@ -32,14 +33,16 @@ export function BillItemRow({
   >;
   return (
     <tr className="border-t">
-      <td className="px-3 py-2">
-        <Input
-          data-row-name={index}
-          value={item.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-        />
+      <td className="px-2 py-2">
+        <OverflowTooltip text={item.name}>
+          <Input
+            data-row-name={index}
+            value={item.name}
+            onChange={(e) => onChange({ name: e.target.value })}
+          />
+        </OverflowTooltip>
       </td>
-      <td className="px-3 py-2 w-28">
+      <td className="px-2 py-2">
         <Input
           type="number"
           step="0.001"
@@ -47,7 +50,7 @@ export function BillItemRow({
           onChange={(e) => onChange({ quantity: Number(e.target.value) })}
         />
       </td>
-      <td className="px-3 py-2 w-28">
+      <td className="px-2 py-2">
         <select
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
           value={item.unit}
@@ -62,7 +65,7 @@ export function BillItemRow({
           ))}
         </select>
       </td>
-      <td className="px-3 py-2 w-32">
+      <td className="px-2 py-2">
         <Input
           aria-label={cols.weightKg}
           type="number"
@@ -76,7 +79,7 @@ export function BillItemRow({
           }
         />
       </td>
-      <td className="px-3 py-2 w-32">
+      <td className="px-2 py-2">
         <Input
           aria-label={cols.pricePerKg}
           type="number"
@@ -91,7 +94,7 @@ export function BillItemRow({
           }
         />
       </td>
-      <td className="px-3 py-2 w-32">
+      <td className="px-2 py-2">
         <Input
           data-testid={`item-final-price-${index}`}
           type="number"
@@ -100,7 +103,7 @@ export function BillItemRow({
           onChange={(e) => onChange({ final_price: Number(e.target.value) })}
         />
       </td>
-      <td className="px-3 py-2 text-muted-foreground">
+      <td className="px-2 py-2 text-muted-foreground">
         <div className="flex items-center gap-1.5">
           {item.category_confidence < 0.5 && item.sub_category && (
             <AlertTriangle
@@ -108,17 +111,27 @@ export function BillItemRow({
               aria-label={t('review.items.lowConfidence')}
             />
           )}
-          <SubCategorySelect
-            aria-label={cols.category}
-            value={item.sub_category}
-            onChange={(next) =>
-              onChange({
-                sub_category: next,
-                category_confidence: 1,
-                category_reasoning: undefined,
-              })
+          <OverflowTooltip
+            text={
+              item.sub_category
+                ? `${item.sub_category.category_name} › ${item.sub_category.name}`
+                : ''
             }
-          />
+          >
+            <div className="min-w-0 flex-1">
+              <SubCategorySelect
+                aria-label={cols.category}
+                value={item.sub_category}
+                onChange={(next) =>
+                  onChange({
+                    sub_category: next,
+                    category_confidence: 1,
+                    category_reasoning: undefined,
+                  })
+                }
+              />
+            </div>
+          </OverflowTooltip>
           {item.category_reasoning && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -136,7 +149,7 @@ export function BillItemRow({
         </div>
       </td>
       {onDelete && (
-        <td className="px-3 py-2 w-12">
+        <td className="px-2 py-2 w-12">
           <button
             type="button"
             aria-label={t('review.items.deleteAria')}

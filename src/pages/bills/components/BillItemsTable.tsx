@@ -43,17 +43,19 @@ export function BillItemsTable({
 
       {/* Desktop table */}
       <div className="hidden overflow-x-auto rounded-md border md:block">
-        <table className="w-full text-sm">
+        {/* Fixed layout so the weights below hold: Name and Category get the
+            most room, and the table scrolls instead of squeezing them. */}
+        <table className="w-full min-w-[1024px] table-fixed text-sm">
           <thead className="bg-muted/50 text-left">
             <tr>
-              <th className="px-3 py-2">{cols.name}</th>
-              <th className="px-3 py-2">{cols.quantity}</th>
-              <th className="px-3 py-2">{cols.unit}</th>
-              <th className="px-3 py-2">{cols.weightKg}</th>
-              <th className="px-3 py-2">{cols.pricePerKg}</th>
-              <th className="px-3 py-2">{cols.finalPrice}</th>
-              <th className="px-3 py-2">{cols.category}</th>
-              <th className="px-3 py-2 w-12" />
+              <th className="w-[24%] px-2 py-2">{cols.name}</th>
+              <th className="w-[8%] px-2 py-2">{cols.quantity}</th>
+              <th className="w-[9%] px-2 py-2">{cols.unit}</th>
+              <th className="w-[10%] px-2 py-2">{cols.weightKg}</th>
+              <th className="w-[10%] px-2 py-2">{cols.pricePerKg}</th>
+              <th className="w-[10%] px-2 py-2">{cols.finalPrice}</th>
+              <th className="w-[25%] px-2 py-2">{cols.category}</th>
+              <th className="w-12 px-2 py-2" />
             </tr>
           </thead>
           <tbody>
