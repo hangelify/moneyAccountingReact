@@ -14,8 +14,8 @@ describe('subCategoriesApi.list', () => {
     mock.restore();
   });
 
-  it('GETs /sub-categories and returns the array', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+  it('GETs /households/hh-1/sub-categories and returns the array', async () => {
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: 'a',
         name: 'milk',
@@ -26,7 +26,7 @@ describe('subCategoriesApi.list', () => {
       },
     ]);
 
-    const result = await subCategoriesApi.list();
+    const result = await subCategoriesApi.list('hh-1');
 
     expect(result).toHaveLength(1);
     expect(result[0]!.name).toBe('milk');
@@ -34,7 +34,11 @@ describe('subCategoriesApi.list', () => {
   });
 
   it('maps 401 responses to ApiError', async () => {
-    mock.onGet('/sub-categories').reply(401, { message: 'Unauthorized' });
-    await expect(subCategoriesApi.list()).rejects.toBeInstanceOf(ApiError);
+    mock
+      .onGet('/households/hh-1/sub-categories')
+      .reply(401, { message: 'Unauthorized' });
+    await expect(subCategoriesApi.list('hh-1')).rejects.toBeInstanceOf(
+      ApiError
+    );
   });
 });

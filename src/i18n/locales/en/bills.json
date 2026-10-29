@@ -9,7 +9,13 @@
     },
     "pending": "Parsing receipt… this can take up to 10 seconds.",
     "discardTitle": "Discard this photo?",
-    "discardDescription": "Your selection will be lost. You'll need to pick the photo again."
+    "discardDescription": "Your selection will be lost. You'll need to pick the photo again.",
+    "household": "Household",
+    "noHousehold": "No household available. New bills can't be added right now.",
+    "duplicate": "You already scanned this receipt. Continuing the existing draft.",
+    "saveFailedFallback": "The receipt was read, but the draft could not be saved. Check it and save it manually.",
+    "retryIn": "Try again in {{seconds}} s",
+    "cancelUpload": "Cancel"
   },
   "validation": {
     "unsupportedFormat": "Unsupported format. Use JPEG, PNG, or WEBP.",
@@ -19,6 +25,13 @@
     "title": "Review bill",
     "description": "Verify the extracted details and edit any fields before saving.",
     "noDraftRedirect": "No bill in progress",
+    "otherHousehold": "This draft belongs to {{name}}. Switch to that household to save it.",
+    "otherHouseholdUnknown": "This draft belongs to a household you can no longer access.",
+    "saved": "Bill saved",
+    "categoriseAll": "Pick a category for every line before saving.",
+    "marketNotSaved": "The shop name can't be saved for this bill.",
+    "draftGone": "This draft no longer exists.",
+    "alreadyConfirmed": "This bill was already confirmed.",
     "fields": {
       "marketName": "Market name",
       "billDate": "Date",

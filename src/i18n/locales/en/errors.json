@@ -1,9 +1,10 @@
 {
-  "aiUnavailable": {
-    "title": "AI service temporarily unavailable",
-    "description": "Please try again. Ref: {{requestId}}"
-  },
+  "saveFailed": "Could not save the bill. Please try again.",
   "uploadFailed": "Upload failed. Please try again.",
   "sessionExpired": "Your session ended, please sign in again",
-  "signedOutElsewhere": "You were signed out"
+  "signedOutElsewhere": "You were signed out",
+  "reference": "Reference: {{requestId}}",
+  "recognitionTimeout": "Recognition is taking too long. Try again in a moment — a repeat send continues the same draft.",
+  "network": "Network error. Check your connection and try again.",
+  "recognitionFailed": "Recognition failed"
 }

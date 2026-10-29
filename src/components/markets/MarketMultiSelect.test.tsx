@@ -6,12 +6,17 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { MarketMultiSelect } from './MarketMultiSelect';
 import type { ReactElement, ReactNode } from 'react';
+import { HouseholdTestProvider } from '@/test/household';
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  return <QueryClientProvider client={qc}>{ui}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={qc}>
+      <HouseholdTestProvider>{ui}</HouseholdTestProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('MarketMultiSelect', () => {
@@ -24,7 +29,7 @@ describe('MarketMultiSelect', () => {
   });
 
   it('renders fetched markets and emits names on toggle', async () => {
-    mock.onGet('/markets').reply(200, [
+    mock.onGet('/households/hh-1/markets').reply(200, [
       {
         id: '1',
         name: 'Lidl',
@@ -61,7 +66,7 @@ describe('MarketMultiSelect', () => {
   });
 
   it('shows "All markets" when value is empty', () => {
-    mock.onGet('/markets').reply(200, []);
+    mock.onGet('/households/hh-1/markets').reply(200, []);
     render(
       wrap(
         <MarketMultiSelect value={[]} onChange={vi.fn()} aria-label="Markets" />
@@ -71,7 +76,7 @@ describe('MarketMultiSelect', () => {
   });
 
   it('summarizes 1-2 selected names, shows count for 3+', () => {
-    mock.onGet('/markets').reply(200, []);
+    mock.onGet('/households/hh-1/markets').reply(200, []);
     const { rerender } = render(
       wrap(
         <MarketMultiSelect
@@ -95,7 +100,7 @@ describe('MarketMultiSelect', () => {
   });
 
   it('renders a retry button on error', async () => {
-    mock.onGet('/markets').reply(500);
+    mock.onGet('/households/hh-1/markets').reply(500);
     render(
       wrap(
         <MarketMultiSelect value={[]} onChange={vi.fn()} aria-label="Markets" />

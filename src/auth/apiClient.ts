@@ -169,7 +169,8 @@ apiClient.interceptors.response.use(
       status,
       err.response?.data,
       normaliseHeaders(err.response?.headers),
-      err.message
+      err.message,
+      { url, code: err.code }
     );
     const skipRefresh = NO_REFRESH_PATHS.some((p) => url.includes(p));
 

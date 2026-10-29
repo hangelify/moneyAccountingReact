@@ -11,11 +11,13 @@ interface BillReviewFieldsProps {
     'market_name' | 'bill_date' | 'currency' | 'total_amount'
   >;
   onChange: (patch: Partial<BillEdits>) => void;
+  marketHint?: string;
 }
 
 export function BillReviewFields({
   edits,
   onChange,
+  marketHint,
 }: BillReviewFieldsProps): ReactElement {
   const { t } = useTranslation('bills');
   return (
@@ -27,6 +29,9 @@ export function BillReviewFields({
           value={edits.market_name}
           onChange={(e) => onChange({ market_name: e.target.value })}
         />
+        {marketHint && (
+          <p className="text-xs text-muted-foreground">{marketHint}</p>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="bill_date">{t('review.fields.billDate')}</Label>

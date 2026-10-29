@@ -15,6 +15,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { BillDetailDrawer } from './BillDetailDrawer';
 import type { ReactElement } from 'react';
+import { HouseholdTestProvider } from '@/test/household';
 
 function LocationProbe(): ReactElement {
   const loc = useLocation();
@@ -30,13 +31,15 @@ function renderAt(path: string): void {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route path="/bills/confirmed" element={<LocationProbe />}>
-            <Route path=":id" element={<BillDetailDrawer />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <HouseholdTestProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route path="/bills/confirmed" element={<LocationProbe />}>
+              <Route path=":id" element={<BillDetailDrawer />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </HouseholdTestProvider>
     </QueryClientProvider>
   );
 }
@@ -51,7 +54,7 @@ describe('BillDetailDrawer', () => {
   });
 
   it('opens for /bills/confirmed/:id and renders detail content', async () => {
-    mock.onGet('/bills/b1').reply(200, {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
       id: 'b1',
       bill_date: '2026-05-19T00:00:00Z',
       total_amount: 10,
@@ -66,7 +69,7 @@ describe('BillDetailDrawer', () => {
   });
 
   it('navigates back to parent route when closed via Esc', async () => {
-    mock.onGet('/bills/b1').reply(200, {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
       id: 'b1',
       bill_date: '2026-05-19T00:00:00Z',
       total_amount: 10,

@@ -13,12 +13,15 @@ export class ApiError extends Error {
   readonly messages: string[];
   readonly headers: Record<string, string>;
   readonly body: unknown;
+  readonly url: string;
+  readonly code: string | undefined;
 
   constructor(
     status: number | undefined,
     body: unknown,
     headers: Record<string, string> = {},
-    fallbackMessage?: string
+    fallbackMessage?: string,
+    meta?: { url?: string; code?: string | undefined }
   ) {
     const messages = extractMessages(body);
     super(messages[0] ?? fallbackMessage ?? 'Request failed');
@@ -27,6 +30,8 @@ export class ApiError extends Error {
     this.messages = messages;
     this.headers = headers;
     this.body = body;
+    this.url = meta?.url ?? '';
+    this.code = meta?.code;
   }
 
   fieldErrors(): Record<string, string> {

@@ -1,15 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useBillDraftStore } from './billDraftStore';
-import type { ParsedBillResponse } from '@/types/bills';
+import type { ParsedBill } from '@/types/bills';
 
 function makeFile(name = 'r.jpg'): File {
   return new File(['x'], name, { type: 'image/jpeg' });
 }
 
-function makeParsed(
-  overrides: Partial<ParsedBillResponse> = {}
-): ParsedBillResponse {
+function makeParsed(overrides: Partial<ParsedBill> = {}): ParsedBill {
   return {
+    draft_id: 'd1',
     market_name: 'Lidl',
     bill_date: '2026-05-07',
     currency: 'EUR',
@@ -26,7 +25,6 @@ function makeParsed(
         category_confidence: 0.9,
       },
     ],
-    raw_extracted_text: 'LIDL',
     ...overrides,
   };
 }
@@ -59,7 +57,9 @@ describe('billDraftStore', () => {
     const file = makeFile();
     const parsed = makeParsed();
 
-    useBillDraftStore.getState().setDraft(file, parsed);
+    useBillDraftStore
+      .getState()
+      .setDraft({ file, parsed, hid: 'h1', mode: 'confirm' });
 
     const state = useBillDraftStore.getState();
     expect(state.file).toBe(file);
@@ -84,7 +84,9 @@ describe('billDraftStore', () => {
       items: [],
     });
 
-    useBillDraftStore.getState().setDraft(file, parsed);
+    useBillDraftStore
+      .getState()
+      .setDraft({ file, parsed, hid: 'h1', mode: 'confirm' });
 
     const e = useBillDraftStore.getState().edits;
     expect(e.market_name).toBe('');
@@ -95,30 +97,55 @@ describe('billDraftStore', () => {
 
   it('setDraft revokes a previously set preview URL', () => {
     const first = makeFile('a.jpg');
-    useBillDraftStore.getState().setDraft(first, makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: first,
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
     createObjectURL.mockReturnValueOnce('blob:second');
 
     const second = makeFile('b.jpg');
-    useBillDraftStore.getState().setDraft(second, makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: second,
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
 
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake-url');
     expect(useBillDraftStore.getState().previewUrl).toBe('blob:second');
   });
 
   it('updateEdits patches edits', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
     useBillDraftStore.getState().updateEdits({ market_name: 'Rewe' });
     expect(useBillDraftStore.getState().edits.market_name).toBe('Rewe');
   });
 
   it('updateItem patches a single item by index', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
     useBillDraftStore.getState().updateItem(0, { name: 'Sourdough' });
     expect(useBillDraftStore.getState().edits.items[0]!.name).toBe('Sourdough');
   });
 
   it('addItem appends a default item and returns its index', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
 
     const i = useBillDraftStore.getState().addItem();
 
@@ -137,7 +164,12 @@ describe('billDraftStore', () => {
   });
 
   it('removeItem splices the item at index', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
     useBillDraftStore.getState().addItem();
     expect(useBillDraftStore.getState().edits.items).toHaveLength(2);
 
@@ -149,7 +181,12 @@ describe('billDraftStore', () => {
   });
 
   it('removeItem is a no-op for out-of-bounds indices', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
 
     useBillDraftStore.getState().removeItem(99);
 
@@ -157,7 +194,12 @@ describe('billDraftStore', () => {
   });
 
   it('clear revokes preview URL and nulls slots', () => {
-    useBillDraftStore.getState().setDraft(makeFile(), makeParsed());
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
 
     useBillDraftStore.getState().clear();
 
@@ -167,5 +209,48 @@ describe('billDraftStore', () => {
     expect(s.previewUrl).toBeNull();
     expect(s.parsed).toBeNull();
     expect(s.edits.items).toEqual([]);
+  });
+  it('setDraft keeps line ids on edit items', () => {
+    const parsed = makeParsed({
+      items: [{ ...makeParsed().items[0]!, id: 'l1' }],
+    });
+    useBillDraftStore
+      .getState()
+      .setDraft({ file: makeFile(), parsed, hid: 'h1', mode: 'confirm' });
+
+    const s = useBillDraftStore.getState();
+    expect(s.edits.items[0]!.id).toBe('l1');
+    expect(s.hid).toBe('h1');
+    expect(s.draftId).toBe('d1');
+    expect(s.mode).toBe('confirm');
+  });
+
+  it('setDraft in create mode leaves draftId null', () => {
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'create',
+    });
+
+    const s = useBillDraftStore.getState();
+    expect(s.draftId).toBeNull();
+    expect(s.mode).toBe('create');
+  });
+
+  it('clear resets hid, draftId and mode', () => {
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
+
+    useBillDraftStore.getState().clear();
+
+    const s = useBillDraftStore.getState();
+    expect(s.hid).toBeNull();
+    expect(s.draftId).toBeNull();
+    expect(s.mode).toBeNull();
   });
 });

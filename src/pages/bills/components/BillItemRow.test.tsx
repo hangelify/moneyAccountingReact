@@ -9,6 +9,7 @@ import { apiClient } from '@/auth/apiClient';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BillItemRow } from './BillItemRow';
 import type { BillEditItem } from '@/types/bills';
+import { HouseholdTestProvider } from '@/test/household';
 
 function makeItem(overrides: Partial<BillEditItem> = {}): BillEditItem {
   return {
@@ -33,13 +34,15 @@ function renderRow(
   });
   return render(
     <QueryClientProvider client={client}>
-      <TooltipProvider>
-        <table>
-          <tbody>
-            <BillItemRow item={item} index={0} onChange={onChange} />
-          </tbody>
-        </table>
-      </TooltipProvider>
+      <HouseholdTestProvider>
+        <TooltipProvider>
+          <table>
+            <tbody>
+              <BillItemRow item={item} index={0} onChange={onChange} />
+            </tbody>
+          </table>
+        </TooltipProvider>
+      </HouseholdTestProvider>
     </QueryClientProvider>
   );
 }
@@ -59,20 +62,22 @@ function StatefulRow({
   });
   return (
     <QueryClientProvider client={client}>
-      <TooltipProvider>
-        <table>
-          <tbody>
-            <BillItemRow
-              item={item}
-              index={0}
-              onChange={(patch) => {
-                setItem((prev) => ({ ...prev, ...patch }));
-                onPatch(patch);
-              }}
-            />
-          </tbody>
-        </table>
-      </TooltipProvider>
+      <HouseholdTestProvider>
+        <TooltipProvider>
+          <table>
+            <tbody>
+              <BillItemRow
+                item={item}
+                index={0}
+                onChange={(patch) => {
+                  setItem((prev) => ({ ...prev, ...patch }));
+                  onPatch(patch);
+                }}
+              />
+            </tbody>
+          </table>
+        </TooltipProvider>
+      </HouseholdTestProvider>
     </QueryClientProvider>
   );
 }
@@ -118,7 +123,7 @@ describe('BillItemRow — sub-category', () => {
   });
 
   it('emits sub_category, confidence=1 and clears reasoning when picked', async () => {
-    mock.onGet('/sub-categories').reply(200, [
+    mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '1',
         name: 'milk',
@@ -155,18 +160,20 @@ describe('BillItemRow — sub-category', () => {
     });
     render(
       <QueryClientProvider client={client}>
-        <TooltipProvider>
-          <table>
-            <tbody>
-              <BillItemRow
-                item={makeItem()}
-                index={0}
-                onChange={vi.fn()}
-                onDelete={onDelete}
-              />
-            </tbody>
-          </table>
-        </TooltipProvider>
+        <HouseholdTestProvider>
+          <TooltipProvider>
+            <table>
+              <tbody>
+                <BillItemRow
+                  item={makeItem()}
+                  index={0}
+                  onChange={vi.fn()}
+                  onDelete={onDelete}
+                />
+              </tbody>
+            </table>
+          </TooltipProvider>
+        </HouseholdTestProvider>
       </QueryClientProvider>
     );
     await userEvent.click(screen.getByRole('button', { name: /delete item/i }));

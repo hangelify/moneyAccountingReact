@@ -125,6 +125,18 @@ describe('apiClient response interceptor — error mapping', () => {
     });
   });
 
+  it('attaches request url and axios code to ApiError', async () => {
+    mock.onGet('/households/h1/markets').reply(403, { message: 'Forbidden' });
+    await expect(apiClient.get('/households/h1/markets')).rejects.toMatchObject(
+      { status: 403, url: '/households/h1/markets' }
+    );
+
+    mock.onGet('/households/h1/slow').timeout();
+    await expect(apiClient.get('/households/h1/slow')).rejects.toMatchObject({
+      code: 'ECONNABORTED',
+    });
+  });
+
   it('maps a 500 with no body to ApiError with axios message', async () => {
     mock.onGet('/anything').reply(500);
     await expect(apiClient.get('/anything')).rejects.toBeInstanceOf(ApiError);

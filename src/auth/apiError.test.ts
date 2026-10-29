@@ -22,6 +22,18 @@ describe('ApiError', () => {
     });
   });
 
+  it('stores url and code from meta', () => {
+    const e = new ApiError(403, {}, {}, undefined, {
+      url: '/households/x/bills',
+      code: 'ERR_BAD_REQUEST',
+    });
+    expect(e.url).toBe('/households/x/bills');
+    expect(e.code).toBe('ERR_BAD_REQUEST');
+    const bare = new ApiError(500, {});
+    expect(bare.url).toBe('');
+    expect(bare.code).toBeUndefined();
+  });
+
   it('fieldErrors ignores non-field messages', () => {
     const e = new ApiError(409, { message: ['User already exists'] });
     expect(e.fieldErrors()).toEqual({});

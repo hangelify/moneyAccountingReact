@@ -9,6 +9,7 @@ export interface SubCategoryRef {
 }
 
 export interface ParsedBillItem {
+  id?: string;
   name: string;
   quantity: number | null;
   unit: BillUnit | null;
@@ -20,16 +21,70 @@ export interface ParsedBillItem {
   category_reasoning?: string;
 }
 
-export interface ParsedBillResponse {
+export interface ParsedBill {
+  draft_id: string;
   market_name: string | null;
   bill_date: string | null;
   currency: string | null;
   total_amount: number | null;
   items: ParsedBillItem[];
-  raw_extracted_text: string;
+}
+
+export interface ParsePhotoResponse extends ParsedBill {
+  request_id: string | null;
+  duplicate: boolean;
+}
+
+export interface AiErrorBody {
+  statusCode: number;
+  error: string;
+  message: string;
+  request_id: string | null;
+  parsed?: ParsedBill;
+}
+
+export interface ConfirmBillItem {
+  id?: string;
+  sub_category_id?: string;
+  raw_name?: string;
+  product_count: number;
+  amount: number;
+  product_weight?: number;
+}
+
+export interface ConfirmBillRequest {
+  market_id?: string;
+  new_market?: {
+    name: string;
+    city?: string;
+    country?: string;
+    address?: string;
+  };
+  bill_date: string;
+  currency?: Currency;
+  total_amount: number;
+  description?: string;
+  items: ConfirmBillItem[];
+}
+
+export interface CreateBillItem {
+  sub_category_id: string;
+  product_count: number;
+  amount: number;
+  product_weight?: number;
+}
+
+export interface CreateBillRequest {
+  market_id?: string;
+  bill_date: string;
+  currency?: Currency;
+  total_amount: number;
+  description?: string;
+  items: CreateBillItem[];
 }
 
 export interface BillEditItem {
+  id?: string;
   name: string;
   quantity: number;
   unit: BillUnit | '';

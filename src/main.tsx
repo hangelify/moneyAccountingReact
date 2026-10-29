@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { HouseholdProvider } from '@/contexts/HouseholdContext';
 import { Toaster } from '@/components/ui/toaster';
 import './index.css';
 import '@/i18n';
@@ -28,8 +29,10 @@ createRoot(rootElement).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
-          <Toaster />
+          <HouseholdProvider>
+            <App />
+            <Toaster />
+          </HouseholdProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

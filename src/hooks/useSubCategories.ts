@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { subCategoriesApi } from '@/pages/categories/api';
 import type { SubCategoryResponse } from '@/types/categories';
 
@@ -16,9 +17,11 @@ export interface UseSubCategoriesResult {
 }
 
 export function useSubCategories(): UseSubCategoriesResult {
+  const hid = useActiveHouseholdId();
   const query = useQuery({
-    queryKey: ['sub-categories'],
-    queryFn: subCategoriesApi.list,
+    queryKey: ['households', hid, 'sub-categories'],
+    queryFn: () => subCategoriesApi.list(hid!),
+    enabled: hid !== null,
     staleTime: 5 * 60 * 1000,
   });
 
