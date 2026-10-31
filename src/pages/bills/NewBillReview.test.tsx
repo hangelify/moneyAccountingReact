@@ -264,6 +264,9 @@ describe('NewBillReview', () => {
       expect(spy).toHaveBeenCalledWith({
         queryKey: ['households', 'hh-1', 'markets'],
       });
+      expect(spy).toHaveBeenCalledWith({
+        queryKey: ['households', 'hh-1', 'dashboard'],
+      });
     });
 
     it('create mode posts to the household bills and gates Save on categories', async () => {

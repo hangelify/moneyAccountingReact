@@ -63,6 +63,9 @@ export function useBillDetailActions(
       void queryClient.invalidateQueries({
         queryKey: ['households', hid, 'bills'],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ['households', hid, 'dashboard'],
+      });
       // A confirm can create a market.
       void queryClient.invalidateQueries({
         queryKey: ['households', hid, 'markets'],
@@ -83,10 +86,16 @@ export function useBillDetailActions(
         void queryClient.invalidateQueries({
           queryKey: ['households', hid, 'bills'],
         });
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'dashboard'],
+        });
         toast({ title: t('review.alreadyConfirmed') });
       } else if (status === 404) {
         void queryClient.invalidateQueries({
           queryKey: ['households', hid, 'bills'],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'dashboard'],
         });
         toast({ variant: 'destructive', title: t('review.draftGone') });
         close();
