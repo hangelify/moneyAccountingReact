@@ -1,27 +1,7 @@
 import { CURRENCY, type Currency } from '@/const/currency';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '@/types/pagination';
+import { parseIsoDate } from '@/lib/isoDate';
 import type { ConfirmedBillsFilters } from './buildBillsQueryParams';
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-function parseDate(v: string | null): string | null {
-  if (!v || !ISO_DATE.test(v)) return null;
-  const [y, m, d] = v.split('-').map(Number) as [number, number, number];
-  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
-  const t = Date.parse(`${v}T00:00:00Z`);
-  if (!Number.isFinite(t)) return null;
-  // Reject normalized dates (e.g. "2026-02-31" → "2026-03-03") by
-  // round-tripping through a UTC Date and confirming the components match.
-  const dt = new Date(t);
-  if (
-    dt.getUTCFullYear() !== y ||
-    dt.getUTCMonth() + 1 !== m ||
-    dt.getUTCDate() !== d
-  ) {
-    return null;
-  }
-  return v;
-}
 
 function parseAmountRange(v: string | null): {
   amount_min: number | null;
@@ -63,8 +43,8 @@ export function parseBillsSearchParams(sp: URLSearchParams): ParsedBillsSearch {
   const { amount_min, amount_max } = parseAmountRange(sp.get('amount_range'));
 
   const filters: ConfirmedBillsFilters = {
-    date_from: parseDate(sp.get('date_from')),
-    date_to: parseDate(sp.get('date_to')),
+    date_from: parseIsoDate(sp.get('date_from')),
+    date_to: parseIsoDate(sp.get('date_to')),
     market_names,
     amount_min,
     amount_max,
