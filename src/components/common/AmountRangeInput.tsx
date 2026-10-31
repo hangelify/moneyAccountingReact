@@ -31,7 +31,7 @@ export function AmountRangeInput({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-end gap-2">
-        <div className="flex-1">
+        <div className="flex flex-1 flex-col gap-1">
           <Label htmlFor={minId}>{t('confirmed.filters.amountMin')}</Label>
           <Input
             id={minId}
@@ -43,7 +43,7 @@ export function AmountRangeInput({
             aria-invalid={invalid}
           />
         </div>
-        <div className="flex-1">
+        <div className="flex flex-1 flex-col gap-1">
           <Label htmlFor={maxId}>{t('confirmed.filters.amountMax')}</Label>
           <Input
             id={maxId}
