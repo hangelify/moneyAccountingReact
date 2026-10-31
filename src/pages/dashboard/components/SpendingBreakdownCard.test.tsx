@@ -174,4 +174,61 @@ describe('SpendingBreakdownCard', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Food,/ })).toBeNull();
   });
+
+  describe('zoom', () => {
+    const MONTH = '?period=month&anchor=2026-10-31';
+    const legendRows = (): string[] =>
+      screen.getAllByRole('listitem').map((r) => r.textContent ?? '');
+
+    it('shows a breadcrumb only while zoomed and returns to all categories', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(MONTH);
+      await screen.findByRole('button', { name: /^Food,/ });
+      expect(
+        screen.queryByRole('button', { name: 'All categories' })
+      ).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: /^Food,/ }));
+      await waitFor(() => expect(search()).toContain('category=food'));
+      const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' });
+      expect(crumbs).toHaveTextContent('Food');
+
+      fireEvent.click(screen.getByRole('button', { name: 'All categories' }));
+      await waitFor(() => expect(search()).not.toContain('category'));
+      expect(
+        screen.queryByRole('navigation', { name: 'Breadcrumb' })
+      ).toBeNull();
+      expect(legendRows()[0]).toContain('Food');
+    });
+
+    it('opens zoomed from the URL', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(`${MONTH}&category=food`);
+      await screen.findByRole('navigation', { name: 'Breadcrumb' });
+      expect(legendRows()).toEqual([
+        expect.stringContaining('Bread'),
+        expect.stringContaining('Dairy'),
+      ]);
+      expect(mock.history.get[0]!.params).not.toHaveProperty('category');
+    });
+
+    it('drops the zoom when the period changes', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(`${MONTH}&category=food`);
+      await screen.findByRole('navigation', { name: 'Breadcrumb' });
+      fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
+      await waitFor(() => expect(search()).toContain('anchor=2026-09-30'));
+      expect(search()).not.toContain('category');
+    });
+
+    it('drops a category that is not in the data', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(`${MONTH}&category=gone`);
+      await screen.findByRole('button', { name: /^Food,/ });
+      await waitFor(() => expect(search()).not.toContain('category'));
+      expect(
+        screen.queryByRole('navigation', { name: 'Breadcrumb' })
+      ).toBeNull();
+    });
+  });
 });

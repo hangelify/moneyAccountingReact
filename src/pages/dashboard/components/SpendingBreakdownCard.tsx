@@ -16,13 +16,16 @@ import type {
 } from '@/types/dashboard';
 import {
   parseSpendingSearchParams,
+  parseZoomCategory,
   toSpendingSearchParams,
 } from '../parseSpendingSearchParams';
 import { formatRangeLabel, rangeForParams } from '../period';
+import { PALETTE_SIZE, categoryKey } from '../sunburstGeometry';
 import { CurrencyTabs } from './CurrencyTabs';
 import { PeriodPicker } from './PeriodPicker';
 import { SpendingLegend } from './SpendingLegend';
 import { SpendingSunburst } from './SpendingSunburst';
+import { ZoomBreadcrumb } from './ZoomBreadcrumb';
 
 /** The currency with the most spending; the first one on ties. */
 function largest(list: SpendingCurrency[]): SpendingCurrency | undefined {
@@ -41,6 +44,7 @@ export function SpendingBreakdownCard(): ReactElement {
     () => parseSpendingSearchParams(new URLSearchParams(search)),
     [search]
   );
+  const category = parseZoomCategory(searchParams);
 
   useEffect(() => {
     if (invalid) {
@@ -90,26 +94,35 @@ export function SpendingBreakdownCard(): ReactElement {
   const current =
     currencies.find((c) => c.currency === picked) ?? largest(currencies);
 
-  // Zoom and highlight belong to one period and currency; a change of either
-  // drops them without an effect.
+  // The zoom lives in the URL, so Back (browser or phone gesture) zooms out.
+  // A period change writes params without it, which drops the zoom.
+  const zoomedIndex =
+    category === null || !current
+      ? -1
+      : current.categories.findIndex((c) => categoryKey(c) === category);
+  const zoomed = current?.categories[zoomedIndex];
+  const zoomedKey = zoomed ? category : null;
+  const onZoom = useCallback(
+    (key: string | null) =>
+      setSearchParams(toSpendingSearchParams(params, key)),
+    [params, setSearchParams]
+  );
+
+  // A category that isn't in this period's (or currency's) answer is dropped.
+  const settled = query.data !== undefined && !query.isPlaceholderData;
+  useEffect(() => {
+    if (category !== null && settled && !zoomed) {
+      setSearchParams(toSpendingSearchParams(params), { replace: true });
+    }
+  }, [category, settled, zoomed, params, setSearchParams]);
+
+  // Highlight belongs to one view; any URL or currency change drops it.
   const scope = `${search}|${current?.currency ?? ''}`;
-  const [zoom, setZoom] = useState<{ scope: string; key: string | null }>({
-    scope,
-    key: null,
-  });
   const [highlight, setHighlight] = useState<{
     scope: string;
     key: string | null;
   }>({ scope, key: null });
-  const zoomedKey = zoom.scope === scope ? zoom.key : null;
   const highlightedKey = highlight.scope === scope ? highlight.key : null;
-  const onZoom = useCallback(
-    (key: string | null) => {
-      setZoom({ scope, key });
-      setHighlight({ scope, key: null });
-    },
-    [scope]
-  );
   const onHighlight = useCallback(
     (key: string | null) => setHighlight({ scope, key }),
     [scope]
@@ -155,6 +168,18 @@ export function SpendingBreakdownCard(): ReactElement {
           selected={current.currency}
           onSelect={setPicked}
         />
+        {zoomed && (
+          <ZoomBreadcrumb
+            name={zoomed.id === null ? t('uncategorized') : zoomed.name}
+            look={{
+              colorIndex: zoomedIndex % PALETTE_SIZE,
+              tint: 0,
+              muted: zoomed.archived,
+              uncategorized: zoomed.id === null,
+            }}
+            onBack={() => onZoom(null)}
+          />
+        )}
         <div
           className={cn(
             'flex flex-col items-center gap-6 transition-opacity md:flex-row md:items-center',

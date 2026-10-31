@@ -45,12 +45,20 @@ export function parseSpendingSearchParams(
   return { params: { period, anchor }, invalid: false };
 }
 
+/** The category the chart is zoomed into; not sent to the backend. */
+export function parseZoomCategory(sp: URLSearchParams): string | null {
+  return sp.get('category') || null;
+}
+
 export function toSpendingSearchParams(
-  p: SpendingBreakdownParams
+  p: SpendingBreakdownParams,
+  category: string | null = null
 ): URLSearchParams {
-  return new URLSearchParams(
+  const sp = new URLSearchParams(
     p.period === 'custom'
       ? { period: p.period, from: p.from, to: p.to }
       : { period: p.period, anchor: p.anchor }
   );
+  if (category) sp.set('category', category);
+  return sp;
 }

@@ -77,11 +77,52 @@ describe('SpendingSunburst', () => {
     expect(onZoom).not.toHaveBeenCalled();
   });
 
-  it('when zoomed shows the category name and Back in the centre', async () => {
-    const { onZoom } = renderChart({ zoomedKey: 'food' });
+  it('when zoomed shows the category name and total in the centre', () => {
+    renderChart({ zoomedKey: 'food' });
     expect(screen.getByText('Food')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText(/MDL\s?910\.40/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /back/i })).toBeNull();
+  });
+
+  it('clicking the centre zooms out', async () => {
+    const { onZoom } = renderChart({ zoomedKey: 'food' });
+    await userEvent.click(screen.getByTestId('sunburst-centre'));
     expect(onZoom).toHaveBeenCalledWith(null);
+  });
+
+  it('clicking the centre does nothing at the top level', async () => {
+    const { onZoom } = renderChart();
+    await userEvent.click(screen.getByTestId('sunburst-centre'));
+    expect(onZoom).not.toHaveBeenCalled();
+  });
+
+  it('returns focus to the category segment after zooming out', () => {
+    mm = mockMatchMedia(true);
+    const { rerender } = render(
+      <SpendingSunburst
+        data={MDL}
+        centreLabel="October 2026"
+        zoomedKey="food"
+        onZoom={vi.fn()}
+        highlightedKey={null}
+        onHighlight={vi.fn()}
+      />
+    );
+    rerender(
+      <SpendingSunburst
+        data={MDL}
+        centreLabel="October 2026"
+        zoomedKey={null}
+        onZoom={vi.fn()}
+        highlightedKey={null}
+        onHighlight={vi.fn()}
+      />
+    );
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /^Food,/ })
+    );
+    // Restoring focus is not a hover; no tooltip pops up.
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('Escape zooms out', async () => {
@@ -115,10 +156,5 @@ describe('SpendingSunburst', () => {
     });
     await userEvent.hover(screen.getByRole('button', { name: /^Food,/ }));
     expect(screen.getByRole('tooltip')).toHaveTextContent('archived');
-  });
-
-  it('resets zoom when the zoomed category disappears', () => {
-    const { onZoom } = renderChart({ zoomedKey: 'gone' });
-    expect(onZoom).toHaveBeenCalledWith(null);
   });
 });

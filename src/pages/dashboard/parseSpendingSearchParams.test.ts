@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { SpendingBreakdownParams } from '@/types/dashboard';
 import {
+  parseZoomCategory,
   parseSpendingSearchParams,
   toSpendingSearchParams,
 } from './parseSpendingSearchParams';
@@ -68,5 +69,35 @@ describe('toSpendingSearchParams', () => {
       to: '2026-03-20',
     });
     expect(sp.has('anchor')).toBe(false);
+  });
+});
+
+describe('zoomed category in the URL', () => {
+  it('reads category', () => {
+    expect(
+      parseZoomCategory(new URLSearchParams('period=year&category=food'))
+    ).toBe('food');
+    expect(parseZoomCategory(new URLSearchParams('period=year'))).toBeNull();
+    expect(parseZoomCategory(new URLSearchParams('category='))).toBeNull();
+  });
+
+  it('writes category after the period params', () => {
+    const sp = toSpendingSearchParams(
+      { period: 'year', anchor: '2025-12-31' },
+      'food'
+    );
+    expect(sp.toString()).toBe('period=year&anchor=2025-12-31&category=food');
+  });
+
+  it('leaves category out of the period params', () => {
+    expect(
+      parseSpendingSearchParams(
+        new URLSearchParams('period=year&anchor=2025-12-31&category=food'),
+        TODAY
+      )
+    ).toEqual({
+      params: { period: 'year', anchor: '2025-12-31' },
+      invalid: false,
+    });
   });
 });

@@ -1,7 +1,6 @@
 import type { KeyboardEvent, PointerEvent, ReactElement } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 import type { SpendingCurrency } from '@/types/dashboard';
@@ -51,10 +50,26 @@ export function SpendingSunburst({
     ? data.categories.find((c) => categoryKey(c) === zoomedKey)
     : undefined;
 
-  // The zoomed category can vanish after a refetch or a household switch.
+  // After zooming out, put focus back on the category the user came from,
+  // unless it already moved somewhere else on purpose.
+  const categoryPaths = useRef(new Map<string, SVGPathElement>());
+  const prevZoomed = useRef(zoomedKey);
+  const restoringFocus = useRef(false);
   useEffect(() => {
-    if (zoomedKey !== null && !zoomed) onZoom(null);
-  }, [zoomedKey, zoomed, onZoom]);
+    const prev = prevZoomed.current;
+    prevZoomed.current = zoomedKey;
+    if (prev === null || zoomedKey !== null) return;
+    const active = document.activeElement;
+    if (
+      active === null ||
+      active === document.body ||
+      wrapRef.current?.contains(active)
+    ) {
+      restoringFocus.current = true;
+      categoryPaths.current.get(prev)?.focus();
+      restoringFocus.current = false;
+    }
+  }, [zoomedKey]);
 
   const arcs = useMemo(
     () => buildSunburst(data, zoomed ? zoomedKey : null),
@@ -98,7 +113,7 @@ export function SpendingSunburst({
   };
 
   const tipAtArc = (arc: SunburstArc): void => {
-    if (!canHover) return;
+    if (!canHover || restoringFocus.current) return;
     const [r0, r1] = radii(arc);
     const c = arcCentroid(r0, r1, arc.start, arc.end);
     setTip({ arc, x: ((c.x + 1) / 2) * 100, y: ((c.y + 1) / 2) * 100 });
@@ -114,19 +129,32 @@ export function SpendingSunburst({
       onPointerLeave={() => setTip(null)}
     >
       <svg viewBox="-1 -1 2 2" className="h-full w-full">
+        {/* Mouse shortcut back out; the breadcrumb is the keyboard path. */}
         <circle
           r={RADII.centre}
-          className={cn('fill-transparent', zoomed && 'cursor-pointer')}
+          data-testid="sunburst-centre"
+          aria-hidden
+          className={cn(
+            'fill-transparent transition-colors',
+            zoomed && 'cursor-pointer hover:fill-accent'
+          )}
           onClick={() => {
             if (zoomed) onZoom(null);
           }}
-        />
+        >
+          {zoomed && <title>{t('backToAll')}</title>}
+        </circle>
         {arcs.map((arc) => {
           const [r0, r1] = radii(arc);
           const active = arc.key === highlightedKey || arc.key === tip?.arc.key;
           return (
             <path
               key={`${arc.ring}-${arc.key}`}
+              ref={(el) => {
+                if (arc.kind !== 'category') return;
+                if (el) categoryPaths.current.set(arc.key, el);
+                else categoryPaths.current.delete(arc.key);
+              }}
               d={arcPath(r0, r1, arc.start, arc.end)}
               role="button"
               tabIndex={0}
@@ -160,14 +188,6 @@ export function SpendingSunburst({
               <span className="text-base font-semibold sm:text-lg">
                 {money(zoomed.total)}
               </span>
-              <button
-                type="button"
-                className="pointer-events-auto mt-1 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                onClick={() => onZoom(null)}
-              >
-                <ChevronLeft className="h-3 w-3" aria-hidden />
-                {t('back')}
-              </button>
             </>
           ) : (
             <>
