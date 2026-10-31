@@ -58,6 +58,9 @@ export function NewBillReview(): ReactElement | null {
       void queryClient.invalidateQueries({
         queryKey: ['households', savedHid, 'bills'],
       });
+      void queryClient.invalidateQueries({
+        queryKey: ['households', savedHid, 'dashboard'],
+      });
       // A save can create a market.
       void queryClient.invalidateQueries({
         queryKey: ['households', savedHid, 'markets'],

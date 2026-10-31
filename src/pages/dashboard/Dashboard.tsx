@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SpendingBreakdownCard } from './components/SpendingBreakdownCard';
 
 export function Dashboard(): ReactElement {
   const { t } = useTranslation('header');
@@ -11,12 +12,7 @@ export function Dashboard(): ReactElement {
             {t('nav.dashboard')}
           </h1>
         </div>
-        <div className="rounded-lg border bg-card p-4 sm:p-6">
-          <p className="text-muted-foreground">
-            {/* Placeholder — real content lands in a future spec. */}
-            Dashboard content will be implemented here.
-          </p>
-        </div>
+        <SpendingBreakdownCard />
       </div>
     </div>
   );

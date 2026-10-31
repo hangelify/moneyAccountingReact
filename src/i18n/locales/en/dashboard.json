@@ -1,0 +1,27 @@
+{
+  "title": "Spending",
+  "period": {
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year",
+    "5y": "5Y",
+    "custom": "Custom"
+  },
+  "previous": "Previous period",
+  "next": "Next period",
+  "uncategorized": "Uncategorized",
+  "allCategories": "All categories",
+  "backToAll": "Back to all categories",
+  "breadcrumb": "Breadcrumb",
+  "noCurrency": "No currency",
+  "archived": "archived",
+  "empty": "No spending in this period",
+  "error": "Couldn't load this period",
+  "retry": "Retry",
+  "customErrors": {
+    "endBeforeStart": "End date is before start date",
+    "tooLong": "Choose at most 10 years"
+  },
+  "segmentLabel": "{{name}}, {{amount}}, {{share}}%"
+}

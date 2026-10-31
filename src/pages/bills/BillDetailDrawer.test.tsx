@@ -1,6 +1,6 @@
 // src/pages/bills/BillDetailDrawer.test.tsx
 import '@/i18n';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -265,6 +265,22 @@ describe('BillDetailDrawer', () => {
         ],
       });
       expect(await screen.findByText('Bill confirmed')).toBeInTheDocument();
+    });
+
+    it('refreshes the dashboard after confirm', async () => {
+      const spy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
+      mock.onGet(DETAIL).reply(200, draftBill);
+      mock.onPost(CONFIRM).reply(200, { ...draftBill, status: 'confirmed' });
+      renderAt('/bills/drafts/d1');
+      await userEvent.click(
+        await screen.findByRole('button', { name: /confirm/i })
+      );
+      await waitFor(() =>
+        expect(spy).toHaveBeenCalledWith({
+          queryKey: ['households', 'hh-1', 'dashboard'],
+        })
+      );
+      spy.mockRestore();
     });
 
     it('confirms the edited values and leaves edit mode', async () => {
