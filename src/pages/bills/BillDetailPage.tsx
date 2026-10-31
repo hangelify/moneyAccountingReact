@@ -28,7 +28,9 @@ export function BillDetailPage(): ReactElement | null {
   if (!id) return null;
 
   const renderBody = (): ReactElement => {
-    if (q.isLoading) {
+    // isPending, not isLoading: the query is disabled (no data, not loading)
+    // until the household is known, e.g. on a cold deep link.
+    if (q.isPending) {
       return (
         <p className="text-sm text-muted-foreground">
           {t('confirmed.detail.loading')}
@@ -56,7 +58,7 @@ export function BillDetailPage(): ReactElement | null {
       );
     }
     return (
-      <BillDetailTable bill={q.data!} draft={draft} onDraftChange={setDraft} />
+      <BillDetailTable bill={q.data} draft={draft} onDraftChange={setDraft} />
     );
   };
 

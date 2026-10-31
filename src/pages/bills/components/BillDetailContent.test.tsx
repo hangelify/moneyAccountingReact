@@ -7,7 +7,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { BillDetailContent } from './BillDetailContent';
 import { useState, type ReactElement, type ReactNode } from 'react';
-import { HouseholdTestProvider } from '@/test/household';
+import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { toDraft } from '../billDetailDraft';
 
@@ -29,6 +29,23 @@ describe('BillDetailContent', () => {
   });
   afterEach(() => {
     mock.restore();
+  });
+
+  it('shows loading while the household is not ready yet', () => {
+    const qc = new QueryClient();
+    render(
+      <QueryClientProvider client={qc}>
+        <HouseholdTestProvider
+          value={makeHouseholdValue({
+            status: 'loading',
+            activeHousehold: null,
+          })}
+        >
+          <BillDetailContent id="b1" />
+        </HouseholdTestProvider>
+      </QueryClientProvider>
+    );
+    expect(screen.getByText('Loading bill…')).toBeInTheDocument();
   });
 
   it('renders summary and items on success', async () => {

@@ -13,7 +13,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import type { ReactElement } from 'react';
 import { apiClient } from '@/auth/apiClient';
-import { HouseholdTestProvider } from '@/test/household';
+import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import { Toaster } from '@/components/ui/toaster';
 import { BillDetailPage } from './BillDetailPage';
 
@@ -28,11 +28,11 @@ function LocationProbe(): ReactElement {
   );
 }
 
-function renderAt(path: string): void {
+function renderAt(path: string, household = makeHouseholdValue()): void {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <HouseholdTestProvider>
+      <HouseholdTestProvider value={household}>
         <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route path="/bills/confirmed" element={<LocationProbe />}>
@@ -196,5 +196,13 @@ describe('BillDetailPage', () => {
     mock.onGet(DETAIL).reply(404, {});
     renderAt('/bills/drafts/d1');
     expect(await screen.findByText('Bill not found.')).toBeInTheDocument();
+  });
+
+  it('shows loading while the household is not ready yet', () => {
+    renderAt(
+      '/bills/drafts/d1',
+      makeHouseholdValue({ status: 'loading', activeHousehold: null })
+    );
+    expect(screen.getByText('Loading bill…')).toBeInTheDocument();
   });
 });
