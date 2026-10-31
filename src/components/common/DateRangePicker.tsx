@@ -25,7 +25,7 @@ export function DateRangePicker({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-end gap-2">
-        <div className="flex flex-1 flex-col gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Label htmlFor={fromId}>{t('confirmed.filters.dateFrom')}</Label>
           <Input
             id={fromId}
@@ -36,7 +36,7 @@ export function DateRangePicker({
             aria-invalid={invalid}
           />
         </div>
-        <div className="flex flex-1 flex-col gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Label htmlFor={toId}>{t('confirmed.filters.dateTo')}</Label>
           <Input
             id={toId}

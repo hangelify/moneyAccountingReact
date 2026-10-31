@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/common/DateRangePicker';
 import { SPENDING_PERIODS } from '@/const/dashboard';
 import { addDays } from '@/lib/isoDate';
+import { cn } from '@/lib/utils';
 import type {
   SpendingBreakdownParams,
   SpendingPeriod,
@@ -50,43 +51,52 @@ export function PeriodPicker({
       {/* One toolbar on desktop: range type on the left, range value on the
           right. On mobile it wraps into two rows. */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 py-0.5">
-          {SPENDING_PERIODS.map((p) => (
-            <Button
-              key={p}
-              type="button"
-              size="sm"
-              variant={p === params.period ? 'default' : 'outline'}
-              aria-pressed={p === params.period}
-              className="shrink-0"
-              onClick={() => pick(p)}
-            >
-              {t(`period.${p}`)}
-            </Button>
-          ))}
+        {/* Mobile: a segmented control that fits all six options. Desktop:
+            separate outline buttons. */}
+        <div className="grid grid-cols-6 rounded-lg bg-muted p-1 md:flex md:gap-2 md:bg-transparent md:p-0">
+          {SPENDING_PERIODS.map((p) => {
+            const selected = p === params.period;
+            return (
+              <button
+                key={p}
+                type="button"
+                aria-pressed={selected}
+                className={cn(
+                  'inline-flex items-center justify-center whitespace-nowrap rounded-md py-1.5 text-[11px] font-medium min-[360px]:text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                  'md:h-8 md:border md:px-3 md:py-0 md:text-sm md:shadow-sm',
+                  selected
+                    ? 'bg-background text-foreground shadow-sm md:border-primary md:bg-primary md:text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground md:border-input md:bg-background md:text-foreground md:hover:bg-accent'
+                )}
+                onClick={() => pick(p)}
+              >
+                {t(`period.${p}`)}
+              </button>
+            );
+          })}
         </div>
 
         {/* The arrows hug a fixed-width label so they stay put while the
-            label changes length. */}
-        <div className="inline-flex shrink-0 items-center self-center rounded-md border">
+            label changes length. Full width on mobile, under the periods. */}
+        <div className="flex w-full items-center rounded-md border md:inline-flex md:w-auto md:shrink-0 md:self-center">
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="rounded-r-none"
+            className="h-10 w-10 rounded-r-none md:h-9 md:w-9"
             aria-label={t('previous')}
             onClick={() => onChange(shiftParams(params, range, -1))}
           >
             <ChevronLeft />
           </Button>
-          <span className="min-w-[11rem] whitespace-nowrap border-x px-3 text-center text-sm font-medium tabular-nums leading-9">
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap border-x px-3 text-center text-sm font-medium tabular-nums leading-10 md:min-w-[11rem] md:flex-none md:leading-9">
             {label}
           </span>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="rounded-l-none"
+            className="h-10 w-10 rounded-l-none md:h-9 md:w-9"
             aria-label={t('next')}
             disabled={!canGoNext(range)}
             onClick={() => onChange(shiftParams(params, range, 1))}
