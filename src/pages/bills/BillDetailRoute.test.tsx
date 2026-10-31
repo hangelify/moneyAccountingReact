@@ -1,5 +1,5 @@
 import '@/i18n';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -148,5 +148,40 @@ describe('BillDetailRoute', () => {
       )
     );
     expect(await screen.findByLabelText('Currency')).toBeInTheDocument();
+  });
+
+  it('desktop: opens the page at the top with its heading focused, and Back restores the list', async () => {
+    mm = mockMatchMedia(true);
+    const scrollTo = vi
+      .spyOn(window, 'scrollTo')
+      .mockImplementation(() => undefined);
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 400,
+    });
+    try {
+      renderApp('/bills/drafts');
+      await waitFor(() => expect(listCard()).not.toBeNull());
+      await userEvent.click(listCard()!);
+
+      const heading = await screen.findByRole('heading', {
+        name: 'Bill details',
+      });
+      expect(scrollTo).toHaveBeenLastCalledWith(0, 0);
+      expect(heading).toHaveFocus();
+
+      await userEvent.click(
+        screen.getByRole('button', { name: /back to list/i })
+      );
+      await waitFor(() => expect(listCard()).not.toBeNull());
+      await waitFor(() => expect(scrollTo).toHaveBeenLastCalledWith(0, 400));
+      expect(listCard()).toHaveFocus();
+    } finally {
+      scrollTo.mockRestore();
+      Object.defineProperty(window, 'scrollY', {
+        configurable: true,
+        value: 0,
+      });
+    }
   });
 });

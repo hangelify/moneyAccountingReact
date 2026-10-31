@@ -46,6 +46,7 @@ export function ConfirmedBillsTable({
           {bills.map((b) => (
             <tr
               key={b.id}
+              data-bill-id={b.id}
               role="button"
               aria-label={t('confirmed.table.rowAction')}
               tabIndex={0}

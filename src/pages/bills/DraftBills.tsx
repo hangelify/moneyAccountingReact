@@ -1,20 +1,15 @@
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
-import {
-  useLocation,
-  useNavigate,
-  useOutlet,
-  useSearchParams,
-} from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { useMediaQuery } from '@/lib/useMediaQuery';
 import { useDraftBills } from '@/hooks/useDraftBills';
 import { DEFAULT_LIMIT } from '@/types/pagination';
 import { parseBillsSearchParams } from './parseBillsSearchParams';
 import { BillCardGrid } from './components/BillCardGrid';
 import { BillsTabs } from './components/BillsTabs';
 import { Pagination } from './components/Pagination';
+import { useDetailOutlet } from './useDetailOutlet';
 
 // Drafts (bills waiting for review). The endpoint takes only page and limit,
 // so this tab has no filters.
@@ -30,14 +25,15 @@ export function DraftBills(): ReactElement {
     setSp(next > 1 ? { page: String(next) } : {});
   };
 
+  const { outlet, pageMode, rememberOpen } = useDetailOutlet();
+
   const openBill = (id: string): void => {
+    rememberOpen(id);
     void navigate({ pathname: `./${id}`, search: location.search });
   };
 
   // On desktop an open bill is a page of its own, so the list steps aside.
-  const outlet = useOutlet();
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-  if (isDesktop && outlet) return outlet;
+  if (pageMode && outlet) return outlet;
 
   return (
     <>

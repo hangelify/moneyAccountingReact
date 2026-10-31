@@ -117,7 +117,7 @@ export function BillDetailTable({
           </p>
         ) : (
           <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[768px] table-fixed text-sm">
+            <table className="w-full min-w-[44rem] table-fixed text-sm">
               <thead className="bg-muted/50 text-left">
                 <tr>
                   <th className="w-10 px-2 py-2">#</th>

@@ -1,5 +1,5 @@
 // src/pages/bills/BillDetailPage.tsx
-import type { ReactElement } from 'react';
+import { useEffect, useRef, type ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
@@ -24,6 +24,13 @@ export function BillDetailPage(): ReactElement | null {
     canConfirm,
     close,
   } = useBillDetailActions(id);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The page replaces the list: start at the top and move focus to the page.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    headingRef.current?.focus();
+  }, [id]);
 
   if (!id) return null;
 
@@ -69,7 +76,13 @@ export function BillDetailPage(): ReactElement | null {
           <ArrowLeft className="mr-1 h-4 w-4" />
           {t('confirmed.detail.back')}
         </Button>
-        <h1 className="text-2xl font-bold">{t('confirmed.detail.title')}</h1>
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-2xl font-bold outline-none"
+        >
+          {t('confirmed.detail.title')}
+        </h1>
         {bill && (
           <div className="ml-auto flex gap-2">
             {bill.status === 'draft' && (
