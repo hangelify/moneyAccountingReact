@@ -42,6 +42,10 @@ function renderCard(search = ''): { switchHousehold: (i: number) => void } {
 
 const search = (): string => screen.getByTestId('search').textContent ?? '';
 
+// Legend rows only; the breadcrumb is a list too.
+const legendItems = (): HTMLElement[] =>
+  screen.getAllByRole('listitem').filter((li) => !li.closest('nav'));
+
 describe('SpendingBreakdownCard', () => {
   let mock: MockAdapter;
 
@@ -153,7 +157,8 @@ describe('SpendingBreakdownCard', () => {
     mock.onGet(URL).reply(200, breakdown([MDL]));
     renderCard();
     fireEvent.click(await screen.findByRole('button', { name: /^Food,/ }));
-    const rows = await screen.findAllByRole('listitem');
+    await screen.findByRole('button', { name: 'All categories' });
+    const rows = legendItems();
     expect(rows.map((r) => r.textContent)).toEqual([
       expect.stringContaining('Bread'),
       expect.stringContaining('Dairy'),
@@ -178,33 +183,43 @@ describe('SpendingBreakdownCard', () => {
   describe('zoom', () => {
     const MONTH = '?period=month&anchor=2026-10-31';
     const legendRows = (): string[] =>
-      screen.getAllByRole('listitem').map((r) => r.textContent ?? '');
+      legendItems().map((r) => r.textContent ?? '');
 
-    it('shows a breadcrumb only while zoomed and returns to all categories', async () => {
+    const crumbs = (): HTMLElement =>
+      screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const currentCrumb = (): string | null =>
+      crumbs().querySelector('[aria-current="page"]')?.textContent ?? null;
+    const backLink = (): HTMLElement | null =>
+      screen.queryByRole('button', { name: 'All categories' });
+
+    it('shows All categories as the current crumb with the total', async () => {
       mock.onGet(URL).reply(200, breakdown([MDL]));
       renderCard(MONTH);
       await screen.findByRole('button', { name: /^Food,/ });
-      expect(
-        screen.queryByRole('button', { name: 'All categories' })
-      ).toBeNull();
+      expect(currentCrumb()).toBe('All categories');
+      expect(backLink()).toBeNull();
+      expect(crumbs()).toHaveTextContent(/MDL\s?1,250\.40/);
+    });
 
-      fireEvent.click(screen.getByRole('button', { name: /^Food,/ }));
+    it('zooming makes All categories a link back', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(MONTH);
+      fireEvent.click(await screen.findByRole('button', { name: /^Food,/ }));
       await waitFor(() => expect(search()).toContain('category=food'));
-      const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' });
-      expect(crumbs).toHaveTextContent('Food');
+      expect(currentCrumb()).toBe('Food');
+      expect(crumbs()).toHaveTextContent(/MDL\s?910\.40/);
+      expect(crumbs()).toHaveTextContent('72.81%');
 
-      fireEvent.click(screen.getByRole('button', { name: 'All categories' }));
+      fireEvent.click(backLink()!);
       await waitFor(() => expect(search()).not.toContain('category'));
-      expect(
-        screen.queryByRole('navigation', { name: 'Breadcrumb' })
-      ).toBeNull();
+      expect(currentCrumb()).toBe('All categories');
       expect(legendRows()[0]).toContain('Food');
     });
 
     it('opens zoomed from the URL', async () => {
       mock.onGet(URL).reply(200, breakdown([MDL]));
       renderCard(`${MONTH}&category=food`);
-      await screen.findByRole('navigation', { name: 'Breadcrumb' });
+      await screen.findByRole('button', { name: 'All categories' });
       expect(legendRows()).toEqual([
         expect.stringContaining('Bread'),
         expect.stringContaining('Dairy'),
@@ -215,7 +230,7 @@ describe('SpendingBreakdownCard', () => {
     it('drops the zoom when the period changes', async () => {
       mock.onGet(URL).reply(200, breakdown([MDL]));
       renderCard(`${MONTH}&category=food`);
-      await screen.findByRole('navigation', { name: 'Breadcrumb' });
+      await screen.findByRole('button', { name: 'All categories' });
       fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
       await waitFor(() => expect(search()).toContain('anchor=2026-09-30'));
       expect(search()).not.toContain('category');
@@ -226,9 +241,7 @@ describe('SpendingBreakdownCard', () => {
       renderCard(`${MONTH}&category=gone`);
       await screen.findByRole('button', { name: /^Food,/ });
       await waitFor(() => expect(search()).not.toContain('category'));
-      expect(
-        screen.queryByRole('navigation', { name: 'Breadcrumb' })
-      ).toBeNull();
+      expect(currentCrumb()).toBe('All categories');
     });
   });
 });

@@ -25,7 +25,7 @@ import { CurrencyTabs } from './CurrencyTabs';
 import { PeriodPicker } from './PeriodPicker';
 import { SpendingLegend } from './SpendingLegend';
 import { SpendingSunburst } from './SpendingSunburst';
-import { ZoomBreadcrumb } from './ZoomBreadcrumb';
+import { ChartBreadcrumb } from './ChartBreadcrumb';
 
 /** The currency with the most spending; the first one on ties. */
 function largest(list: SpendingCurrency[]): SpendingCurrency | undefined {
@@ -168,41 +168,51 @@ export function SpendingBreakdownCard(): ReactElement {
           selected={current.currency}
           onSelect={setPicked}
         />
-        {zoomed && (
-          <ZoomBreadcrumb
-            name={zoomed.id === null ? t('uncategorized') : zoomed.name}
-            look={{
-              colorIndex: zoomedIndex % PALETTE_SIZE,
-              tint: 0,
-              muted: zoomed.archived,
-              uncategorized: zoomed.id === null,
-            }}
+        <div className="flex flex-col gap-3">
+          <ChartBreadcrumb
+            currency={current.currency}
+            total={current.total}
+            zoomed={
+              zoomed
+                ? {
+                    name: zoomed.id === null ? t('uncategorized') : zoomed.name,
+                    look: {
+                      colorIndex: zoomedIndex % PALETTE_SIZE,
+                      tint: 0,
+                      muted: zoomed.archived,
+                      uncategorized: zoomed.id === null,
+                    },
+                    total: zoomed.total,
+                    share: zoomed.share,
+                  }
+                : null
+            }
             onBack={() => onZoom(null)}
           />
-        )}
-        <div
-          className={cn(
-            'flex flex-col items-center gap-6 transition-opacity md:flex-row md:items-center',
-            stale && 'opacity-60'
-          )}
-        >
-          <div className="w-full md:w-1/2">
-            <SpendingSunburst
-              data={current}
-              centreLabel={label}
-              zoomedKey={zoomedKey}
-              onZoom={onZoom}
-              highlightedKey={highlightedKey}
-              onHighlight={onHighlight}
-            />
-          </div>
-          <div className="w-full md:w-1/2">
-            <SpendingLegend
-              data={current}
-              zoomedKey={zoomedKey}
-              highlightedKey={highlightedKey}
-              onZoom={onZoom}
-            />
+          <div
+            className={cn(
+              'flex flex-col items-center gap-6 transition-opacity md:flex-row md:items-center',
+              stale && 'opacity-60'
+            )}
+          >
+            <div className="w-full md:w-1/2">
+              <SpendingSunburst
+                data={current}
+                centreLabel={label}
+                zoomedKey={zoomedKey}
+                onZoom={onZoom}
+                highlightedKey={highlightedKey}
+                onHighlight={onHighlight}
+              />
+            </div>
+            <div className="w-full md:w-1/2">
+              <SpendingLegend
+                data={current}
+                zoomedKey={zoomedKey}
+                highlightedKey={highlightedKey}
+                onZoom={onZoom}
+              />
+            </div>
           </div>
         </div>
         {query.isFetching && query.isPlaceholderData && (
