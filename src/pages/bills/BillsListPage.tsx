@@ -1,10 +1,11 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ConfirmedBillsFilters } from './components/ConfirmedBillsFilters';
 import { Pagination } from './components/Pagination';
+import { useDetailOutlet } from './useDetailOutlet';
 import { useConfirmedBillsFilters } from '@/hooks/useConfirmedBillsFilters';
 import { useConfirmedBills } from '@/hooks/useConfirmedBills';
 import type { BillResponseDto } from '@/types/bills';
@@ -61,9 +62,15 @@ export function BillsListPage({
     filters.amount_min != null ||
     filters.amount_max != null;
 
+  const { outlet, pageMode, rememberOpen } = useDetailOutlet();
+
   const openBill = (id: string): void => {
+    rememberOpen(id);
     void navigate({ pathname: `./${id}`, search: location.search });
   };
+
+  // On desktop an open bill is a page of its own, so the list steps aside.
+  if (pageMode && outlet) return outlet;
 
   return (
     <>
@@ -126,7 +133,7 @@ export function BillsListPage({
           </>
         )}
       </div>
-      <Outlet />
+      {outlet}
     </>
   );
 }

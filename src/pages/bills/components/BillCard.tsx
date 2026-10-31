@@ -24,6 +24,7 @@ export function BillCard({ bill, onClick }: BillCardProps): ReactElement {
     <button
       type="button"
       aria-label={t('cards.open')}
+      data-bill-id={bill.id}
       onClick={() => onClick(bill.id)}
       className="flex w-full flex-col gap-3 rounded-lg border bg-card p-4 text-left shadow-sm outline-none transition-colors hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring"
     >

@@ -24,7 +24,9 @@ export function BillDetailContent({
   const { t } = useTranslation('bills');
   const q = useBillDetail(id);
 
-  if (q.isLoading) {
+  // isPending, not isLoading: the query is disabled (no data, not loading)
+  // until the household is known, e.g. on a cold deep link.
+  if (q.isPending) {
     return (
       <p className="text-sm text-muted-foreground">
         {t('confirmed.detail.loading')}
@@ -53,7 +55,7 @@ export function BillDetailContent({
     );
   }
 
-  const bill = q.data!;
+  const bill = q.data;
   if (draft) {
     return (
       <BillDetailEditForm bill={bill} draft={draft} onChange={onDraftChange} />

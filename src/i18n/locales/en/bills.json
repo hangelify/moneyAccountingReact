@@ -159,7 +159,10 @@
       "itemWeight": "Item {{index}} weight (kg)",
       "amountColumn": "Amount",
       "countColumn": "Count",
-      "weightColumn": "Weight (kg)"
+      "weightColumn": "Weight (kg)",
+      "nameColumn": "Name",
+      "categoryColumn": "Category",
+      "itemsTotal": "Items total"
     }
   }
 }

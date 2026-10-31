@@ -38,9 +38,9 @@ const DraftBills = lazy(() =>
     default: m.DraftBills,
   }))
 );
-const BillDetailDrawer = lazy(() =>
-  import('@/pages/bills/BillDetailDrawer').then((m) => ({
-    default: m.BillDetailDrawer,
+const BillDetailRoute = lazy(() =>
+  import('@/pages/bills/BillDetailRoute').then((m) => ({
+    default: m.BillDetailRoute,
   }))
 );
 
@@ -76,7 +76,7 @@ function App(): ReactElement {
                 </RequireAuth>
               }
             >
-              <Route path=":id" element={<BillDetailDrawer />} />
+              <Route path=":id" element={<BillDetailRoute />} />
             </Route>
             <Route
               path="/bills/drafts"
@@ -86,7 +86,7 @@ function App(): ReactElement {
                 </RequireAuth>
               }
             >
-              <Route path=":id" element={<BillDetailDrawer />} />
+              <Route path=":id" element={<BillDetailRoute />} />
             </Route>
             <Route
               path="/bills"
@@ -96,7 +96,7 @@ function App(): ReactElement {
                 </RequireAuth>
               }
             >
-              <Route path=":id" element={<BillDetailDrawer />} />
+              <Route path=":id" element={<BillDetailRoute />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
