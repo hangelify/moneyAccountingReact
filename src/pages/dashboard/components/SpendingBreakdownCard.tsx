@@ -224,7 +224,8 @@ export function SpendingBreakdownCard(): ReactElement {
         label={label}
         onChange={setParams}
       />
-      {body}
+      {/* Controls above the line, data below it. */}
+      {body && <div className="border-t pt-5">{body}</div>}
     </section>
   );
 }

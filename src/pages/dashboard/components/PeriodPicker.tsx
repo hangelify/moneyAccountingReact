@@ -47,45 +47,53 @@ export function PeriodPicker({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-        {SPENDING_PERIODS.map((p) => (
-          <Button
-            key={p}
-            type="button"
-            size="sm"
-            variant={p === params.period ? 'default' : 'outline'}
-            aria-pressed={p === params.period}
-            className="shrink-0"
-            onClick={() => pick(p)}
-          >
-            {t(`period.${p}`)}
-          </Button>
-        ))}
-      </div>
+      {/* One toolbar on desktop: range type on the left, range value on the
+          right. On mobile it wraps into two rows. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 py-0.5">
+          {SPENDING_PERIODS.map((p) => (
+            <Button
+              key={p}
+              type="button"
+              size="sm"
+              variant={p === params.period ? 'default' : 'outline'}
+              aria-pressed={p === params.period}
+              className="shrink-0"
+              onClick={() => pick(p)}
+            >
+              {t(`period.${p}`)}
+            </Button>
+          ))}
+        </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          aria-label={t('previous')}
-          onClick={() => onChange(shiftParams(params, range, -1))}
-        >
-          <ChevronLeft />
-        </Button>
-        <span className="min-w-0 truncate text-center font-medium">
-          {label}
-        </span>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          aria-label={t('next')}
-          disabled={!canGoNext(range)}
-          onClick={() => onChange(shiftParams(params, range, 1))}
-        >
-          <ChevronRight />
-        </Button>
+        {/* The arrows hug a fixed-width label so they stay put while the
+            label changes length. */}
+        <div className="inline-flex shrink-0 items-center self-center rounded-md border">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="rounded-r-none"
+            aria-label={t('previous')}
+            onClick={() => onChange(shiftParams(params, range, -1))}
+          >
+            <ChevronLeft />
+          </Button>
+          <span className="min-w-[11rem] whitespace-nowrap border-x px-3 text-center text-sm font-medium tabular-nums leading-9">
+            {label}
+          </span>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="rounded-l-none"
+            aria-label={t('next')}
+            disabled={!canGoNext(range)}
+            onClick={() => onChange(shiftParams(params, range, 1))}
+          >
+            <ChevronRight />
+          </Button>
+        </div>
       </div>
 
       {params.period === 'custom' && (
