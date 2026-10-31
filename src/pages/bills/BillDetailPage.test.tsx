@@ -107,6 +107,21 @@ describe('BillDetailPage', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('switches between the items table and the chart', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    renderAt('/bills/drafts/d1');
+    const items = await screen.findByRole('tab', { name: 'Items' });
+    expect(items).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(screen.getByRole('tab', { name: 'Chart' }));
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /^Dairy, €2\.49, 34\.58%$/ })
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /edit/i }));
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Chart' })).toBeDisabled();
+  });
+
   it('Back returns to the list keeping the search string', async () => {
     mock.onGet(DETAIL).reply(200, draftBill);
     renderAt('/bills/drafts/d1?page=2');

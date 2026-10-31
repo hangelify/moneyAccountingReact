@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
 import type { BillDetailResponseDto } from '@/types/bills';
 import type { BillDetailDraft } from '../billDetailDraft';
+import { BillDetailViews } from './BillDetailViews';
 
 export interface BillDetailContentProps {
   id: string;
@@ -56,11 +57,27 @@ export function BillDetailContent({
   }
 
   const bill = q.data;
-  if (draft) {
-    return (
-      <BillDetailEditForm bill={bill} draft={draft} onChange={onDraftChange} />
-    );
-  }
+  return (
+    <BillDetailViews key={id} bill={bill} editing={draft !== null}>
+      {draft ? (
+        <BillDetailEditForm
+          bill={bill}
+          draft={draft}
+          onChange={onDraftChange}
+        />
+      ) : (
+        <BillDetailSummary bill={bill} />
+      )}
+    </BillDetailViews>
+  );
+}
+
+function BillDetailSummary({
+  bill,
+}: {
+  bill: BillDetailResponseDto;
+}): ReactElement {
+  const { t } = useTranslation('bills');
   return (
     <div className="flex flex-col gap-4">
       <dl className="grid grid-cols-2 gap-3 text-sm">
