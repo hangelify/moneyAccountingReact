@@ -170,4 +170,22 @@ describe('PeriodPicker', () => {
       to: '2026-03-25',
     });
   });
+
+  it('keeps focus in the date input after a debounced commit', () => {
+    setup({ period: 'custom', from: '2026-03-05', to: '2026-03-20' });
+    toInput().focus();
+    fireEvent.change(toInput(), { target: { value: '2026-03-25' } });
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(toInput().value).toBe('2026-03-25');
+    expect(document.activeElement).toBe(toInput());
+  });
+
+  it('follows an outside change such as Previous', () => {
+    setup({ period: 'custom', from: '2026-03-05', to: '2026-03-20' });
+    fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
+    expect(fromInput().value).toBe('2026-02-17');
+    expect(toInput().value).toBe('2026-03-04');
+  });
 });

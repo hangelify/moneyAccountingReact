@@ -89,13 +89,7 @@ export function PeriodPicker({
       </div>
 
       {params.period === 'custom' && (
-        // Remount on outside changes (prev/next) so the draft follows them.
-        <CustomRange
-          key={`${params.from}|${params.to}`}
-          from={params.from}
-          to={params.to}
-          onChange={onChange}
-        />
+        <CustomRange from={params.from} to={params.to} onChange={onChange} />
       )}
     </div>
   );
@@ -112,6 +106,13 @@ function CustomRange({
 }): ReactElement {
   const { t } = useTranslation('dashboard');
   const [draft, setDraft] = useState({ from, to });
+  // Follow outside changes (prev/next, back button) without remounting, so
+  // the focused input survives our own debounced commits.
+  const [synced, setSynced] = useState({ from, to });
+  if (synced.from !== from || synced.to !== to) {
+    setSynced({ from, to });
+    if (draft.from !== from || draft.to !== to) setDraft({ from, to });
+  }
   const error =
     draft.from && draft.to ? validateCustomRange(draft.from, draft.to) : null;
 
