@@ -5,7 +5,11 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
 import type { ReactElement } from 'react';
 import { apiClient } from '@/auth/apiClient';
-import { HouseholdTestProvider } from '@/test/household';
+import {
+  HouseholdTestProvider,
+  TEST_HOUSEHOLDS,
+  makeHouseholdValue,
+} from '@/test/household';
 import { EUR, MDL, breakdown } from '@/test/spending';
 import { SpendingBreakdownCard } from './SpendingBreakdownCard';
 
@@ -16,11 +20,13 @@ function LocationProbe(): ReactElement {
   return <output data-testid="search">{search}</output>;
 }
 
-function renderCard(search = ''): void {
+function renderCard(search = ''): { switchHousehold: (i: number) => void } {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+  const tree = (household = TEST_HOUSEHOLDS[0]!): ReactElement => (
     <QueryClientProvider client={qc}>
-      <HouseholdTestProvider>
+      <HouseholdTestProvider
+        value={makeHouseholdValue({ activeHousehold: household })}
+      >
         <MemoryRouter initialEntries={[`/dashboard${search}`]}>
           <SpendingBreakdownCard />
           <LocationProbe />
@@ -28,6 +34,10 @@ function renderCard(search = ''): void {
       </HouseholdTestProvider>
     </QueryClientProvider>
   );
+  const { rerender } = render(tree());
+  return {
+    switchHousehold: (i) => rerender(tree(TEST_HOUSEHOLDS[i])),
+  };
 }
 
 const search = (): string => screen.getByTestId('search').textContent ?? '';
@@ -148,5 +158,20 @@ describe('SpendingBreakdownCard', () => {
       expect.stringContaining('Bread'),
       expect.stringContaining('Dairy'),
     ]);
+  });
+
+  it("never shows another household's spending after a switch", async () => {
+    mock.onGet(URL).reply(200, breakdown([MDL]));
+    const { switchHousehold } = renderCard();
+    await screen.findByRole('button', { name: /^Food,/ });
+    mock
+      .onGet('/households/hh-2/bills/dashboard/spending-breakdown')
+      .reply(500, {});
+    switchHousehold(1);
+    expect(screen.queryByRole('button', { name: /^Food,/ })).toBeNull();
+    expect(
+      await screen.findByRole('button', { name: 'Retry' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Food,/ })).toBeNull();
   });
 });

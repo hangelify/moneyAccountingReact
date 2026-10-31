@@ -55,10 +55,18 @@ export function SpendingBreakdownCard(): ReactElement {
 
   const query = useSpendingBreakdown(params);
 
-  // Keep the last good answer so a failed refetch doesn't blank the chart.
-  const [lastGood, setLastGood] = useState<SpendingBreakdown | undefined>();
-  if (query.data && query.data !== lastGood) setLastGood(query.data);
-  const data = query.data ?? (query.isError ? lastGood : undefined);
+  // Keep the last good answer so a failed refetch doesn't blank the chart,
+  // but never show one household's answer under another.
+  const [lastGood, setLastGood] = useState<{
+    hid: string | null;
+    data: SpendingBreakdown;
+  }>();
+  if (query.data && query.data !== lastGood?.data) {
+    setLastGood({ hid, data: query.data });
+  }
+  const data =
+    query.data ??
+    (query.isError && lastGood?.hid === hid ? lastGood.data : undefined);
   const stale =
     query.isPlaceholderData || (query.isError && data !== undefined);
 

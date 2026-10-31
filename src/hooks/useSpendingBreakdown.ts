@@ -1,8 +1,4 @@
-import {
-  keepPreviousData,
-  useQuery,
-  type UseQueryResult,
-} from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { dashboardApi } from '@/pages/dashboard/api';
 import type {
@@ -19,6 +15,8 @@ export function useSpendingBreakdown(
     queryKey: ['households', hid, 'dashboard', 'spending-breakdown', params],
     queryFn: () => dashboardApi.spendingBreakdown(hid!, params),
     enabled: hid !== null,
-    placeholderData: keepPreviousData,
+    // Keep the previous chart only within one household, never across a switch.
+    placeholderData: (prev, prevQuery) =>
+      prevQuery?.queryKey[1] === hid ? prev : undefined,
   });
 }
