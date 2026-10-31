@@ -191,6 +191,11 @@ describe('arcPath', () => {
     expect(d).not.toContain('NaN');
   });
 
+  it('draws a full circle without radial edges, so no seam shows', () => {
+    const d = arcPath(0.4, 0.68, 0, TAU);
+    expect(d).not.toContain('L');
+  });
+
   it('splits a full circle into two halves', () => {
     const d = arcPath(0.4, 0.68, 0, TAU);
     expect(d.match(/A 0\.68/g)).toHaveLength(2);

@@ -174,7 +174,7 @@ export function SpendingSunburst({
               <span className="text-base font-semibold sm:text-lg">
                 {money(data.total)}
               </span>
-              <span className="w-full truncate text-xs text-muted-foreground">
+              <span className="line-clamp-2 w-full text-xs leading-tight text-muted-foreground">
                 {centreLabel}
               </span>
             </>

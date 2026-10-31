@@ -153,17 +153,35 @@ function segment(
   ].join(' ');
 }
 
-/** SVG path for a ring segment. A full circle is drawn as two halves. */
+/**
+ * A full ring: the outer circle clockwise and the inner one counter-clockwise
+ * (two half-arcs each, since one SVG arc can't close a circle). No radial
+ * edges, so the separator stroke draws no seam.
+ */
+function ring(innerR: number, outerR: number, start: number): string {
+  const mid = start + Math.PI;
+  const half = (r: number, sweep: 0 | 1, to: number): string =>
+    `A ${fmt(r)} ${fmt(r)} 0 0 ${sweep} ${point(r, to)}`;
+  return [
+    `M ${point(outerR, start)}`,
+    half(outerR, 1, mid),
+    half(outerR, 1, start),
+    'Z',
+    `M ${point(innerR, start)}`,
+    half(innerR, 0, mid),
+    half(innerR, 0, start),
+    'Z',
+  ].join(' ');
+}
+
+/** SVG path for a ring segment. */
 export function arcPath(
   innerR: number,
   outerR: number,
   start: number,
   end: number
 ): string {
-  if (end - start >= TAU - 1e-9) {
-    const mid = start + Math.PI;
-    return `${segment(innerR, outerR, start, mid)} ${segment(innerR, outerR, mid, start + TAU)}`;
-  }
+  if (end - start >= TAU - 1e-9) return ring(innerR, outerR, start);
   return segment(innerR, outerR, start, end);
 }
 
