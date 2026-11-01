@@ -6,6 +6,11 @@ import { RequireAuth } from '@/auth/RequireAuth';
 import { LoadingFallback } from '@/components/common/LoadingFallback';
 
 // Lazy load pages
+const HouseholdSettings = lazy(() =>
+  import('@/pages/households/HouseholdSettings').then((m) => ({
+    default: m.HouseholdSettings,
+  }))
+);
 const Home = lazy(() =>
   import('@/pages/home/Home').then((m) => ({ default: m.Home }))
 );
@@ -98,6 +103,14 @@ function App(): ReactElement {
             >
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
+            <Route
+              path="/households/settings"
+              element={
+                <RequireAuth>
+                  <HouseholdSettings />
+                </RequireAuth>
+              }
+            />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>

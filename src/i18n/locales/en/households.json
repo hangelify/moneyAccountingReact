@@ -1,5 +1,17 @@
 {
   "accessLost": "You no longer have access to this household.",
   "loadFailed": "Could not load your households.",
-  "retry": "Try again"
+  "retry": "Try again",
+  "settings": {
+    "title": "Household settings",
+    "name": "Name",
+    "currency": "Currency",
+    "currencyHint": "Bills, the dashboard and totals will be shown in this currency. Original receipt amounts are kept.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Household updated",
+    "ownerOnly": "Only the household owner can change these.",
+    "invalid": "Couldn't save — check the values",
+    "failed": "Couldn't save the household"
+  }
 }
