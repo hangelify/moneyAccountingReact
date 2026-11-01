@@ -1,5 +1,6 @@
 import type { KeyboardEvent, ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { HouseholdAmount } from '@/components/currency/HouseholdAmount';
 import type { BillResponseDto } from '@/types/bills';
 
 export interface ConfirmedBillsTableProps {
@@ -55,7 +56,10 @@ export function ConfirmedBillsTable({
               onKeyDown={(e) => onKey(e, () => onRowClick(b.id))}
             >
               <td className="px-3 py-2">{b.bill_date.slice(0, 10)}</td>
-              <td className="px-3 py-2 font-mono">{formatAmount(b)}</td>
+              <td className="px-3 py-2 font-mono">
+                {formatAmount(b)}
+                <HouseholdAmount bill={b} className="block text-xs" />
+              </td>
               <td className="px-3 py-2">
                 {b.market?.name ?? t('confirmed.table.noMarket')}
               </td>
