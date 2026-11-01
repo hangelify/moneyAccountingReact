@@ -148,6 +148,10 @@ export interface BillEdits {
   currency: string;
   total_amount: number;
   items: BillEditItem[];
+  // Receipt identity as typed; '' when empty.
+  fiscal_register_id: string;
+  fiscal_receipt_number: string;
+  purchase_time: string;
 }
 
 export interface MarketRef {

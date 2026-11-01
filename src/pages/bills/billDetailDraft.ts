@@ -70,9 +70,11 @@ function marketFields(
  */
 export function buildDetailConfirmPayload(
   bill: BillDetailResponseDto,
-  draft: BillDetailDraft
+  draft: BillDetailDraft,
+  duplicateOfId?: string | null
 ): ConfirmBillRequest {
   return {
+    ...(duplicateOfId ? { duplicate_of_id: duplicateOfId } : {}),
     ...marketFields(bill, draft.market.trim()),
     bill_date: draft.date,
     total_amount: round2(Number(draft.total)),

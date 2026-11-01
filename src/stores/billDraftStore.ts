@@ -33,6 +33,9 @@ const EMPTY_EDITS: BillEdits = {
   currency: '',
   total_amount: 0,
   items: [],
+  fiscal_register_id: '',
+  fiscal_receipt_number: '',
+  purchase_time: '',
 };
 
 function toEditItem(item: ParsedBillItem): BillEditItem {
@@ -59,6 +62,9 @@ function toEdits(parsed: ParsedBill): BillEdits {
     currency: parsed.currency ?? '',
     total_amount: parsed.total_amount ?? 0,
     items: parsed.items.map(toEditItem),
+    fiscal_register_id: parsed.fiscal_register_id ?? '',
+    fiscal_receipt_number: parsed.fiscal_receipt_number ?? '',
+    purchase_time: parsed.purchase_time ?? '',
   };
 }
 

@@ -172,3 +172,22 @@ describe('isDraftValid', () => {
     expect(isDraftValid({ ...toDraft(bill), items: [] })).toBe(false);
   });
 });
+
+describe('buildDetailConfirmPayload duplicate link', () => {
+  it('adds duplicate_of_id when given', () => {
+    const bill = makeBill();
+    expect(buildDetailConfirmPayload(bill, toDraft(bill), 'b0')).toMatchObject({
+      duplicate_of_id: 'b0',
+    });
+  });
+
+  it('leaves duplicate_of_id out otherwise', () => {
+    const bill = makeBill();
+    expect(buildDetailConfirmPayload(bill, toDraft(bill))).not.toHaveProperty(
+      'duplicate_of_id'
+    );
+    expect(
+      buildDetailConfirmPayload(bill, toDraft(bill), null)
+    ).not.toHaveProperty('duplicate_of_id');
+  });
+});

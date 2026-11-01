@@ -47,9 +47,55 @@ function toCreateItem(item: BillEditItem): CreateBillItem {
   };
 }
 
+type ReceiptField =
+  | 'fiscal_register_id'
+  | 'fiscal_receipt_number'
+  | 'purchase_time';
+
+const RECEIPT_FIELDS: ReceiptField[] = [
+  'fiscal_register_id',
+  'fiscal_receipt_number',
+  'purchase_time',
+];
+const RECEIPT_ID_MAX = 64;
+const HH_MM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** Receipt fields the API would reject: ids over 64 chars, time not HH:MM. */
+export function receiptFieldErrors(
+  edits: Pick<BillEdits, ReceiptField>
+): ReceiptField[] {
+  return RECEIPT_FIELDS.filter((field) => {
+    const value = edits[field].trim();
+    if (value === '') return false;
+    return field === 'purchase_time'
+      ? !HH_MM.test(value)
+      : value.length > RECEIPT_ID_MAX;
+  });
+}
+
+// The confirm and create endpoints reject unknown or empty fields, so only
+// the filled-in ones are sent.
+function receiptFields(
+  edits: BillEdits
+): Partial<Record<ReceiptField, string>> {
+  const out: Partial<Record<ReceiptField, string>> = {};
+  for (const field of RECEIPT_FIELDS) {
+    const value = edits[field].trim();
+    if (value) out[field] = value;
+  }
+  return out;
+}
+
+function duplicateOf(id: string | null | undefined): {
+  duplicate_of_id?: string;
+} {
+  return id ? { duplicate_of_id: id } : {};
+}
+
 export function buildConfirmPayload(
   edits: BillEdits,
-  today: string = todayIso()
+  today: string = todayIso(),
+  duplicateOfId?: string | null
 ): ConfirmBillRequest {
   return {
     ...(edits.market_name ? { new_market: { name: edits.market_name } } : {}),
@@ -57,17 +103,22 @@ export function buildConfirmPayload(
     ...(edits.currency ? { currency: edits.currency } : {}),
     total_amount: round2(edits.total_amount),
     items: edits.items.map(toConfirmItem),
+    ...receiptFields(edits),
+    ...duplicateOf(duplicateOfId),
   };
 }
 
 export function buildCreatePayload(
   edits: BillEdits,
-  today: string = todayIso()
+  today: string = todayIso(),
+  duplicateOfId?: string | null
 ): CreateBillRequest {
   return {
     bill_date: edits.bill_date || today,
     ...(edits.currency ? { currency: edits.currency } : {}),
     total_amount: round2(edits.total_amount),
     items: edits.items.map(toCreateItem),
+    ...receiptFields(edits),
+    ...duplicateOf(duplicateOfId),
   };
 }

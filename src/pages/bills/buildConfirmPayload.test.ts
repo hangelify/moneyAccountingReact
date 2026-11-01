@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import type { BillEditItem, BillEdits } from '@/types/bills';
-import { buildConfirmPayload, buildCreatePayload } from './buildConfirmPayload';
+import {
+  buildConfirmPayload,
+  buildCreatePayload,
+  receiptFieldErrors,
+} from './buildConfirmPayload';
 
 const TODAY = '2026-10-29';
 
@@ -26,6 +30,9 @@ function makeEdits(overrides: Partial<BillEdits> = {}): BillEdits {
     currency: 'EUR',
     total_amount: 10,
     items: [makeItem()],
+    fiscal_register_id: '',
+    fiscal_receipt_number: '',
+    purchase_time: '',
     ...overrides,
   };
 }
@@ -125,5 +132,75 @@ describe('buildCreatePayload', () => {
         TODAY
       )
     ).toThrow('uncategorised');
+  });
+});
+
+const RECEIPT = {
+  fiscal_register_id: ' J403 ',
+  fiscal_receipt_number: '   ',
+  purchase_time: '14:05',
+};
+
+describe.each([
+  ['buildConfirmPayload', buildConfirmPayload],
+  ['buildCreatePayload', buildCreatePayload],
+] as const)('%s duplicate and receipt fields', (_name, build) => {
+  it('adds duplicate_of_id when given', () => {
+    expect(build(makeEdits(), TODAY, 'b0')).toMatchObject({
+      duplicate_of_id: 'b0',
+    });
+    expect(build(makeEdits(), TODAY)).not.toHaveProperty('duplicate_of_id');
+    expect(build(makeEdits(), TODAY, null)).not.toHaveProperty(
+      'duplicate_of_id'
+    );
+  });
+
+  it('sends trimmed receipt fields only when non-blank', () => {
+    const body = build(makeEdits(RECEIPT), TODAY);
+    expect(body).toMatchObject({
+      fiscal_register_id: 'J403',
+      purchase_time: '14:05',
+    });
+    expect(body).not.toHaveProperty('fiscal_receipt_number');
+  });
+
+  it('sends no receipt fields when all are empty', () => {
+    const body = build(makeEdits(), TODAY);
+    expect(body).not.toHaveProperty('fiscal_register_id');
+    expect(body).not.toHaveProperty('fiscal_receipt_number');
+    expect(body).not.toHaveProperty('purchase_time');
+  });
+});
+
+describe('receiptFieldErrors', () => {
+  const empty = {
+    fiscal_register_id: '',
+    fiscal_receipt_number: '',
+    purchase_time: '',
+  };
+
+  it('accepts empty fields and a valid time', () => {
+    expect(receiptFieldErrors(empty)).toEqual([]);
+    expect(receiptFieldErrors({ ...empty, purchase_time: '23:59' })).toEqual(
+      []
+    );
+  });
+
+  it('rejects an id over 64 characters', () => {
+    expect(
+      receiptFieldErrors({ ...empty, fiscal_register_id: 'x'.repeat(65) })
+    ).toEqual(['fiscal_register_id']);
+    expect(
+      receiptFieldErrors({ ...empty, fiscal_receipt_number: 'x'.repeat(64) })
+    ).toEqual([]);
+  });
+
+  it('rejects a time that is not HH:MM', () => {
+    expect(receiptFieldErrors({ ...empty, purchase_time: '25:00' })).toEqual([
+      'purchase_time',
+    ]);
+    expect(receiptFieldErrors({ ...empty, purchase_time: '9:05' })).toEqual([
+      'purchase_time',
+    ]);
   });
 });
