@@ -8,6 +8,7 @@ import { useBillDetail } from '@/hooks/useBillDetail';
 import { ApiError } from '@/auth/apiError';
 import { BillDetailTable } from './components/BillDetailTable';
 import { BillDetailViews } from './components/BillDetailViews';
+import { BillDuplicateSection } from './components/BillDuplicateSection';
 import { useBillDetailActions } from './useBillDetailActions';
 
 // Desktop layout of a bill: a full page with the items in a table.
@@ -15,6 +16,7 @@ export function BillDetailPage(): ReactElement | null {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation('bills');
   const q = useBillDetail(id);
+  const actions = useBillDetailActions(id);
   const {
     bill,
     draft,
@@ -24,7 +26,7 @@ export function BillDetailPage(): ReactElement | null {
     isConfirming,
     canConfirm,
     close,
-  } = useBillDetailActions(id);
+  } = actions;
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // The page replaces the list: start at the top and move focus to the page.
@@ -66,9 +68,16 @@ export function BillDetailPage(): ReactElement | null {
       );
     }
     return (
-      <BillDetailViews key={id} bill={q.data} editing={draft !== null}>
-        <BillDetailTable bill={q.data} draft={draft} onDraftChange={setDraft} />
-      </BillDetailViews>
+      <>
+        <BillDuplicateSection bill={q.data} actions={actions} />
+        <BillDetailViews key={id} bill={q.data} editing={draft !== null}>
+          <BillDetailTable
+            bill={q.data}
+            draft={draft}
+            onDraftChange={setDraft}
+          />
+        </BillDetailViews>
+      </>
     );
   };
 

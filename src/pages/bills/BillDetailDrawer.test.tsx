@@ -388,3 +388,78 @@ describe('BillDetailDrawer', () => {
     });
   });
 });
+
+describe('BillDetailDrawer duplicates', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const ORIGINAL = {
+    id: 'b0',
+    bill_date: '2026-10-03',
+    total_amount: 10,
+    currency: 'EUR',
+    market_name: 'Lidl',
+    created_by_name: 'Ana',
+  };
+  const bill = {
+    id: 'c1',
+    bill_date: '2026-10-28',
+    total_amount: 10,
+    amount_mismatch: false,
+    currency: 'EUR',
+    created_at: '2026-10-28T10:00:00Z',
+    status: 'confirmed',
+    market: { id: 'm1', name: 'Lidl', city: null },
+    items: [],
+    possible_duplicates: [{ ...ORIGINAL, match: 'strong' }],
+    duplicate_of: null,
+  };
+  const C1 = '/households/hh-1/bills/c1';
+
+  it('Mark on a confirmed bill calls mark-duplicate and shows the badge', async () => {
+    const marked = {
+      ...bill,
+      status: 'duplicate',
+      possible_duplicates: [],
+      duplicate_of: ORIGINAL,
+    };
+    mock.onGet(C1).replyOnce(200, bill).onGet(C1).reply(200, marked);
+    mock.onPost(`${C1}/mark-duplicate`).reply(200, marked);
+    renderAt('/bills/confirmed/c1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Mark as duplicate' })
+    );
+    expect(
+      await screen.findByRole('link', {
+        name: "Duplicate of Ana's bill on Oct 3",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it('Unmark on a duplicate calls unmark-duplicate', async () => {
+    const unmarked = { ...bill, possible_duplicates: [] };
+    mock
+      .onGet(C1)
+      .replyOnce(200, {
+        ...bill,
+        status: 'duplicate',
+        possible_duplicates: [],
+        duplicate_of: ORIGINAL,
+      })
+      .onGet(C1)
+      .reply(200, unmarked);
+    mock.onPost(`${C1}/unmark-duplicate`).reply(200, unmarked);
+    renderAt('/bills/confirmed/c1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Unmark' })
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('link', { name: /Duplicate of/ })).toBeNull()
+    );
+  });
+});
