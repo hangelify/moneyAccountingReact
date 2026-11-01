@@ -8,7 +8,11 @@ import {
   useMutation,
   useQuery,
 } from '@tanstack/react-query';
-import { HouseholdProvider, useHouseholds } from './HouseholdContext';
+import {
+  HouseholdProvider,
+  OWN_FORBIDDEN_META,
+  useHouseholds,
+} from './HouseholdContext';
 import { householdsApi } from '@/pages/households/api';
 import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
@@ -35,11 +39,18 @@ const toastSpy = vi.mocked(toast);
 const forbidden = (): ApiError =>
   new ApiError(403, null, {}, 'Forbidden', { url: '/households/hh-1/x' });
 
-function Mutator({ explicit }: { explicit: boolean }): null {
+function Mutator({
+  explicit,
+  own = false,
+}: {
+  explicit: boolean;
+  own?: boolean;
+}): null {
   const { handleForbidden } = useHouseholds();
   const m = useMutation({
     mutationFn: () => Promise.reject(forbidden()),
     ...(explicit && { onError: (e: unknown) => handleForbidden(e) }),
+    ...(own && { meta: OWN_FORBIDDEN_META }),
   });
   useEffect(() => {
     m.mutate();
@@ -220,6 +231,14 @@ describe('HouseholdProvider', () => {
     render(tree(makeClient(), <Mutator explicit={false} />));
     await waitFor(() => expect(toastSpy).toHaveBeenCalledTimes(1));
     expect(list).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores a 403 from a mutation that handles it itself', async () => {
+    render(tree(makeClient(), <Mutator explicit={false} own />));
+    await waitFor(() => expect(status()).toBe('ready'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(toastSpy).not.toHaveBeenCalled();
+    expect(list).toHaveBeenCalledTimes(1);
   });
 
   it('dedupes an explicit onError call and the central hook', async () => {

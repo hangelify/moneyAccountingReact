@@ -36,7 +36,10 @@ export const HouseholdContext = createContext<HouseholdContextValue | null>(
   null
 );
 
-const HOUSEHOLDS_KEY = ['households'] as const;
+export const HOUSEHOLDS_KEY = ['households'] as const;
+
+/** Mutation meta: the mutation handles its own 403 (e.g. member, not owner). */
+export const OWN_FORBIDDEN_META = { ownForbidden: true } as const;
 const NO_HOUSEHOLDS: Household[] = [];
 
 export function HouseholdProvider({
@@ -144,6 +147,7 @@ export function HouseholdProvider({
     });
     const unsubMutations = queryClient.getMutationCache().subscribe((event) => {
       if (event.type === 'updated' && event.action.type === 'error') {
+        if (event.mutation.options.meta?.ownForbidden === true) return;
         check(event.action.error);
       }
     });
