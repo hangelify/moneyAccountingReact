@@ -3,6 +3,7 @@ import {
   loginSchema,
   registerSchema,
   firstNameSchema,
+  householdSettingsSchema,
 } from './validation-schemas';
 
 const base = {
@@ -72,5 +73,20 @@ describe('loginSchema', () => {
     expect(
       loginSchema.safeParse({ email: 'a@b.co', password: 'abc' }).success
     ).toBe(true);
+  });
+});
+
+describe('householdSettingsSchema', () => {
+  it('rejects a blank name', () => {
+    expect(
+      householdSettingsSchema.safeParse({ name: '   ', currency: 'EUR' })
+        .success
+    ).toBe(false);
+  });
+
+  it('trims the name', () => {
+    expect(
+      householdSettingsSchema.parse({ name: ' Home ', currency: 'EUR' }).name
+    ).toBe('Home');
   });
 });

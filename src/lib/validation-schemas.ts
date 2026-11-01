@@ -61,5 +61,18 @@ export const registerSchema = z.object({
     .optional(),
 });
 
+/**
+ * Household settings form schema
+ */
+export const householdSettingsSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(MAX_NAME_LENGTH, 'Name must be at most 255 characters'),
+  currency: z.string().min(1),
+});
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export type HouseholdSettingsFormData = z.infer<typeof householdSettingsSchema>;

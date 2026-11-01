@@ -10,6 +10,8 @@ export interface CurrencySelectProps {
   value: Currency | null;
   onChange: (next: Currency | null) => void;
   disabled?: boolean;
+  // A value must be picked: no "All currencies" option.
+  required?: boolean;
   id?: string;
   'aria-label'?: string | undefined;
 }
@@ -18,6 +20,7 @@ export function CurrencySelect({
   value,
   onChange,
   disabled,
+  required = false,
   id,
   'aria-label': ariaLabel,
 }: CurrencySelectProps): ReactElement {
@@ -37,7 +40,9 @@ export function CurrencySelect({
       disabled={disabled}
       onChange={(e) => handleChange(e.target.value)}
     >
-      <option value="">{t('confirmed.filters.currencyAll')}</option>
+      {!required && (
+        <option value="">{t('confirmed.filters.currencyAll')}</option>
+      )}
       {CURRENCY_REGION_ORDER.map((group) => (
         <optgroup key={group.label} label={group.label}>
           {group.codes.map((code) => (
