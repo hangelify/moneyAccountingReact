@@ -1,39 +1,37 @@
 import type { ReactElement } from 'react';
-import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface CurrencyTabsProps {
-  currencies: (string | null)[];
-  selected: string | null;
-  onSelect: (currency: string | null) => void;
+  tabs: { key: string; label: string }[];
+  selected: string;
+  onSelect: (key: string) => void;
 }
 
-/** One tab per currency; hidden when there is only one. */
+/** One tab per currency view; hidden when there is only one. */
 export function CurrencyTabs({
-  currencies,
+  tabs,
   selected,
   onSelect,
 }: CurrencyTabsProps): ReactElement | null {
-  const { t } = useTranslation('dashboard');
-  if (currencies.length < 2) return null;
+  if (tabs.length < 2) return null;
   return (
     <div
       role="tablist"
       className="inline-flex w-fit gap-1 rounded-lg bg-muted p-1"
     >
-      {currencies.map((c) => (
+      {tabs.map((tab) => (
         <button
-          key={c ?? 'none'}
+          key={tab.key}
           type="button"
           role="tab"
-          aria-selected={c === selected}
+          aria-selected={tab.key === selected}
           className={cn(
             'rounded-md px-3 py-1 text-sm font-medium text-muted-foreground transition-colors',
-            c === selected && 'bg-background text-foreground shadow-sm'
+            tab.key === selected && 'bg-background text-foreground shadow-sm'
           )}
-          onClick={() => onSelect(c)}
+          onClick={() => onSelect(tab.key)}
         >
-          {c ?? t('noCurrency')}
+          {tab.label}
         </button>
       ))}
     </div>

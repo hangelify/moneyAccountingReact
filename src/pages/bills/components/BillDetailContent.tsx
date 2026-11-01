@@ -8,6 +8,7 @@ import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
 import type { BillDetailResponseDto } from '@/types/bills';
 import type { BillDetailDraft } from '../billDetailDraft';
 import { BillDetailViews } from './BillDetailViews';
+import { HouseholdTotal } from './HouseholdTotal';
 
 export interface BillDetailContentProps {
   id: string;
@@ -94,6 +95,7 @@ function BillDetailSummary({
               value: bill.total_amount.toFixed(2),
               currency: bill.currency ?? '',
             })}
+            <HouseholdTotal bill={bill} />
           </dd>
         </div>
         <div>

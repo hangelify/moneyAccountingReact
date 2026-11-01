@@ -9,6 +9,7 @@ import {
 const h = (id: string): Household => ({
   id,
   name: id,
+  currency: 'EUR',
   created_at: '2026-06-03T12:00:00.000Z',
   member_count: 1,
 });

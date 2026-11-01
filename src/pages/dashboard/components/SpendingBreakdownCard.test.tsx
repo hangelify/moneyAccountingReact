@@ -10,7 +10,7 @@ import {
   TEST_HOUSEHOLDS,
   makeHouseholdValue,
 } from '@/test/household';
-import { EUR, MDL, breakdown } from '@/test/spending';
+import { EUR, MDL, breakdown, inHousehold } from '@/test/spending';
 import { SpendingBreakdownCard } from './SpendingBreakdownCard';
 
 const URL = '/households/hh-1/bills/dashboard/spending-breakdown';
@@ -95,6 +95,96 @@ describe('SpendingBreakdownCard', () => {
     expect(
       await screen.findByRole('button', { name: /^Food, MDL/ })
     ).toBeInTheDocument();
+  });
+
+  describe('household currency tab', () => {
+    const RANGE = {
+      period: 'month',
+      start: '2026-10-01',
+      end: '2026-11-01',
+    } as const;
+    const converted = inHousehold({ ...MDL, currency: 'EUR', total: 2062.52 });
+
+    it('shows the empty state for an empty range', async () => {
+      const empty = inHousehold({
+        currency: 'EUR',
+        total: 0,
+        lines: 0,
+        categories: [],
+      });
+      mock.onGet(URL).reply(200, breakdown([], RANGE, empty));
+      renderCard();
+      expect(
+        await screen.findByText('No spending in this period')
+      ).toBeInTheDocument();
+    });
+
+    it('adds an "All in EUR" tab last and keeps the default', async () => {
+      mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, converted));
+      renderCard();
+      await screen.findByRole('tab', { name: 'EUR' });
+      expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([
+        'EUR',
+        'MDL',
+        'All in EUR',
+      ]);
+      expect(screen.getByRole('tab', { name: 'EUR' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+    });
+
+    it('shows the converted total on the household tab', async () => {
+      mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, converted));
+      renderCard();
+      fireEvent.click(await screen.findByRole('tab', { name: 'All in EUR' }));
+      expect(screen.getByRole('navigation')).toHaveTextContent(/€2,062\.52/);
+    });
+
+    it('shows the unconverted note only on the household tab', async () => {
+      const tree = inHousehold({ ...MDL, currency: 'EUR', total: 2062.52 }, [
+        { currency: null, bill_count: 1, amount: 31 },
+      ]);
+      mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, tree));
+      renderCard();
+      await screen.findByRole('tab', { name: 'EUR' });
+      const note = '+ 31.00 without currency (1 bill)';
+      expect(screen.queryByText(note)).toBeNull();
+      fireEvent.click(screen.getByRole('tab', { name: 'All in EUR' }));
+      expect(screen.getByText(note)).toBeInTheDocument();
+    });
+
+    it('falls back to the largest currency when the household tab disappears', async () => {
+      mock
+        .onGet(URL)
+        .replyOnce(200, breakdown([EUR, MDL], RANGE, converted))
+        .onGet(URL)
+        .reply(200, breakdown([EUR, MDL]));
+      renderCard();
+      fireEvent.click(await screen.findByRole('tab', { name: 'All in EUR' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
+      await waitFor(() =>
+        expect(screen.queryByRole('tab', { name: 'All in EUR' })).toBeNull()
+      );
+      expect(screen.getByRole('tab', { name: 'EUR' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      expect(
+        screen.getByRole('button', { name: /^Food, €/ })
+      ).toBeInTheDocument();
+    });
+
+    it('drops a zoom that is not in the household tree', async () => {
+      mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, converted));
+      renderCard('?period=month&anchor=2026-10-31&category=food-eur');
+      await screen.findByRole('button', { name: 'All categories' });
+      fireEvent.click(screen.getByRole('tab', { name: 'All in EUR' }));
+      await waitFor(() => expect(search()).not.toContain('category'));
+      expect(
+        screen.getByRole('button', { name: /^Food, €/ })
+      ).toBeInTheDocument();
+    });
   });
 
   it('previous updates the URL', async () => {

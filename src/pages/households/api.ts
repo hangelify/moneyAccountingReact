@@ -1,6 +1,6 @@
 import { apiClient } from '@/auth/apiClient';
-import { HOUSEHOLDS_ENDPOINTS } from '@/const/households';
-import type { Household } from '@/types/households';
+import { HOUSEHOLDS_ENDPOINTS, householdPath } from '@/const/households';
+import type { Household, UpdateHouseholdRequest } from '@/types/households';
 
 export const householdsApi = {
   list: async (): Promise<Household[]> => {
@@ -11,5 +11,12 @@ export const householdsApi = {
       (a, b) =>
         a.created_at.localeCompare(b.created_at) || a.name.localeCompare(b.name)
     );
+  },
+  update: async (
+    hid: string,
+    body: UpdateHouseholdRequest
+  ): Promise<Household> => {
+    const { data } = await apiClient.put<Household>(householdPath(hid), body);
+    return data;
   },
 };

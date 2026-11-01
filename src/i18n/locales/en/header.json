@@ -10,7 +10,8 @@
   "menu": {
     "openMenu": "Open menu",
     "userMenu": "User menu",
-    "logout": "Logout"
+    "logout": "Logout",
+    "householdSettings": "Household settings"
   },
   "auth": {
     "login": "Login",

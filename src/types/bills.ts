@@ -110,6 +110,11 @@ export interface MarketRef {
   city: string | null;
 }
 
+export interface ExchangeRate {
+  rate: number; // household currency per 1 unit of the bill's currency
+  rate_date: string; // YYYY-MM-DD, up to 7 days before bill_date
+}
+
 export interface BillResponseDto {
   id: string;
   bill_date: string;
@@ -122,6 +127,10 @@ export interface BillResponseDto {
   created_at: string;
   // Number of line items. Requested from the backend; absent until it ships.
   items_count?: number;
+  // Total in the household currency. The drafts list omits both; the amount
+  // is null when the bill has no currency or no rate is available.
+  household_currency?: Currency;
+  household_amount?: number | null;
 }
 
 export interface DraftBillItem {
@@ -160,4 +169,6 @@ export interface BillDetailResponseDto extends BillResponseDto {
   status?: 'draft' | 'confirmed';
   market_name_raw?: string;
   items: BillDetailItem[];
+  // null when already in the household currency or not convertible.
+  exchange_rate?: ExchangeRate | null;
 }

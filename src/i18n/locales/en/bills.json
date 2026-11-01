@@ -167,7 +167,13 @@
       "weightColumn": "Weight (kg)",
       "nameColumn": "Name",
       "categoryColumn": "Category",
-      "itemsTotal": "Items total"
+      "itemsTotal": "Items total",
+      "rate": "1 {{from}} = {{rate}} {{to}} · rate of {{date}}",
+      "notConverted": {
+        "noCurrency": "Set a currency to convert this bill.",
+        "futureDate": "Check the bill date — no exchange rate for a future date.",
+        "pending": "Not converted yet."
+      }
     }
   }
 }

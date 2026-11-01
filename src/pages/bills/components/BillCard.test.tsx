@@ -27,6 +27,16 @@ describe('BillCard', () => {
     expect(screen.getByText('5 items')).toBeInTheDocument();
   });
 
+  it('shows the household amount for a foreign bill', () => {
+    render(
+      <BillCard
+        bill={{ ...bill, household_currency: 'MDL', household_amount: 472.65 }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText('≈ 472.65 MDL')).toBeInTheDocument();
+  });
+
   it('uses the singular form for one item', () => {
     render(<BillCard bill={{ ...bill, items_count: 1 }} onClick={vi.fn()} />);
     expect(screen.getByText('1 item')).toBeInTheDocument();

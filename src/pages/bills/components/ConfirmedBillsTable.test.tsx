@@ -29,6 +29,19 @@ const fixtures: BillResponseDto[] = [
 ];
 
 describe('ConfirmedBillsTable', () => {
+  it('shows the household amount for a foreign bill', () => {
+    const [first] = fixtures as [BillResponseDto];
+    render(
+      <ConfirmedBillsTable
+        bills={[
+          { ...first, household_currency: 'MDL', household_amount: 1056.46 },
+        ]}
+        onRowClick={vi.fn()}
+      />
+    );
+    expect(screen.getByText('≈ 1,056.46 MDL')).toBeInTheDocument();
+  });
+
   it('renders one row per bill with market or em-dash', () => {
     render(<ConfirmedBillsTable bills={fixtures} onRowClick={vi.fn()} />);
     expect(screen.getByText('Lidl')).toBeInTheDocument();

@@ -1,4 +1,5 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut, Settings, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -68,6 +69,13 @@ export function UserMenu({
             {user.email}
           </span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/households/settings">
+            <Settings className="mr-2 h-4 w-4" />
+            {t('menu.householdSettings')}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}

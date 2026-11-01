@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import type {
   SpendingBreakdown,
   SpendingBreakdownParams,
-  SpendingCurrency,
 } from '@/types/dashboard';
 import {
   parseSpendingSearchParams,
@@ -21,19 +20,13 @@ import {
 } from '../parseSpendingSearchParams';
 import { formatRangeLabel, rangeForParams } from '../period';
 import { PALETTE_SIZE, categoryKey } from '../sunburstGeometry';
+import { defaultTab, spendingTabs } from '../spendingTabs';
 import { CurrencyTabs } from './CurrencyTabs';
 import { PeriodPicker } from './PeriodPicker';
 import { SpendingLegend } from './SpendingLegend';
 import { SpendingSunburst } from './SpendingSunburst';
 import { ChartBreadcrumb } from './ChartBreadcrumb';
-
-/** The currency with the most spending; the first one on ties. */
-function largest(list: SpendingCurrency[]): SpendingCurrency | undefined {
-  return list.reduce<SpendingCurrency | undefined>(
-    (best, c) => (best === undefined || c.total > best.total ? c : best),
-    undefined
-  );
-}
+import { UnconvertedNote } from './UnconvertedNote';
 
 export function SpendingBreakdownCard(): ReactElement {
   const { t, i18n } = useTranslation('dashboard');
@@ -89,10 +82,13 @@ export function SpendingBreakdownCard(): ReactElement {
     }
   }, [query.error, params]);
 
-  const currencies = data?.by_currency ?? [];
-  const [picked, setPicked] = useState<string | null | undefined>();
-  const current =
-    currencies.find((c) => c.currency === picked) ?? largest(currencies);
+  const tabs = useMemo(() => (data ? spendingTabs(data) : []), [data]);
+  const [picked, setPicked] = useState<string | undefined>();
+  const tab = tabs.find((x) => x.key === picked) ?? defaultTab(tabs);
+  const current = tab?.data;
+  const unconverted = tab?.household
+    ? (data?.in_household_currency?.unconverted ?? [])
+    : [];
 
   // The zoom lives in the URL, so Back (browser or phone gesture) zooms out.
   // A period change writes params without it, which drops the zoom.
@@ -117,7 +113,7 @@ export function SpendingBreakdownCard(): ReactElement {
   }, [category, settled, zoomed, params, setSearchParams]);
 
   // Highlight belongs to one view; any URL or currency change drops it.
-  const scope = `${search}|${current?.currency ?? ''}`;
+  const scope = `${search}|${tab?.key ?? ''}`;
   const [highlight, setHighlight] = useState<{
     scope: string;
     key: string | null;
@@ -148,7 +144,7 @@ export function SpendingBreakdownCard(): ReactElement {
         </Button>
       </div>
     );
-  } else if (!current) {
+  } else if (!tab || !current) {
     body = (
       <p className="py-10 text-center text-muted-foreground">{t('empty')}</p>
     );
@@ -164,8 +160,13 @@ export function SpendingBreakdownCard(): ReactElement {
           </div>
         )}
         <CurrencyTabs
-          currencies={currencies.map((c) => c.currency)}
-          selected={current.currency}
+          tabs={tabs.map((x) => ({
+            key: x.key,
+            label: x.household
+              ? t('inHouseholdCurrency', { currency: x.currency })
+              : (x.currency ?? t('noCurrency')),
+          }))}
+          selected={tab.key}
           onSelect={setPicked}
         />
         <div className="flex flex-col gap-3">
@@ -189,6 +190,7 @@ export function SpendingBreakdownCard(): ReactElement {
             }
             onBack={() => onZoom(null)}
           />
+          <UnconvertedNote buckets={unconverted} />
           <div
             className={cn(
               'flex flex-col items-center gap-6 transition-opacity md:flex-row md:items-center',

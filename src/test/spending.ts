@@ -2,6 +2,8 @@ import type {
   SpendingBreakdown,
   SpendingCategory,
   SpendingCurrency,
+  SpendingHouseholdCurrency,
+  UnconvertedBucket,
 } from '@/types/dashboard';
 
 export const FOOD: SpendingCategory = {
@@ -55,11 +57,21 @@ export const EUR: SpendingCurrency = {
   ],
 };
 
+export const inHousehold = (
+  tree: SpendingCurrency,
+  unconverted: UnconvertedBucket[] = []
+): SpendingHouseholdCurrency => ({ ...tree, unconverted });
+
 export const breakdown = (
   by_currency: SpendingCurrency[],
   range: SpendingBreakdown['range'] = {
     period: 'month',
     start: '2026-10-01',
     end: '2026-11-01',
-  }
-): SpendingBreakdown => ({ range, by_currency });
+  },
+  in_household_currency?: SpendingHouseholdCurrency
+): SpendingBreakdown => ({
+  range,
+  by_currency,
+  ...(in_household_currency && { in_household_currency }),
+});

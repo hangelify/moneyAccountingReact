@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
 import type { BillDetailResponseDto } from '@/types/bills';
 import type { BillDetailDraft } from '../billDetailDraft';
+import { HouseholdTotal } from './HouseholdTotal';
 
 export interface BillDetailTableProps {
   bill: BillDetailResponseDto;
@@ -77,7 +78,10 @@ export function BillDetailTable({
                 onChange={(e) => setDraft({ ...draft, total: e.target.value })}
               />
             ) : (
-              money(bill.total_amount)
+              <>
+                {money(bill.total_amount)}
+                <HouseholdTotal bill={bill} />
+              </>
             )}
           </dd>
         </div>

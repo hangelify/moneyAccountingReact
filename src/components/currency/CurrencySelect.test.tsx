@@ -21,6 +21,13 @@ describe('CurrencySelect', () => {
     expect(onChange).toHaveBeenCalledWith('EUR');
   });
 
+  it('has no empty option when a currency is required', () => {
+    const { container } = render(
+      <CurrencySelect value="EUR" onChange={vi.fn()} required />
+    );
+    expect(container.querySelector('option[value=""]')).toBeNull();
+  });
+
   it('reflects the controlled value', () => {
     render(<CurrencySelect value="USD" onChange={vi.fn()} />);
     expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe('USD');

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
+import { HouseholdAmount } from '@/components/currency/HouseholdAmount';
 import type { BillResponseDto, DraftBillDto } from '@/types/bills';
 
 // A confirmed summary, or a draft with its receipt fields and items.
@@ -44,6 +45,7 @@ export function BillCard({ bill, onClick }: BillCardProps): ReactElement {
           <span className="text-sm text-muted-foreground">{bill.currency}</span>
         )}
       </div>
+      <HouseholdAmount bill={bill} className="-mt-2 text-sm" />
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         {itemsCount != null && (
           <span>{t('cards.itemsCount', { count: itemsCount })}</span>
