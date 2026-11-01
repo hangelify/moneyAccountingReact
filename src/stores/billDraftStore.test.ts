@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useBillDraftStore } from './billDraftStore';
-import type { ParsedBill } from '@/types/bills';
+import type { ParsedBill, PossibleDuplicate } from '@/types/bills';
 
 function makeFile(name = 'r.jpg'): File {
   return new File(['x'], name, { type: 'image/jpeg' });
@@ -252,5 +252,104 @@ describe('billDraftStore', () => {
     expect(s.hid).toBeNull();
     expect(s.draftId).toBeNull();
     expect(s.mode).toBeNull();
+  });
+});
+
+describe('billDraftStore duplicates', () => {
+  const cand = (id: string): PossibleDuplicate => ({
+    id,
+    bill_date: '2026-10-03',
+    total_amount: 412.5,
+    currency: 'MDL',
+    market_name: 'Linella',
+    created_by_name: 'Ana',
+    match: 'strong',
+  });
+
+  beforeEach(() => {
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: vi.fn(() => 'blob:fake-url'),
+      configurable: true,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      value: vi.fn(),
+      configurable: true,
+    });
+    useBillDraftStore.getState().clear();
+  });
+
+  const seed = (possible_duplicates?: PossibleDuplicate[]): void => {
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: {
+        ...makeParsed(),
+        ...(possible_duplicates ? { possible_duplicates } : {}),
+      },
+      hid: 'hh-1',
+      mode: 'confirm',
+    });
+  };
+
+  it('setDraft keeps possible_duplicates', () => {
+    seed([cand('b0')]);
+    expect(useBillDraftStore.getState().possibleDuplicates).toEqual([
+      cand('b0'),
+    ]);
+    seed();
+    expect(useBillDraftStore.getState().possibleDuplicates).toEqual([]);
+  });
+
+  it('markDuplicateOf and undoDuplicateOf set and clear the link', () => {
+    seed([cand('b0')]);
+    useBillDraftStore.getState().markDuplicateOf(cand('b0'));
+    expect(useBillDraftStore.getState().duplicateOf).toEqual(cand('b0'));
+    useBillDraftStore.getState().undoDuplicateOf();
+    expect(useBillDraftStore.getState().duplicateOf).toBeNull();
+  });
+
+  it('keepBoth drops the candidate, down to an empty list', () => {
+    seed([cand('b0'), cand('b1')]);
+    useBillDraftStore.getState().keepBoth('b0');
+    expect(
+      useBillDraftStore.getState().possibleDuplicates.map((d) => d.id)
+    ).toEqual(['b1']);
+    useBillDraftStore.getState().keepBoth('b1');
+    expect(useBillDraftStore.getState().possibleDuplicates).toEqual([]);
+  });
+
+  it('keepBoth on the pending original clears duplicateOf', () => {
+    seed([cand('b0')]);
+    useBillDraftStore.getState().markDuplicateOf(cand('b0'));
+    useBillDraftStore.getState().keepBoth('b0');
+    expect(useBillDraftStore.getState().duplicateOf).toBeNull();
+  });
+
+  it('a new setDraft and clear reset duplicate state', () => {
+    seed([cand('b0')]);
+    useBillDraftStore.getState().markDuplicateOf(cand('b0'));
+    seed([cand('b9')]);
+    expect(useBillDraftStore.getState().duplicateOf).toBeNull();
+    useBillDraftStore.getState().clear();
+    expect(useBillDraftStore.getState().possibleDuplicates).toEqual([]);
+    expect(useBillDraftStore.getState().duplicateOf).toBeNull();
+  });
+
+  it('setDraft copies receipt fields into edits, null as empty', () => {
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: {
+        ...makeParsed(),
+        fiscal_register_id: 'J403',
+        fiscal_receipt_number: null,
+        purchase_time: '14:05',
+      },
+      hid: 'hh-1',
+      mode: 'confirm',
+    });
+    expect(useBillDraftStore.getState().edits).toMatchObject({
+      fiscal_register_id: 'J403',
+      fiscal_receipt_number: '',
+      purchase_time: '14:05',
+    });
   });
 });

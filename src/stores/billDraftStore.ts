@@ -4,6 +4,7 @@ import type {
   BillEditItem,
   ParsedBillItem,
   ParsedBill,
+  PossibleDuplicate,
 } from '@/types/bills';
 
 interface BillDraftState {
@@ -14,9 +15,13 @@ interface BillDraftState {
   mode: 'confirm' | 'create' | null;
   parsed: ParsedBill | null;
   edits: BillEdits;
+  // Confirmed bills that may be the same purchase, minus "Keep both" ones.
+  possibleDuplicates: PossibleDuplicate[];
+  // Set by "Mark as duplicate"; sent as duplicate_of_id on save.
+  duplicateOf: PossibleDuplicate | null;
   setDraft: (args: {
     file: File;
-    parsed: ParsedBill;
+    parsed: ParsedBill & { possible_duplicates?: PossibleDuplicate[] };
     hid: string;
     mode: 'confirm' | 'create';
   }) => void;
@@ -24,6 +29,9 @@ interface BillDraftState {
   updateItem: (index: number, patch: Partial<BillEditItem>) => void;
   addItem: () => number;
   removeItem: (index: number) => void;
+  markDuplicateOf: (original: PossibleDuplicate) => void;
+  undoDuplicateOf: () => void;
+  keepBoth: (id: string) => void;
   clear: () => void;
 }
 
@@ -76,6 +84,8 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
   mode: null,
   parsed: null,
   edits: EMPTY_EDITS,
+  possibleDuplicates: [],
+  duplicateOf: null,
 
   setDraft: ({ file, parsed, hid, mode }) => {
     const existing = get().previewUrl;
@@ -89,7 +99,24 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
       mode,
       parsed,
       edits: toEdits(parsed),
+      possibleDuplicates: parsed.possible_duplicates ?? [],
+      duplicateOf: null,
     });
+  },
+
+  markDuplicateOf: (original) => {
+    set({ duplicateOf: original });
+  },
+
+  undoDuplicateOf: () => {
+    set({ duplicateOf: null });
+  },
+
+  keepBoth: (id) => {
+    set((s) => ({
+      possibleDuplicates: s.possibleDuplicates.filter((d) => d.id !== id),
+      duplicateOf: s.duplicateOf?.id === id ? null : s.duplicateOf,
+    }));
   },
 
   updateEdits: (patch) => {
@@ -142,6 +169,8 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
       mode: null,
       parsed: null,
       edits: EMPTY_EDITS,
+      possibleDuplicates: [],
+      duplicateOf: null,
     });
   },
 }));
