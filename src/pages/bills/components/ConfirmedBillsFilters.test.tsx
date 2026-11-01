@@ -17,6 +17,7 @@ const empty: Filters = {
   amount_min: null,
   amount_max: null,
   currency: null,
+  include_duplicates: false,
 };
 
 function wrap(ui: ReactNode): ReactElement {

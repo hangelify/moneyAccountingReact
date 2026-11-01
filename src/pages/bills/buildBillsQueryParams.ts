@@ -8,6 +8,8 @@ export interface ConfirmedBillsFilters {
   amount_min: number | null;
   amount_max: number | null;
   currency: Currency | null;
+  // Widens the list to duplicates; the API accepts only 'true' or 'false'.
+  include_duplicates: boolean;
 }
 
 export type BillsQueryParams = Record<string, string | string[]>;
@@ -32,6 +34,7 @@ export function buildBillsQueryParams(
   if (tokens.length > 0) out.amount_range = tokens.join(',');
 
   if (filters.currency) out.currency = filters.currency;
+  if (filters.include_duplicates) out.include_duplicates = 'true';
 
   const safePage = Math.max(1, Math.floor(page) || 1);
   const safeLimit = Math.min(MAX_LIMIT, Math.max(1, Math.floor(limit) || 1));

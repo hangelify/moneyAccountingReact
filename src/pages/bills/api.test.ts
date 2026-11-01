@@ -170,6 +170,7 @@ describe('billsApi.list', () => {
     amount_min: null,
     amount_max: null,
     currency: null,
+    include_duplicates: false,
   };
 
   it('GETs /bills with default page=1 and limit=20', async () => {
@@ -209,6 +210,7 @@ describe('billsApi.list', () => {
         amount_min: 100,
         amount_max: 500,
         currency: 'EUR',
+        include_duplicates: false,
       },
       2,
       20

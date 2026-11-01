@@ -49,6 +49,7 @@ export function parseBillsSearchParams(sp: URLSearchParams): ParsedBillsSearch {
     amount_min,
     amount_max,
     currency: parseCurrency(sp.get('currency')),
+    include_duplicates: sp.get('include_duplicates') === 'true',
   };
 
   const page = parsePositiveInt(sp.get('page'), DEFAULT_PAGE);

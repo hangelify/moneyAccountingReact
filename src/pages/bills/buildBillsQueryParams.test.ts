@@ -9,6 +9,7 @@ const empty: ConfirmedBillsFilters = {
   amount_min: null,
   amount_max: null,
   currency: null,
+  include_duplicates: false,
 };
 
 describe('buildBillsQueryParams', () => {
@@ -91,5 +92,17 @@ describe('buildBillsQueryParams', () => {
       page: '1',
       limit: '1',
     });
+  });
+});
+
+describe('buildBillsQueryParams include_duplicates', () => {
+  it('sends include_duplicates=true only when on', () => {
+    expect(
+      buildBillsQueryParams({ ...empty, include_duplicates: true }, 1, 20)
+        .include_duplicates
+    ).toBe('true');
+    expect(buildBillsQueryParams(empty, 1, 20)).not.toHaveProperty(
+      'include_duplicates'
+    );
   });
 });
