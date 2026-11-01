@@ -10,6 +10,8 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { toDraft } from '../billDetailDraft';
+import { addDays } from '@/lib/isoDate';
+import { localIsoDate } from '@/pages/dashboard/period';
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({
@@ -100,6 +102,84 @@ describe('BillDetailContent', () => {
     expect(
       screen.getByRole('button', { name: /^Dairy, €10\.00, 100\.00%$/ })
     ).toBeInTheDocument();
+  });
+
+  describe('household currency', () => {
+    const reply = (
+      extra: Partial<Record<keyof BillDetailResponseDto, unknown>>
+    ): void => {
+      mock.onGet('/households/hh-1/bills/b1').reply(200, {
+        id: 'b1',
+        bill_date: '2026-10-30',
+        total_amount: 50,
+        currency: 'EUR',
+        created_at: '2026-10-30T10:00:00Z',
+        items: [],
+        household_currency: 'MDL',
+        ...extra,
+      });
+    };
+    const loaded = async (): Promise<void> => {
+      await screen.findByText(/50\.00/);
+    };
+    const NO_CURRENCY = 'Set a currency to convert this bill.';
+    const FUTURE = 'Check the bill date — no exchange rate for a future date.';
+    const PENDING = 'Not converted yet.';
+    const notes = [NO_CURRENCY, FUTURE, PENDING];
+
+    it('shows the converted total with the rate in a tooltip', async () => {
+      reply({
+        household_amount: 1009.95,
+        exchange_rate: { rate: 20.1989, rate_date: '2026-10-30' },
+      });
+      render(wrap(<BillDetailContent id="b1" />));
+      const amount = await screen.findByText('≈ 1,009.95 MDL');
+      await userEvent.hover(amount);
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(
+        '1 EUR = 20.1989 MDL · rate of Oct 30, 2026'
+      );
+    });
+
+    it('asks for a currency when the bill has none', async () => {
+      reply({ currency: null, household_amount: null, exchange_rate: null });
+      render(wrap(<BillDetailContent id="b1" />));
+      expect(await screen.findByText(NO_CURRENCY)).toBeInTheDocument();
+    });
+
+    it('flags a bill date in the future', async () => {
+      reply({
+        bill_date: addDays(localIsoDate(), 1),
+        household_amount: null,
+        exchange_rate: null,
+      });
+      render(wrap(<BillDetailContent id="b1" />));
+      expect(await screen.findByText(FUTURE)).toBeInTheDocument();
+    });
+
+    it('says not converted yet when no rate is available', async () => {
+      reply({ household_amount: null, exchange_rate: null });
+      render(wrap(<BillDetailContent id="b1" />));
+      expect(await screen.findByText(PENDING)).toBeInTheDocument();
+    });
+
+    it('adds nothing for a bill in the household currency', async () => {
+      reply({
+        household_currency: 'EUR',
+        household_amount: 50,
+        exchange_rate: null,
+      });
+      render(wrap(<BillDetailContent id="b1" />));
+      await loaded();
+      expect(screen.queryByText(/≈/)).toBeNull();
+      for (const n of notes) expect(screen.queryByText(n)).toBeNull();
+    });
+
+    it('adds nothing when the API sends no household fields', async () => {
+      reply({ household_currency: undefined });
+      render(wrap(<BillDetailContent id="b1" />));
+      await loaded();
+      for (const n of notes) expect(screen.queryByText(n)).toBeNull();
+    });
   });
 
   it('shows "Bill not found" on 404', async () => {
