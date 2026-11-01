@@ -158,3 +158,41 @@ describe('BillDetailTable', () => {
     expect(foot).not.toHaveTextContent('NaN');
   });
 });
+
+describe('BillDetailTable household currency', () => {
+  const foreign: BillDetailResponseDto = {
+    ...bill,
+    bill_date: '2026-10-31',
+    currency: 'MDL',
+    total_amount: 922.22,
+    status: 'confirmed',
+    household_currency: 'EUR',
+    household_amount: 45.89,
+    exchange_rate: { rate: 0.049763, rate_date: '2026-10-31' },
+  };
+  const noop = (): void => undefined;
+
+  it('shows the total in the household currency with the rate', async () => {
+    render(
+      wrap(<BillDetailTable bill={foreign} draft={null} onDraftChange={noop} />)
+    );
+    const amount = screen.getByText('≈ 45.89 EUR');
+    await userEvent.hover(amount);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      '1 MDL = 0.049763 EUR · rate of Oct 31, 2026'
+    );
+  });
+
+  it('says not converted yet when no rate is available', () => {
+    render(
+      wrap(
+        <BillDetailTable
+          bill={{ ...foreign, household_amount: null, exchange_rate: null }}
+          draft={null}
+          onDraftChange={noop}
+        />
+      )
+    );
+    expect(screen.getByText('Not converted yet.')).toBeInTheDocument();
+  });
+});
