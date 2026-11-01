@@ -139,6 +139,11 @@
     "detail": {
       "title": "Bill details",
       "items": "Items",
+      "views": {
+        "label": "Bill view",
+        "items": "Items",
+        "chart": "Chart"
+      },
       "noItems": "This bill has no line items.",
       "loading": "Loading bill…",
       "loadError": "Couldn't load this bill.",

@@ -79,6 +79,29 @@ describe('BillDetailContent', () => {
     expect(screen.getByText(/uncategorized/i)).toBeInTheDocument();
   });
 
+  it('shows the bill as a chart on the Chart tab', async () => {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
+      id: 'b1',
+      bill_date: '2026-05-19T00:00:00Z',
+      total_amount: 10,
+      currency: 'EUR',
+      created_at: '2026-05-19T10:00:00Z',
+      items: [
+        {
+          sub_category: { id: 's1', name: 'milk', category_name: 'Dairy' },
+          product_count: 1,
+          amount: 10,
+          product_weight: null,
+        },
+      ],
+    });
+    render(wrap(<BillDetailContent id="b1" />));
+    await userEvent.click(await screen.findByRole('tab', { name: 'Chart' }));
+    expect(
+      screen.getByRole('button', { name: /^Dairy, €10\.00, 100\.00%$/ })
+    ).toBeInTheDocument();
+  });
+
   it('shows "Bill not found" on 404', async () => {
     mock
       .onGet('/households/hh-1/bills/missing')

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { ApiError } from '@/auth/apiError';
 import { BillDetailTable } from './components/BillDetailTable';
+import { BillDetailViews } from './components/BillDetailViews';
 import { useBillDetailActions } from './useBillDetailActions';
 
 // Desktop layout of a bill: a full page with the items in a table.
@@ -65,7 +66,9 @@ export function BillDetailPage(): ReactElement | null {
       );
     }
     return (
-      <BillDetailTable bill={q.data} draft={draft} onDraftChange={setDraft} />
+      <BillDetailViews key={id} bill={q.data} editing={draft !== null}>
+        <BillDetailTable bill={q.data} draft={draft} onDraftChange={setDraft} />
+      </BillDetailViews>
     );
   };
 
