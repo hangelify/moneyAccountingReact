@@ -13,12 +13,16 @@ export const TEST_HOUSEHOLDS: Household[] = [
   {
     id: 'hh-1',
     name: 'Personal',
+    currency: 'EUR',
+    role: 'owner',
     created_at: '2026-01-01T00:00:00Z',
     member_count: 1,
   },
   {
     id: 'hh-2',
     name: 'Family Budget',
+    currency: 'MDL',
+    role: 'member',
     created_at: '2026-02-01T00:00:00Z',
     member_count: 3,
   },

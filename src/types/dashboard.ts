@@ -13,6 +13,8 @@ export type SpendingBreakdownParams =
 export interface SpendingBreakdown {
   range: { period: SpendingPeriod; start: string; end: string }; // end exclusive
   by_currency: SpendingCurrency[];
+  // Every bill of the range converted; absent on older API versions.
+  in_household_currency?: SpendingHouseholdCurrency;
 }
 
 export interface SpendingCurrency {
@@ -38,4 +40,14 @@ export interface SpendingSubCategory {
   share_of_category: number; // % of the parent category, 2 decimals
   lines: number;
   archived: boolean;
+}
+
+export interface UnconvertedBucket {
+  currency: string | null; // null = bills without a currency
+  bill_count: number;
+  amount: number; // in that original currency
+}
+
+export interface SpendingHouseholdCurrency extends SpendingCurrency {
+  unconverted: UnconvertedBucket[]; // bills left out of the totals
 }

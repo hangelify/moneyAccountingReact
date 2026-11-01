@@ -37,3 +37,29 @@ describe('householdsApi.list', () => {
     expect(r.map((h) => h.id)).toEqual(['a', 'z', 'b']);
   });
 });
+
+describe('householdsApi.update', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('PUTs the given fields and returns the household', async () => {
+    const saved = {
+      id: 'hh 1',
+      name: 'Family',
+      currency: 'MDL',
+      created_at: '2026-06-03T12:00:00.000Z',
+      member_count: 2,
+    };
+    mock.onPut('/households/hh%201').reply(200, saved);
+    const h = await householdsApi.update('hh 1', { currency: 'MDL' });
+    expect(JSON.parse(mock.history.put[0]?.data as string)).toEqual({
+      currency: 'MDL',
+    });
+    expect(h).toEqual(saved);
+  });
+});
