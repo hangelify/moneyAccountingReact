@@ -175,5 +175,49 @@
         "pending": "Not converted yet."
       }
     }
+  },
+  "duplicates": {
+    "match": {
+      "fiscal": "{{name}} already added this receipt",
+      "strong": "{{name}} already added this on {{date}}",
+      "weak": "A bill with the same amount and date exists"
+    },
+    "someone": "Someone",
+    "several": "This may already be added",
+    "mark": "Mark as duplicate",
+    "keepBoth": "Keep both",
+    "pending": "Will be saved as a duplicate of {{name}}'s bill on {{date}}",
+    "undo": "Undo",
+    "duplicateOf": "Duplicate of {{name}}'s bill on {{date}}",
+    "unmark": "Unmark",
+    "badge": "Duplicate",
+    "showDuplicates": "Show duplicates",
+    "savedWithCandidates": "Bill saved. It may already be added — check it.",
+    "errors": {
+      "conflict": "This bill changed. Showing the latest version.",
+      "notFound": "That bill no longer exists.",
+      "invalid": "Couldn't mark this bill",
+      "originalGone": "Couldn't link: the original bill no longer exists."
+    },
+    "receipt": {
+      "registerId": "Receipt register ID",
+      "number": "Receipt number",
+      "time": "Purchase time",
+      "invalid": "Check the receipt fields: up to 64 characters, time as HH:MM."
+    },
+    "cleanup": {
+      "title": "Possible duplicates",
+      "tab": "Possible duplicates",
+      "tabCount": "Possible duplicates ({{count}})",
+      "empty": "No possible duplicates",
+      "isCopy": "This one is the copy",
+      "loadError": "Couldn't load possible duplicates",
+      "addedBy": "Added by {{name}}",
+      "matchLabel": {
+        "fiscal": "Same receipt",
+        "strong": "Very likely the same",
+        "weak": "Same amount and date"
+      }
+    }
   }
 }
