@@ -106,9 +106,9 @@ export function NewBillReview(): ReactElement | null {
       if (status === 400 && err instanceof ApiError) {
         setSaveErrors(err.messages);
       } else if (status === 404 && duplicateOf !== null) {
-        // Most likely the original went away; drop the link and let the user
-        // save again. A missing draft then shows on the next save.
-        undoDuplicateOf();
+        // Most likely the original went away: drop it with the link and let
+        // the user save again. A missing draft then shows on the next save.
+        keepBoth(duplicateOf.id);
         toast({
           variant: 'destructive',
           title: t('bills:duplicates.errors.originalGone'),

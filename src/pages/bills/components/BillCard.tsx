@@ -27,7 +27,7 @@ export function BillCard({ bill, onClick }: BillCardProps): ReactElement {
   return (
     <button
       type="button"
-      aria-label={t('cards.open')}
+      aria-label={isDuplicate ? t('duplicates.openDuplicate') : t('cards.open')}
       data-bill-id={bill.id}
       onClick={() => onClick(bill.id)}
       className={cn(

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -66,24 +67,28 @@ function PairSide({
   onMarkCopy: () => void;
 }): ReactElement {
   const { t, i18n } = useTranslation('bills');
+  const detailsId = useId();
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3 text-sm">
-      <Link
-        to={`/bills/confirmed/${bill.id}`}
-        className="font-medium underline-offset-4 hover:underline"
-      >
-        {bill.market_name ?? t('cards.noMarket')} ·{' '}
-        {bill.bill_date.slice(0, 10)}
-      </Link>
-      <span className="font-mono">
-        {formatAmount(bill.total_amount, bill.currency, i18n.language)}
-      </span>
-      <span className="text-muted-foreground">
-        {t('duplicates.cleanup.addedBy', { name: addedBy(t, bill) })}
-      </span>
+      <div id={detailsId} className="flex flex-col gap-2">
+        <Link
+          to={`/bills/confirmed/${bill.id}`}
+          className="font-medium underline-offset-4 hover:underline"
+        >
+          {bill.market_name ?? t('cards.noMarket')} ·{' '}
+          {bill.bill_date.slice(0, 10)}
+        </Link>
+        <span className="font-mono">
+          {formatAmount(bill.total_amount, bill.currency, i18n.language)}
+        </span>
+        <span className="text-muted-foreground">
+          {t('duplicates.cleanup.addedBy', { name: addedBy(t, bill) })}
+        </span>
+      </div>
       <Button
         type="button"
         size="sm"
+        aria-describedby={detailsId}
         className="self-start"
         disabled={busy}
         onClick={onMarkCopy}

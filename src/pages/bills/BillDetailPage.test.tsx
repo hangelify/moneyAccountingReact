@@ -392,9 +392,10 @@ describe('BillDetailPage duplicates', () => {
     expect(
       screen.getByRole('heading', { name: 'Bill details' })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Mark as duplicate' })
-    ).toBeInTheDocument();
+    // The bill is refetched so a deleted original drops out of the banner.
+    await waitFor(() =>
+      expect(mock.history.get.filter((r) => r.url === DETAIL)).toHaveLength(2)
+    );
   });
 
   it('the pending link does not carry over to another draft', async () => {

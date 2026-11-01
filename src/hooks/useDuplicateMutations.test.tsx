@@ -142,3 +142,39 @@ describe('useDuplicateMutations', () => {
     expect(toast).not.toHaveBeenCalled();
   });
 });
+
+describe('useDuplicateMutations refreshes', () => {
+  let mock: MockAdapter;
+  let qc: QueryClient;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+  const run = async (status: number): Promise<unknown[]> => {
+    mock.onPost('/households/hh-1/bills/b1/mark-duplicate').reply(status, {});
+    const spy = vi.spyOn(qc, 'invalidateQueries');
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(() => useDuplicateMutations('hh-1'), {
+      wrapper,
+    });
+    await act(async () => {
+      await result.current.mark
+        .mutateAsync({ id: 'b1', duplicateOfId: 'b0' })
+        .catch(() => undefined);
+    });
+    return spy.mock.calls.map((c) => c[0]?.queryKey);
+  };
+
+  it('404 refetches the open bill', async () => {
+    expect(await run(404)).toContainEqual(['households', 'hh-1', 'bill', 'b1']);
+  });
+
+  it('success refreshes market bill counts', async () => {
+    expect(await run(200)).toContainEqual(['households', 'hh-1', 'markets']);
+  });
+});

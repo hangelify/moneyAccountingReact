@@ -139,3 +139,15 @@ describe('BillCard duplicate', () => {
     expect(screen.queryByText('Duplicate')).toBeNull();
   });
 });
+
+describe('BillCard duplicate accessibility', () => {
+  it('announces a duplicate in the card label', () => {
+    render(
+      <BillCard
+        bill={{ ...bill, status: 'duplicate', duplicate_of_id: 'b0' }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button')).toHaveAccessibleName(/duplicate/i);
+  });
+});

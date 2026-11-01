@@ -607,7 +607,9 @@ describe('NewBillReview duplicates', () => {
       )
     ).toBeInTheDocument();
     expect(document.body.dataset.pathname).toBeUndefined();
-    expect(screen.getByText(/Ana already added this/)).toBeInTheDocument();
+    // The original is gone, so it is no longer offered.
+    expect(screen.queryByText(/Ana already added this/)).toBeNull();
+    expect(screen.queryByText(/Will be saved as a duplicate/)).toBeNull();
   });
 
   it('create mode: 201 with possible_duplicates opens the bill detail', async () => {

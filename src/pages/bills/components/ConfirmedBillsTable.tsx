@@ -50,7 +50,11 @@ export function ConfirmedBillsTable({
               key={b.id}
               data-bill-id={b.id}
               role="button"
-              aria-label={t('confirmed.table.rowAction')}
+              aria-label={
+                b.status === 'duplicate'
+                  ? t('duplicates.openDuplicate')
+                  : t('confirmed.table.rowAction')
+              }
               tabIndex={0}
               className={cn(
                 'cursor-pointer border-b last:border-b-0 outline-none focus-visible:bg-accent hover:bg-accent/40',

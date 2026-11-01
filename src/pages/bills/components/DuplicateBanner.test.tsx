@@ -95,3 +95,44 @@ describe('DuplicateBanner', () => {
     expect(screen.getByRole('button', { name: 'Keep both' })).toBeDisabled();
   });
 });
+
+describe('DuplicateBanner accessibility', () => {
+  it('describes each row button by its candidate', () => {
+    render(
+      <DuplicateBanner
+        candidates={[cand('b0'), cand('b1', 'Ion')]}
+        onMark={vi.fn()}
+        onKeepBoth={vi.fn()}
+      />
+    );
+    const [first, second] = screen.getAllByRole('button', {
+      name: 'Mark as duplicate',
+    });
+    expect(first).toHaveAccessibleDescription(/Ana already added this/);
+    expect(second).toHaveAccessibleDescription(/Ion already added this/);
+    expect(
+      screen.getAllByRole('button', { name: 'Keep both' })[1]
+    ).toHaveAccessibleDescription(/Ion already added this/);
+  });
+
+  it('moves focus to Undo when a link becomes pending', () => {
+    const { rerender } = render(
+      <DuplicateBanner
+        candidates={[cand('b0')]}
+        onMark={vi.fn()}
+        onKeepBoth={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    rerender(
+      <DuplicateBanner
+        candidates={[cand('b0')]}
+        pendingOriginal={cand('b0')}
+        onMark={vi.fn()}
+        onKeepBoth={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Undo' })).toHaveFocus();
+  });
+});

@@ -32,7 +32,8 @@ export function useDuplicateMutations(hid: string | null): DuplicateMutations {
   const queryClient = useQueryClient();
 
   const refreshAll = (): void => {
-    for (const part of ['bills', 'bill', 'dashboard']) {
+    // Markets carry bill_count, which only counts confirmed bills.
+    for (const part of ['bills', 'bill', 'dashboard', 'markets']) {
       void queryClient.invalidateQueries({
         queryKey: ['households', hid, part],
       });
@@ -49,6 +50,10 @@ export function useDuplicateMutations(hid: string | null): DuplicateMutations {
       });
       toast({ title: t('bills:duplicates.errors.conflict') });
     } else if (status === 404) {
+      // The bill or the other one is gone: refresh what still shows it.
+      void queryClient.invalidateQueries({
+        queryKey: ['households', hid, 'bill', id],
+      });
       void queryClient.invalidateQueries({
         queryKey: ['households', hid, 'bills'],
       });

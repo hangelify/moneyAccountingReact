@@ -86,3 +86,21 @@ describe('ConfirmedBillsTable duplicate', () => {
     expect(screen.getAllByText('Duplicate')).toHaveLength(1);
   });
 });
+
+describe('ConfirmedBillsTable duplicate accessibility', () => {
+  it('announces a duplicate in the row label', () => {
+    const [first, second] = fixtures as [BillResponseDto, BillResponseDto];
+    render(
+      <ConfirmedBillsTable
+        bills={[
+          { ...first, status: 'duplicate', duplicate_of_id: 'b2' },
+          second,
+        ]}
+        onRowClick={vi.fn()}
+      />
+    );
+    const rows = screen.getAllByRole('button');
+    expect(rows[0]).toHaveAccessibleName(/duplicate/i);
+    expect(rows[1]).not.toHaveAccessibleName(/duplicate/i);
+  });
+});

@@ -172,3 +172,27 @@ describe('DuplicateSuggestions', () => {
     );
   });
 });
+
+describe('DuplicateSuggestions accessibility', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    mock.onGet('/households/hh-1/bills/drafts').reply(200, {
+      data: [],
+      meta: { total: 0, page: 1, limit: 20, total_pages: 0 },
+    });
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('describes each copy button by its bill', async () => {
+    mock.onGet(SUGGESTIONS).reply(200, { pairs: [PAIR] });
+    renderPage();
+    const [left, right] = await screen.findAllByRole('button', {
+      name: 'This one is the copy',
+    });
+    expect(left).toHaveAccessibleDescription(/Added by Ana/);
+    expect(right).toHaveAccessibleDescription(/Added by Ion/);
+  });
+});

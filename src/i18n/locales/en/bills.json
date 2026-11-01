@@ -218,6 +218,7 @@
         "strong": "Very likely the same",
         "weak": "Same amount and date"
       }
-    }
+    },
+    "openDuplicate": "View bill (duplicate)"
   }
 }

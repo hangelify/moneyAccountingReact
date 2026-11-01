@@ -114,8 +114,12 @@ export function useBillDetailActions(
         });
         toast({ title: t('review.alreadyConfirmed') });
       } else if (status === 404 && pendingDuplicateOf !== null) {
-        // Most likely the original went away: drop the link, stay open.
+        // Most likely the original went away: drop the link, stay open, and
+        // refetch so a deleted original leaves the banner.
         setPending(null);
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'bill', id],
+        });
         toast({
           variant: 'destructive',
           title: t('duplicates.errors.originalGone'),

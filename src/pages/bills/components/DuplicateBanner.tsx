@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,13 @@ export function DuplicateBanner({
   busy = false,
 }: DuplicateBannerProps): ReactElement | null {
   const { t, i18n } = useTranslation('bills');
+  const ids = useId();
+  const undoRef = useRef<HTMLButtonElement>(null);
+  // Mark unmounts the focused button; keep keyboard focus in the banner.
+  const pendingId = pendingOriginal?.id;
+  useEffect(() => {
+    if (pendingId) undoRef.current?.focus();
+  }, [pendingId]);
 
   if (pendingOriginal) {
     return (
@@ -47,6 +55,7 @@ export function DuplicateBanner({
           </span>
           {onUndo && (
             <Button
+              ref={undoRef}
               type="button"
               variant="link"
               size="sm"
@@ -75,11 +84,13 @@ export function DuplicateBanner({
       )}
       <ul className="flex flex-col gap-2">
         {candidates.map((d) => (
+          // Each row's buttons are described by its text, so screen readers
+          // can tell which bill they act on.
           <li
             key={d.id}
             className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
           >
-            <span className="flex items-center gap-2">
+            <span id={`${ids}-${d.id}`} className="flex items-center gap-2">
               {!several && <Copy className="h-4 w-4 shrink-0" aria-hidden />}
               {describeDuplicate(t, d, i18n.language)}
             </span>
@@ -87,6 +98,7 @@ export function DuplicateBanner({
               <Button
                 type="button"
                 size="sm"
+                aria-describedby={`${ids}-${d.id}`}
                 disabled={busy}
                 onClick={() => onMark(d)}
               >
@@ -96,6 +108,7 @@ export function DuplicateBanner({
                 type="button"
                 size="sm"
                 variant="outline"
+                aria-describedby={`${ids}-${d.id}`}
                 disabled={busy}
                 onClick={() => onKeepBoth(d)}
               >
