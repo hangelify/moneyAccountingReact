@@ -67,3 +67,22 @@ describe('ConfirmedBillsTable', () => {
     expect(onRowClick).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('ConfirmedBillsTable duplicate', () => {
+  it('dims a duplicate row and shows a badge', () => {
+    const [first, second] = fixtures as [BillResponseDto, BillResponseDto];
+    render(
+      <ConfirmedBillsTable
+        bills={[
+          { ...first, status: 'duplicate', duplicate_of_id: 'b2' },
+          second,
+        ]}
+        onRowClick={vi.fn()}
+      />
+    );
+    const rows = screen.getAllByRole('button');
+    expect(rows[0]).toHaveClass('opacity-60');
+    expect(rows[1]).not.toHaveClass('opacity-60');
+    expect(screen.getAllByText('Duplicate')).toHaveLength(1);
+  });
+});

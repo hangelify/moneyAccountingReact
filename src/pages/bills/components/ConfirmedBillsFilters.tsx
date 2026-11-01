@@ -23,6 +23,7 @@ export function ConfirmedBillsFilters({
   const { t } = useTranslation('bills');
   const currencyId = useId();
   const marketsId = useId();
+  const duplicatesId = useId();
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:p-4">
@@ -60,7 +61,19 @@ export function ConfirmedBillsFilters({
           />
         </div>
       </div>
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <input
+            id={duplicatesId}
+            type="checkbox"
+            className="h-4 w-4 accent-foreground"
+            checked={value.include_duplicates}
+            onChange={(e) =>
+              onChange({ ...value, include_duplicates: e.target.checked })
+            }
+          />
+          <Label htmlFor={duplicatesId}>{t('duplicates.showDuplicates')}</Label>
+        </div>
         <Button variant="ghost" size="sm" onClick={onClear}>
           {t('confirmed.filters.clear')}
         </Button>

@@ -251,3 +251,40 @@ describe('ConfirmedBills (integration)', () => {
     expect(screen.queryByText('bill b1')).toBeNull();
   });
 });
+
+describe('ConfirmedBills duplicates', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    mock.onGet('/households/hh-1/markets').reply(200, []);
+  });
+  afterEach(() => mock.restore());
+
+  it('sends include_duplicates=true when the URL has it', async () => {
+    const seen: unknown[] = [];
+    mock.onGet('/households/hh-1/bills').reply((config) => {
+      seen.push((config.params as Record<string, unknown>).include_duplicates);
+      return [
+        200,
+        {
+          data: [fixture('a', 10)],
+          meta: { total: 1, page: 1, limit: 20, total_pages: 1 },
+        },
+      ];
+    });
+    renderApp('/bills/confirmed?include_duplicates=true');
+    await waitFor(() => expect(seen).toContain('true'));
+    expect(screen.getByLabelText('Show duplicates')).toBeChecked();
+  });
+
+  it('the toggle alone does not count as an active filter', async () => {
+    mock.onGet('/households/hh-1/bills').reply(200, {
+      data: [],
+      meta: { total: 0, page: 1, limit: 20, total_pages: 0 },
+    });
+    renderApp('/bills/confirmed?include_duplicates=true');
+    expect(
+      await screen.findByRole('link', { name: /new bill|add/i })
+    ).toBeInTheDocument();
+  });
+});
