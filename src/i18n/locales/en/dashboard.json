@@ -23,5 +23,6 @@
     "endBeforeStart": "End date is before start date",
     "tooLong": "Choose at most 10 years"
   },
-  "segmentLabel": "{{name}}, {{amount}}, {{share}}%"
+  "segmentLabel": "{{name}}, {{amount}}, {{share}}%",
+  "inHouseholdCurrency": "All in {{currency}}"
 }
