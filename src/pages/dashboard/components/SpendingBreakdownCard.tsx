@@ -26,6 +26,7 @@ import { PeriodPicker } from './PeriodPicker';
 import { SpendingLegend } from './SpendingLegend';
 import { SpendingSunburst } from './SpendingSunburst';
 import { ChartBreadcrumb } from './ChartBreadcrumb';
+import { UnconvertedNote } from './UnconvertedNote';
 
 export function SpendingBreakdownCard(): ReactElement {
   const { t, i18n } = useTranslation('dashboard');
@@ -85,6 +86,9 @@ export function SpendingBreakdownCard(): ReactElement {
   const [picked, setPicked] = useState<string | undefined>();
   const tab = tabs.find((x) => x.key === picked) ?? defaultTab(tabs);
   const current = tab?.data;
+  const unconverted = tab?.household
+    ? (data?.in_household_currency?.unconverted ?? [])
+    : [];
 
   // The zoom lives in the URL, so Back (browser or phone gesture) zooms out.
   // A period change writes params without it, which drops the zoom.
@@ -140,7 +144,7 @@ export function SpendingBreakdownCard(): ReactElement {
         </Button>
       </div>
     );
-  } else if (!current) {
+  } else if (!tab || !current) {
     body = (
       <p className="py-10 text-center text-muted-foreground">{t('empty')}</p>
     );
@@ -162,7 +166,7 @@ export function SpendingBreakdownCard(): ReactElement {
               ? t('inHouseholdCurrency', { currency: x.currency })
               : (x.currency ?? t('noCurrency')),
           }))}
-          selected={tab?.key ?? ''}
+          selected={tab.key}
           onSelect={setPicked}
         />
         <div className="flex flex-col gap-3">
@@ -186,6 +190,7 @@ export function SpendingBreakdownCard(): ReactElement {
             }
             onBack={() => onZoom(null)}
           />
+          <UnconvertedNote buckets={unconverted} />
           <div
             className={cn(
               'flex flex-col items-center gap-6 transition-opacity md:flex-row md:items-center',

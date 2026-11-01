@@ -127,6 +127,19 @@ describe('SpendingBreakdownCard', () => {
       expect(screen.getByRole('navigation')).toHaveTextContent(/€2,062\.52/);
     });
 
+    it('shows the unconverted note only on the household tab', async () => {
+      const tree = inHousehold({ ...MDL, currency: 'EUR', total: 2062.52 }, [
+        { currency: null, bill_count: 1, amount: 31 },
+      ]);
+      mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, tree));
+      renderCard();
+      await screen.findByRole('tab', { name: 'EUR' });
+      const note = '+ 31.00 without currency (1 bill)';
+      expect(screen.queryByText(note)).toBeNull();
+      fireEvent.click(screen.getByRole('tab', { name: 'All in EUR' }));
+      expect(screen.getByText(note)).toBeInTheDocument();
+    });
+
     it('falls back to the largest currency when the household tab disappears', async () => {
       mock
         .onGet(URL)

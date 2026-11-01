@@ -24,5 +24,11 @@
     "tooLong": "Choose at most 10 years"
   },
   "segmentLabel": "{{name}}, {{amount}}, {{share}}%",
-  "inHouseholdCurrency": "All in {{currency}}"
+  "inHouseholdCurrency": "All in {{currency}}",
+  "unconverted": {
+    "noCurrency_one": "+ {{amount}} without currency ({{count}} bill)",
+    "noCurrency_other": "+ {{amount}} without currency ({{count}} bills)",
+    "currency_one": "+ {{amount}} not converted ({{count}} bill)",
+    "currency_other": "+ {{amount}} not converted ({{count}} bills)"
+  }
 }
