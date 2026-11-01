@@ -66,6 +66,7 @@ const RESPONSE: ParsePhotoResponse = {
   ],
   request_id: 'c5004fd6-2c02-4a35-9615-90f88c64a03b',
   duplicate: false,
+  possible_duplicates: [],
 };
 
 const client = new QueryClient({

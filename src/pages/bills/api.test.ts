@@ -308,3 +308,78 @@ describe('billsApi.listDrafts', () => {
     expect(r.meta.page).toBe(2);
   });
 });
+
+describe('billsApi duplicate calls', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('markDuplicate POSTs { duplicate_of_id } to /households/hh-1/bills/b1/mark-duplicate', async () => {
+    mock.onPost('/households/hh-1/bills/b1/mark-duplicate').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual({
+        duplicate_of_id: 'b0',
+      });
+      return [200, { id: 'b1', status: 'duplicate' }];
+    });
+
+    const result = await billsApi.markDuplicate('hh-1', 'b1', 'b0');
+
+    expect(result).toEqual({ id: 'b1', status: 'duplicate' });
+  });
+
+  it('unmarkDuplicate POSTs with no body to …/b1/unmark-duplicate', async () => {
+    mock
+      .onPost('/households/hh-1/bills/b1/unmark-duplicate')
+      .reply((config) => {
+        expect(config.data).toBeUndefined();
+        return [200, { id: 'b1', status: 'confirmed' }];
+      });
+
+    const result = await billsApi.unmarkDuplicate('hh-1', 'b1');
+
+    expect(result.status).toBe('confirmed');
+  });
+
+  it('dismissDuplicate POSTs { other_bill_id } to …/b1/dismiss-duplicate', async () => {
+    mock
+      .onPost('/households/hh-1/bills/b1/dismiss-duplicate')
+      .reply((config) => {
+        expect(JSON.parse(config.data as string)).toEqual({
+          other_bill_id: 'b2',
+        });
+        return [204];
+      });
+
+    await expect(
+      billsApi.dismissDuplicate('hh-1', 'b1', 'b2')
+    ).resolves.toBeUndefined();
+  });
+
+  it('duplicateSuggestions sends only set dates', async () => {
+    const seen: unknown[] = [];
+    mock
+      .onGet('/households/hh-1/bills/duplicate-suggestions')
+      .reply((config) => {
+        seen.push(config.params);
+        return [200, { pairs: [] }];
+      });
+
+    await billsApi.duplicateSuggestions('hh-1', {
+      date_from: '2026-10-01',
+      date_to: null,
+    });
+    const result = await billsApi.duplicateSuggestions('hh-1', {
+      date_from: null,
+      date_to: null,
+    });
+
+    expect(seen).toEqual([{ date_from: '2026-10-01' }, {}]);
+    expect(result).toEqual({ pairs: [] });
+  });
+});
