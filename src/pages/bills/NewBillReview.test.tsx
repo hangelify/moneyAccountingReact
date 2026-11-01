@@ -13,7 +13,7 @@ import { useBillDraftStore } from '@/stores/billDraftStore';
 import { Toaster } from '@/components/ui/toaster';
 import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import { buildConfirmPayload, todayIso } from './buildConfirmPayload';
-import type { ParsedBillItem } from '@/types/bills';
+import type { ParsedBillItem, PossibleDuplicate } from '@/types/bills';
 
 function LocationProbe(): null {
   const loc = useLocation();
@@ -30,6 +30,7 @@ function seedDraft(
     hid?: string;
     mode?: 'confirm' | 'create';
     items?: ParsedBillItem[];
+    possible_duplicates?: PossibleDuplicate[];
   } = {}
 ): void {
   const file = new File(['x'], 'r.jpg', { type: 'image/jpeg' });
@@ -43,6 +44,9 @@ function seedDraft(
       currency: 'EUR',
       total_amount: 10,
       items: opts.items ?? [],
+      ...(opts.possible_duplicates
+        ? { possible_duplicates: opts.possible_duplicates }
+        : {}),
     },
     hid: opts.hid ?? 'hh-1',
     mode: opts.mode ?? 'confirm',
@@ -470,5 +474,191 @@ describe('NewBillReview', () => {
       });
       expect(mock.history.delete).toHaveLength(0);
     });
+  });
+});
+
+describe('NewBillReview duplicates', () => {
+  let mock: MockAdapter;
+  const CAND: PossibleDuplicate = {
+    id: 'b0',
+    bill_date: '2026-10-03',
+    total_amount: 412.5,
+    currency: 'MDL',
+    market_name: 'Linella',
+    created_by_name: 'Ana',
+    match: 'strong',
+  };
+  const ITEM: ParsedBillItem = {
+    name: 'MILK',
+    quantity: 1,
+    unit: 'piece',
+    weight_kg: null,
+    price_per_kg: null,
+    final_price: 10,
+    sub_category: CAT,
+    category_confidence: 1,
+  };
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    mock.onGet('/households/hh-1/sub-categories').reply(200, []);
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: vi.fn(() => 'blob:fake'),
+      configurable: true,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      value: vi.fn(),
+      configurable: true,
+    });
+    useBillDraftStore.getState().clear();
+    delete document.body.dataset.pathname;
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const renderReview = (): void => {
+    render(
+      <Providers>
+        <MemoryRouter initialEntries={['/bills/review']}>
+          <Routes>
+            <Route path="/bills/review" element={<NewBillReview />} />
+            <Route path="/bills/confirmed" element={<LocationProbe />} />
+            <Route path="/bills/confirmed/:id" element={<LocationProbe />} />
+          </Routes>
+        </MemoryRouter>
+      </Providers>
+    );
+  };
+
+  const captureConfirm = (): { body?: Record<string, unknown> } => {
+    const seen: { body?: Record<string, unknown> } = {};
+    mock.onPost('/households/hh-1/bills/d1/confirm').reply((config) => {
+      seen.body = JSON.parse(config.data as string) as Record<string, unknown>;
+      return [200, { id: 'd1' }];
+    });
+    return seen;
+  };
+
+  it('shows the duplicate banner from the parse response', () => {
+    seedDraft({ possible_duplicates: [CAND] });
+    renderReview();
+    expect(
+      screen.getByText(/Ana already added this on Oct 3/)
+    ).toBeInTheDocument();
+  });
+
+  it('Mark then Save sends duplicate_of_id with confirm', async () => {
+    seedDraft({ possible_duplicates: [CAND] });
+    const seen = captureConfirm();
+    renderReview();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark as duplicate' })
+    );
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() => expect(seen.body).toBeDefined());
+    expect(seen.body?.duplicate_of_id).toBe('b0');
+  });
+
+  it('Undo removes the link', async () => {
+    seedDraft({ possible_duplicates: [CAND] });
+    const seen = captureConfirm();
+    renderReview();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark as duplicate' })
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() => expect(seen.body).toBeDefined());
+    expect(seen.body).not.toHaveProperty('duplicate_of_id');
+  });
+
+  it('Keep both hides the candidate and calls dismiss-duplicate on the draft', async () => {
+    seedDraft({ possible_duplicates: [CAND] });
+    let dismissBody: unknown;
+    mock
+      .onPost('/households/hh-1/bills/d1/dismiss-duplicate')
+      .reply((config) => {
+        dismissBody = JSON.parse(config.data as string);
+        return [500, {}];
+      });
+    renderReview();
+    await userEvent.click(screen.getByRole('button', { name: 'Keep both' }));
+    expect(
+      screen.queryByText(/Ana already added this/)
+    ).not.toBeInTheDocument();
+    await waitFor(() => expect(dismissBody).toEqual({ other_bill_id: 'b0' }));
+    // Best effort: a failed dismiss shows no error.
+    expect(screen.queryByText(/could not save/i)).not.toBeInTheDocument();
+  });
+
+  it('404 on confirm with a link stays on the page and drops the link', async () => {
+    seedDraft({ possible_duplicates: [CAND] });
+    mock.onPost('/households/hh-1/bills/d1/confirm').reply(404, {});
+    renderReview();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Mark as duplicate' })
+    );
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    expect(
+      await screen.findByText(
+        "Couldn't link: the original bill no longer exists."
+      )
+    ).toBeInTheDocument();
+    expect(document.body.dataset.pathname).toBeUndefined();
+    expect(screen.getByText(/Ana already added this/)).toBeInTheDocument();
+  });
+
+  it('create mode: 201 with possible_duplicates opens the bill detail', async () => {
+    seedDraft({ mode: 'create', items: [ITEM] });
+    mock
+      .onPost('/households/hh-1/bills')
+      .reply(201, { id: 'n1', possible_duplicates: [CAND] });
+    renderReview();
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() =>
+      expect(document.body.dataset.pathname).toBe('/bills/confirmed/n1')
+    );
+  });
+
+  it('create mode: 201 without candidates goes to the list', async () => {
+    seedDraft({ mode: 'create', items: [ITEM] });
+    mock
+      .onPost('/households/hh-1/bills')
+      .reply(201, { id: 'n1', possible_duplicates: [] });
+    renderReview();
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() =>
+      expect(document.body.dataset.pathname).toBe('/bills/confirmed')
+    );
+  });
+
+  it('invalid receipt time blocks Save with an inline error', async () => {
+    seedDraft();
+    renderReview();
+    act(() => {
+      useBillDraftStore.getState().updateEdits({ purchase_time: '25:00' });
+    });
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    expect(
+      screen.getByText(
+        'Check the receipt fields: up to 64 characters, time as HH:MM.'
+      )
+    ).toBeInTheDocument();
+    expect(mock.history.post).toHaveLength(0);
+  });
+
+  it('receipt fields are sent on confirm', async () => {
+    seedDraft();
+    const seen = captureConfirm();
+    renderReview();
+    await userEvent.type(
+      screen.getByLabelText('Receipt register ID'),
+      'J403001234'
+    );
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() => expect(seen.body).toBeDefined());
+    expect(seen.body?.fiscal_register_id).toBe('J403001234');
   });
 });

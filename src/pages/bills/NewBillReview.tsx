@@ -8,13 +8,19 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { BillReviewFields } from './components/BillReviewFields';
 import { BillItemsTable } from './components/BillItemsTable';
 import { BillTotalsBanner } from './components/BillTotalsBanner';
+import { DuplicateBanner } from './components/DuplicateBanner';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
 import { billsApi } from './api';
-import { buildConfirmPayload, buildCreatePayload } from './buildConfirmPayload';
+import {
+  buildConfirmPayload,
+  buildCreatePayload,
+  receiptFieldErrors,
+  todayIso,
+} from './buildConfirmPayload';
 
 export function NewBillReview(): ReactElement | null {
   const { t } = useTranslation(['bills', 'common', 'errors']);
@@ -33,6 +39,11 @@ export function NewBillReview(): ReactElement | null {
   const hid = useBillDraftStore((s) => s.hid);
   const draftId = useBillDraftStore((s) => s.draftId);
   const mode = useBillDraftStore((s) => s.mode);
+  const possibleDuplicates = useBillDraftStore((s) => s.possibleDuplicates);
+  const duplicateOf = useBillDraftStore((s) => s.duplicateOf);
+  const markDuplicateOf = useBillDraftStore((s) => s.markDuplicateOf);
+  const undoDuplicateOf = useBillDraftStore((s) => s.undoDuplicateOf);
+  const keepBoth = useBillDraftStore((s) => s.keepBoth);
 
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -41,17 +52,25 @@ export function NewBillReview(): ReactElement | null {
   // below doesn't race the navigate() that follows.
   const leaving = useRef(false);
   const [saveErrors, setSaveErrors] = useState<string[]>([]);
+  const [receiptInvalid, setReceiptInvalid] = useState(false);
 
   const saveMutation = useMutation({
-    mutationFn: async (): Promise<void> => {
-      if (hid === null) return;
+    mutationFn: async () => {
+      if (hid === null) return null;
+      const linkId = duplicateOf?.id ?? null;
       if (mode === 'confirm' && draftId !== null) {
-        await billsApi.confirm(hid, draftId, buildConfirmPayload(edits));
-      } else {
-        await billsApi.create(hid, buildCreatePayload(edits));
+        return billsApi.confirm(
+          hid,
+          draftId,
+          buildConfirmPayload(edits, todayIso(), linkId)
+        );
       }
+      return billsApi.create(
+        hid,
+        buildCreatePayload(edits, todayIso(), linkId)
+      );
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       const savedHid = hid;
       leaving.current = true;
       clear();
@@ -65,6 +84,13 @@ export function NewBillReview(): ReactElement | null {
       void queryClient.invalidateQueries({
         queryKey: ['households', savedHid, 'markets'],
       });
+      // A created bill is checked for look-alikes after the save; its detail
+      // shows the warning.
+      if (mode === 'create' && saved?.possible_duplicates?.length) {
+        toast({ title: t('bills:duplicates.savedWithCandidates') });
+        void navigate(`/bills/confirmed/${saved.id}`);
+        return;
+      }
       toast({ title: t('bills:review.saved') });
       void navigate('/bills/confirmed');
     },
@@ -79,6 +105,14 @@ export function NewBillReview(): ReactElement | null {
       const status = err instanceof ApiError ? err.status : undefined;
       if (status === 400 && err instanceof ApiError) {
         setSaveErrors(err.messages);
+      } else if (status === 404 && duplicateOf !== null) {
+        // Most likely the original went away; drop the link and let the user
+        // save again. A missing draft then shows on the next save.
+        undoDuplicateOf();
+        toast({
+          variant: 'destructive',
+          title: t('bills:duplicates.errors.originalGone'),
+        });
       } else if (status === 404 && mode === 'confirm') {
         toast({ variant: 'destructive', title: t('bills:review.draftGone') });
         leaving.current = true;
@@ -166,7 +200,20 @@ export function NewBillReview(): ReactElement | null {
 
   const handleSave = (): void => {
     setSaveErrors([]);
+    const invalid = receiptFieldErrors(edits).length > 0;
+    setReceiptInvalid(invalid);
+    if (invalid) return;
     saveMutation.mutate();
+  };
+
+  // Keep both on a draft is remembered by the server; best effort.
+  const handleKeepBoth = (other: { id: string }): void => {
+    keepBoth(other.id);
+    if (mode === 'confirm' && hid !== null && draftId !== null) {
+      void billsApi
+        .dismissDuplicate(hid, draftId, other.id)
+        .catch(() => undefined);
+    }
   };
 
   const otherHousehold = hid !== activeHousehold?.id;
@@ -189,6 +236,14 @@ export function NewBillReview(): ReactElement | null {
 
         <div className="space-y-6">
           <div className="space-y-6">
+            <DuplicateBanner
+              candidates={possibleDuplicates}
+              pendingOriginal={duplicateOf}
+              onMark={markDuplicateOf}
+              onKeepBoth={handleKeepBoth}
+              onUndo={undoDuplicateOf}
+              busy={saveMutation.isPending}
+            />
             <BillReviewFields
               edits={edits}
               onChange={handleEditsChange}
@@ -220,6 +275,11 @@ export function NewBillReview(): ReactElement | null {
                   : t('bills:review.otherHousehold', {
                       name: otherHouseholdName,
                     })}
+              </p>
+            )}
+            {receiptInvalid && (
+              <p role="alert" className="text-sm text-destructive">
+                {t('bills:duplicates.receipt.invalid')}
               </p>
             )}
             {uncategorised && (
