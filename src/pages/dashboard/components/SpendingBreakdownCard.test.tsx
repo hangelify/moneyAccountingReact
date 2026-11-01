@@ -105,6 +105,20 @@ describe('SpendingBreakdownCard', () => {
     } as const;
     const converted = inHousehold({ ...MDL, currency: 'EUR', total: 2062.52 });
 
+    it('shows the empty state for an empty range', async () => {
+      const empty = inHousehold({
+        currency: 'EUR',
+        total: 0,
+        lines: 0,
+        categories: [],
+      });
+      mock.onGet(URL).reply(200, breakdown([], RANGE, empty));
+      renderCard();
+      expect(
+        await screen.findByText('No spending in this period')
+      ).toBeInTheDocument();
+    });
+
     it('adds an "All in EUR" tab last and keeps the default', async () => {
       mock.onGet(URL).reply(200, breakdown([EUR, MDL], RANGE, converted));
       renderCard();

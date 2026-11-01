@@ -11,7 +11,8 @@ export interface SpendingTab {
 
 /**
  * One tab per original currency, in API order, then the household currency
- * tab. That last tab is left out when it would repeat the only currency.
+ * tab. That last tab is left out when there is nothing to convert or it
+ * would repeat the only currency.
  */
 export function spendingTabs(b: SpendingBreakdown): SpendingTab[] {
   const tabs: SpendingTab[] = b.by_currency.map((c) => ({
@@ -21,7 +22,8 @@ export function spendingTabs(b: SpendingBreakdown): SpendingTab[] {
     household: false,
   }));
   const hh = b.in_household_currency;
-  if (!hh) return tabs;
+  // An empty range still carries an empty household tree; show no tabs.
+  if (!hh || tabs.length === 0) return tabs;
   const [only] = b.by_currency;
   const repeats =
     b.by_currency.length === 1 &&

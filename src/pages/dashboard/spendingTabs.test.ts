@@ -32,6 +32,11 @@ describe('spendingTabs', () => {
     expect(keys(breakdown([EUR], RANGE, inHousehold(EUR)))).toEqual(['EUR']);
   });
 
+  it('has no tabs for an empty range', () => {
+    const empty = inHousehold({ ...EUR, total: 0, lines: 0, categories: [] });
+    expect(keys(breakdown([], RANGE, empty))).toEqual([]);
+  });
+
   it('keeps the household tab when some bills were left out', () => {
     const tree = inHousehold(EUR, [
       { currency: null, bill_count: 1, amount: 31 },
