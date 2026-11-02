@@ -326,6 +326,22 @@ describe('SpendingBreakdownCard', () => {
       expect(search()).not.toContain('category');
     });
 
+    it('expands a legend row without zooming, and collapses it on period change', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL]));
+      renderCard(MONTH);
+      await screen.findByRole('button', { name: /^Food,/ });
+      fireEvent.click(screen.getByRole('button', { expanded: false }));
+      expect(screen.getByRole('list', { name: 'Food' })).toHaveTextContent(
+        'Bread'
+      );
+      expect(search()).not.toContain('category');
+      expect(currentCrumb()).toBe('All categories');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
+      await waitFor(() => expect(search()).toContain('anchor=2026-09-30'));
+      expect(screen.queryByRole('list', { name: 'Food' })).toBeNull();
+    });
+
     it('drops a category that is not in the data', async () => {
       mock.onGet(URL).reply(200, breakdown([MDL]));
       renderCard(`${MONTH}&category=gone`);

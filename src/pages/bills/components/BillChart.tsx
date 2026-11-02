@@ -79,7 +79,6 @@ export function BillChart({ bill }: BillChartProps): ReactElement {
             data={data}
             zoomedKey={zoomed ? zoomedKey : null}
             highlightedKey={highlightedKey}
-            onZoom={zoom}
           />
         </div>
       </div>
