@@ -26,7 +26,7 @@ function productWeight(item: BillEditItem): { product_weight?: number } {
   return item.weight_kg ? { product_weight: round3(item.weight_kg) } : {};
 }
 
-function toConfirmItem(item: BillEditItem): ConfirmBillItem {
+export function toConfirmItem(item: BillEditItem): ConfirmBillItem {
   return {
     ...(item.id ? { id: item.id } : {}),
     ...(item.sub_category ? { sub_category_id: item.sub_category.id } : {}),
