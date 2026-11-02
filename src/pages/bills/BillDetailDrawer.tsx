@@ -28,6 +28,9 @@ export function BillDetailDrawer(): ReactElement | null {
     confirm,
     isConfirming,
     canConfirm,
+    save,
+    isSaving,
+    canSave,
     close,
   } = actions;
 
@@ -56,10 +59,15 @@ export function BillDetailDrawer(): ReactElement | null {
                   {t('confirmed.detail.confirm')}
                 </Button>
               )}
+              {draft && (
+                <Button size="sm" disabled={!canSave} onClick={save}>
+                  {t('confirmed.detail.save')}
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isConfirming}
+                disabled={isConfirming || isSaving}
                 onClick={toggleEdit}
               >
                 {draft

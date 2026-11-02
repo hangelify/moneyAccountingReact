@@ -9,10 +9,15 @@ import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
-import type { BillDetailResponseDto, PossibleDuplicate } from '@/types/bills';
+import type {
+  BillDetailResponseDto,
+  PossibleDuplicate,
+  UpdateBillRequest,
+} from '@/types/bills';
 import { billsApi } from './api';
 import {
   buildDetailConfirmPayload,
+  buildDetailUpdatePayload,
   isDraftValid,
   toDraft,
   type BillDetailDraft,
@@ -27,6 +32,10 @@ export interface BillDetailActions {
   confirm: () => void;
   isConfirming: boolean;
   canConfirm: boolean;
+  // Sends only the edited fields; never changes the status.
+  save: () => void;
+  isSaving: boolean;
+  canSave: boolean;
   // Back to the parent list, keeping its filters.
   close: () => void;
   // Drafts: the original chosen with Mark, sent as duplicate_of_id on Confirm.
@@ -145,6 +154,52 @@ export function useBillDetailActions(
     },
   });
 
+  const saveMutation = useMutation({
+    mutationFn: (body: UpdateBillRequest) =>
+      billsApi.update(hid!, bill!.id, body),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(['households', hid, 'bill', id], saved);
+      void queryClient.invalidateQueries({
+        queryKey: ['households', hid, 'bills'],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['households', hid, 'dashboard'],
+      });
+      // A new market name creates a market.
+      void queryClient.invalidateQueries({
+        queryKey: ['households', hid, 'markets'],
+      });
+      setEdit(null);
+      toast({ title: t('confirmed.detail.saved') });
+    },
+    onError: (err) => {
+      if (isHouseholdForbidden(err)) return;
+      const status = err instanceof ApiError ? err.status : undefined;
+      if (status === 404) {
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'bills'],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'dashboard'],
+        });
+        toast({ variant: 'destructive', title: t('confirmed.detail.gone') });
+        close();
+      } else if (status === 400 && err instanceof ApiError) {
+        // Nothing was saved; the edits stay so the user can fix and retry.
+        toast({
+          variant: 'destructive',
+          title: t('confirmed.detail.saveFailed'),
+          description: err.messages.join('\n'),
+        });
+      } else {
+        toast({ variant: 'destructive', title: t('errors:saveFailed') });
+      }
+    },
+  });
+
+  const updateBody =
+    bill && draft ? buildDetailUpdatePayload(bill, draft) : null;
+
   const setDraft = (next: BillDetailDraft): void => {
     if (id) setEdit({ id, draft: next });
   };
@@ -158,12 +213,23 @@ export function useBillDetailActions(
     duplicates.mark.isPending ||
     duplicates.unmark.isPending ||
     duplicates.dismiss.isPending ||
-    confirmMutation.isPending;
+    confirmMutation.isPending ||
+    saveMutation.isPending;
 
   const canConfirm =
     hid !== null &&
     !confirmMutation.isPending &&
+    !saveMutation.isPending &&
     (draft === null || isDraftValid(draft));
+
+  const canSave =
+    hid !== null &&
+    !confirmMutation.isPending &&
+    !saveMutation.isPending &&
+    draft !== null &&
+    isDraftValid(draft) &&
+    updateBody !== null &&
+    Object.keys(updateBody).length > 0;
 
   return {
     bill,
@@ -173,6 +239,11 @@ export function useBillDetailActions(
     confirm: () => confirmMutation.mutate(),
     isConfirming: confirmMutation.isPending,
     canConfirm,
+    save: () => {
+      if (updateBody) saveMutation.mutate(updateBody);
+    },
+    isSaving: saveMutation.isPending,
+    canSave,
     close,
     pendingDuplicateOf,
     markPending: (original) => {

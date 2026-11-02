@@ -437,3 +437,124 @@ describe('BillDetailPage duplicates', () => {
     expect(screen.getByText('14:05')).toBeInTheDocument();
   });
 });
+
+describe('BillDetailPage save', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const confirmed = { ...draftBill, status: 'confirmed' };
+  const saveButton = (): HTMLElement =>
+    screen.getByRole('button', { name: /^save$/i });
+  const putBody = (): unknown =>
+    JSON.parse(String(mock.history.put?.[0]?.data));
+
+  async function editTotal(value: string): Promise<void> {
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    const total = screen.getByLabelText('Total');
+    await userEvent.clear(total);
+    await userEvent.type(total, value);
+  }
+
+  it('sends only the changed fields and shows the saved bill', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onPut(DETAIL).reply(200, { ...confirmed, total_amount: 9 });
+    renderAt('/bills/confirmed/d1');
+    await editTotal('9');
+    await userEvent.click(saveButton());
+    await waitFor(() => expect(screen.queryByLabelText('Total')).toBeNull());
+    expect(putBody()).toEqual({ total_amount: 9 });
+    expect(screen.getAllByText('9.00 EUR').length).toBeGreaterThan(0);
+    expect(await screen.findByText('Bill saved')).toBeInTheDocument();
+    expect(mock.history.post).toHaveLength(0);
+  });
+
+  it('sends the full list of lines when a line changed', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onPut(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    const amount = screen.getByLabelText('Item 1 amount');
+    await userEvent.clear(amount);
+    await userEvent.type(amount, '3');
+    await userEvent.click(saveButton());
+    await waitFor(() => expect(mock.history.put).toHaveLength(1));
+    expect(putBody()).toEqual({
+      items: [
+        { id: 'l1', sub_category_id: 's1', product_count: 1, amount: 3 },
+        { id: 'l2', product_count: 1, amount: 4.71, product_weight: 0.942 },
+      ],
+    });
+  });
+
+  it('disables Save until something changed', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    expect(saveButton()).toBeDisabled();
+  });
+
+  it('hides Save outside edit mode', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await screen.findByRole('button', { name: /edit/i });
+    expect(screen.queryByRole('button', { name: /^save$/i })).toBeNull();
+  });
+
+  it('disables Save and Confirm while the request runs', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    mock.onPut(DETAIL).reply(() => new Promise(() => undefined));
+    renderAt('/bills/drafts/d1');
+    await editTotal('9');
+    await userEvent.click(saveButton());
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+    expect(confirmButton()).toBeDisabled();
+  });
+
+  it('saves a draft without confirming it', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    mock.onPut(DETAIL).reply(200, { ...draftBill, total_amount: 9 });
+    renderAt('/bills/drafts/d1');
+    await editTotal('9');
+    await userEvent.click(saveButton());
+    await waitFor(() => expect(mock.history.put).toHaveLength(1));
+    expect(mock.history.post).toHaveLength(0);
+    expect(confirmButton()).toBeInTheDocument();
+  });
+
+  it('keeps the edits and shows the server message on 400', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onPut(DETAIL).reply(400, {
+      statusCode: 400,
+      message: ['SubCategory with ID s1 not found'],
+      error: 'Bad Request',
+    });
+    renderAt('/bills/confirmed/d1');
+    await editTotal('8');
+    await userEvent.click(saveButton());
+    expect(
+      await screen.findByText('SubCategory with ID s1 not found')
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Total')).toHaveValue(8);
+  });
+
+  it('goes back to the list when the bill is gone (404)', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onPut(DETAIL).reply(404, {});
+    renderAt('/bills/confirmed/d1');
+    await editTotal('8');
+    await userEvent.click(saveButton());
+    expect(
+      await screen.findByText('This bill no longer exists.')
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        /^\/bills\/confirmed$/
+      )
+    );
+  });
+});

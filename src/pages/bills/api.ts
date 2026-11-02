@@ -10,6 +10,7 @@ import type {
   DuplicateRange,
   DuplicateSuggestionsResponse,
   ParsePhotoResponse,
+  UpdateBillRequest,
 } from '@/types/bills';
 import type { Paginated } from '@/types/pagination';
 import type { AxiosRequestConfig } from 'axios';
@@ -110,6 +111,19 @@ export const billsApi = {
   ): Promise<BillDetailResponseDto> => {
     const { data } = await apiClient.post<BillDetailResponseDto>(
       householdPath(hid, BILLS_ENDPOINTS.LIST),
+      body
+    );
+    return data;
+  },
+
+  // Edits a bill of any status; never changes the status.
+  update: async (
+    hid: string,
+    id: string,
+    body: UpdateBillRequest
+  ): Promise<BillDetailResponseDto> => {
+    const { data } = await apiClient.put<BillDetailResponseDto>(
+      householdPath(hid, BILLS_ENDPOINTS.DETAIL(id)),
       body
     );
     return data;

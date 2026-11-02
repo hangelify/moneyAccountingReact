@@ -389,6 +389,53 @@ describe('BillDetailDrawer', () => {
   });
 });
 
+describe('BillDetailDrawer save', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const bill = {
+    id: 'c1',
+    bill_date: '2026-10-28',
+    total_amount: 10,
+    amount_mismatch: false,
+    currency: 'EUR',
+    created_at: '2026-10-28T10:00:00Z',
+    status: 'confirmed',
+    market: { id: 'm1', name: 'Lidl', city: null },
+    items: [
+      {
+        id: 'l1',
+        raw_name: 'MILK',
+        sub_category: null,
+        product_count: 1,
+        amount: 10,
+        product_weight: null,
+      },
+    ],
+  };
+  const C1 = '/households/hh-1/bills/c1';
+
+  it('Save PUTs the changed fields and leaves edit mode', async () => {
+    mock.onGet(C1).reply(200, bill);
+    mock.onPut(C1).reply(200, { ...bill, bill_date: '2026-10-27' });
+    renderAt('/bills/confirmed/c1');
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    const date = screen.getByLabelText('Date');
+    await userEvent.clear(date);
+    await userEvent.type(date, '2026-10-27');
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    await waitFor(() => expect(screen.queryByLabelText('Date')).toBeNull());
+    expect(JSON.parse(String(mock.history.put?.[0]?.data))).toEqual({
+      bill_date: '2026-10-27',
+    });
+  });
+});
+
 describe('BillDetailDrawer duplicates', () => {
   let mock: MockAdapter;
   beforeEach(() => {

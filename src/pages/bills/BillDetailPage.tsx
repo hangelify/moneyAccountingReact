@@ -25,6 +25,9 @@ export function BillDetailPage(): ReactElement | null {
     confirm,
     isConfirming,
     canConfirm,
+    save,
+    isSaving,
+    canSave,
     close,
   } = actions;
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -102,9 +105,14 @@ export function BillDetailPage(): ReactElement | null {
                 {t('confirmed.detail.confirm')}
               </Button>
             )}
+            {draft && (
+              <Button disabled={!canSave} onClick={save}>
+                {t('confirmed.detail.save')}
+              </Button>
+            )}
             <Button
               variant="outline"
-              disabled={isConfirming}
+              disabled={isConfirming || isSaving}
               onClick={toggleEdit}
             >
               {draft
