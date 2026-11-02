@@ -5,9 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { BillReviewFields } from './components/BillReviewFields';
-import { BillItemsTable } from './components/BillItemsTable';
-import { BillTotalsBanner } from './components/BillTotalsBanner';
+import { BillEditForm } from './components/BillEditForm';
 import { DuplicateBanner } from './components/DuplicateBanner';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
@@ -32,9 +30,6 @@ export function NewBillReview(): ReactElement | null {
   const previewUrl = useBillDraftStore((s) => s.previewUrl);
   const edits = useBillDraftStore((s) => s.edits);
   const updateEdits = useBillDraftStore((s) => s.updateEdits);
-  const updateItem = useBillDraftStore((s) => s.updateItem);
-  const removeItem = useBillDraftStore((s) => s.removeItem);
-  const addItem = useBillDraftStore((s) => s.addItem);
   const clear = useBillDraftStore((s) => s.clear);
   const hid = useBillDraftStore((s) => s.hid);
   const draftId = useBillDraftStore((s) => s.draftId);
@@ -160,17 +155,9 @@ export function NewBillReview(): ReactElement | null {
     return <Navigate to="/" replace />;
   }
 
-  const handleEditsChange = (patch: Partial<typeof edits>): void => {
+  const handleEditsChange = (next: typeof edits): void => {
     setDirty(true);
-    updateEdits(patch);
-  };
-
-  const handleItemChange = (
-    i: number,
-    patch: Parameters<typeof updateItem>[1]
-  ): void => {
-    setDirty(true);
-    updateItem(i, patch);
+    updateEdits(next);
   };
 
   // Deletes the server draft (confirm mode only) without waiting for it;
@@ -244,29 +231,12 @@ export function NewBillReview(): ReactElement | null {
               onUndo={undoDuplicateOf}
               busy={saveMutation.isPending}
             />
-            <BillReviewFields
+            <BillEditForm
               edits={edits}
               onChange={handleEditsChange}
               {...(createMode
                 ? { marketHint: t('bills:review.marketNotSaved') }
                 : {})}
-            />
-            <BillTotalsBanner
-              items={edits.items}
-              totalAmount={edits.total_amount}
-              currency={edits.currency}
-            />
-            <BillItemsTable
-              items={edits.items}
-              onUpdateItem={handleItemChange}
-              onRemoveItem={(i) => {
-                setDirty(true);
-                removeItem(i);
-              }}
-              onAddItem={() => {
-                setDirty(true);
-                return addItem();
-              }}
             />
             {otherHousehold && (
               <p role="alert" className="text-sm text-destructive">
