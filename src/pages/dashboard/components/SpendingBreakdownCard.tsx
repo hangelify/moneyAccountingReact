@@ -209,10 +209,10 @@ export function SpendingBreakdownCard(): ReactElement {
             </div>
             <div className="w-full md:w-1/2">
               <SpendingLegend
+                key={scope}
                 data={current}
                 zoomedKey={zoomedKey}
                 highlightedKey={highlightedKey}
-                onZoom={onZoom}
               />
             </div>
           </div>

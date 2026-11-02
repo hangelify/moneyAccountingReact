@@ -16,6 +16,8 @@
   "breadcrumb": "Breadcrumb",
   "noCurrency": "No currency",
   "archived": "archived",
+  "lines_one": "{{count}} line",
+  "lines_other": "{{count}} lines",
   "empty": "No spending in this period",
   "error": "Couldn't load this period",
   "retry": "Retry",
