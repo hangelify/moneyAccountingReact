@@ -9,6 +9,7 @@ import { ApiError } from '@/auth/apiError';
 import { BillDetailTable } from './components/BillDetailTable';
 import { BillDetailViews } from './components/BillDetailViews';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
+import { DeleteBillButton } from './components/DeleteBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
 // Desktop layout of a bill: a full page with the items in a table.
@@ -28,6 +29,9 @@ export function BillDetailPage(): ReactElement | null {
     save,
     isSaving,
     canSave,
+    remove,
+    isRemoving,
+    canRemove,
     close,
   } = actions;
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -112,7 +116,7 @@ export function BillDetailPage(): ReactElement | null {
             )}
             <Button
               variant="outline"
-              disabled={isConfirming || isSaving}
+              disabled={isConfirming || isSaving || isRemoving}
               onClick={toggleEdit}
             >
               {draft
@@ -126,10 +130,12 @@ export function BillDetailPage(): ReactElement | null {
       {renderBody()}
 
       {bill && (
-        // Remove is wired in a follow-up; disabled until then.
-        <Button variant="destructive" className="self-end" disabled>
-          {t('confirmed.detail.remove')}
-        </Button>
+        <DeleteBillButton
+          bill={bill}
+          onDelete={remove}
+          disabled={!canRemove}
+          className="self-end"
+        />
       )}
     </div>
   );

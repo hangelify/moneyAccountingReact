@@ -1,7 +1,7 @@
 // src/pages/bills/BillDetailDrawer.test.tsx
 import '@/i18n';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   MemoryRouter,
@@ -92,7 +92,7 @@ describe('BillDetailDrawer', () => {
     );
   });
 
-  it('shows Confirm and Remove actions for a draft bill', async () => {
+  it('shows Confirm and Discard draft actions for a draft bill', async () => {
     mock.onGet('/households/hh-1/bills/d1').reply(200, {
       id: 'd1',
       bill_date: '2026-10-29',
@@ -109,7 +109,9 @@ describe('BillDetailDrawer', () => {
         screen.getByRole('button', { name: /confirm/i })
       ).toBeInTheDocument()
     );
-    expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^discard draft$/i })
+    ).toBeInTheDocument();
   });
 
   it('hides Confirm for an already confirmed bill', async () => {
@@ -125,7 +127,7 @@ describe('BillDetailDrawer', () => {
     renderAt('/bills/confirmed/b1');
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: /remove/i })
+        screen.getByRole('button', { name: /^delete bill$/i })
       ).toBeInTheDocument()
     );
     expect(screen.queryByRole('button', { name: /confirm/i })).toBeNull();
@@ -159,10 +161,12 @@ describe('BillDetailDrawer', () => {
     updated_at: '2026-01-01T00:00:00Z',
   }));
 
-  it('places Remove after the items, at the end of the drawer', async () => {
+  it('places Delete after the items, at the end of the drawer', async () => {
     mock.onGet('/households/hh-1/bills/b1').reply(200, editableBill);
     renderAt('/bills/confirmed/b1');
-    const remove = await screen.findByRole('button', { name: /remove/i });
+    const remove = await screen.findByRole('button', {
+      name: /^delete bill$/i,
+    });
     const itemsHeading = screen.getByRole('heading', { name: /items/i });
     expect(
       itemsHeading.compareDocumentPosition(remove) &
@@ -508,5 +512,71 @@ describe('BillDetailDrawer duplicates', () => {
     await waitFor(() =>
       expect(screen.queryByRole('link', { name: /Duplicate of/ })).toBeNull()
     );
+  });
+});
+
+describe('BillDetailDrawer delete', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const DETAIL = '/households/hh-1/bills/b1';
+  const bill = {
+    id: 'b1',
+    bill_date: '2026-05-19T00:00:00Z',
+    total_amount: 10,
+    amount_mismatch: false,
+    currency: 'EUR',
+    created_at: '2026-05-19T10:00:00Z',
+    status: 'confirmed',
+    market: null,
+    items: [],
+  };
+
+  async function confirmDelete(): Promise<void> {
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^delete bill$/i })
+    );
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Delete this bill?',
+    });
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: /^delete bill$/i })
+    );
+  }
+
+  it('deletes after confirmation and closes the drawer', async () => {
+    mock.onGet(DETAIL).reply(200, bill);
+    mock.onDelete(DETAIL).reply(204);
+    renderAt('/bills/confirmed/b1');
+    await confirmDelete();
+    expect(await screen.findByText('Bill deleted')).toBeInTheDocument();
+    expect(mock.history.delete).toHaveLength(1);
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        /^\/bills\/confirmed$/
+      )
+    );
+  });
+
+  it('refreshes the bills lists and the dashboard after delete', async () => {
+    const spy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
+    mock.onGet(DETAIL).reply(200, bill);
+    mock.onDelete(DETAIL).reply(204);
+    renderAt('/bills/confirmed/b1');
+    await confirmDelete();
+    await waitFor(() =>
+      expect(spy).toHaveBeenCalledWith({
+        queryKey: ['households', 'hh-1', 'dashboard'],
+      })
+    );
+    expect(spy).toHaveBeenCalledWith({
+      queryKey: ['households', 'hh-1', 'bills'],
+    });
+    spy.mockRestore();
   });
 });

@@ -159,7 +159,26 @@
       "saved": "Bill saved",
       "saveFailed": "Couldn't save the bill.",
       "gone": "This bill no longer exists.",
-      "remove": "Remove",
+      "delete": {
+        "bill": {
+          "action": "Delete bill",
+          "title": "Delete this bill?",
+          "description": "This bill will be deleted and you won't have access to it anymore. This can't be undone. If it has copies, the oldest copy becomes the main bill."
+        },
+        "draft": {
+          "action": "Discard draft",
+          "title": "Discard this draft?",
+          "description": "This draft will be deleted and you won't have access to it anymore. This can't be undone."
+        },
+        "copy": {
+          "action": "Delete copy",
+          "title": "Delete this copy?",
+          "description": "This copy will be deleted and you won't have access to it anymore. This can't be undone. The original bill is not affected."
+        }
+      },
+      "deleted": "Bill deleted",
+      "alreadyDeleted": "This bill was already deleted.",
+      "deleteFailed": "Couldn't delete the bill. Try again.",
       "edit": "Edit",
       "cancel": "Cancel",
       "itemCategory": "Item {{index}} category",

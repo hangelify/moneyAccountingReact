@@ -1,6 +1,6 @@
 import '@/i18n';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   Link,
@@ -556,5 +556,140 @@ describe('BillDetailPage save', () => {
         /^\/bills\/confirmed$/
       )
     );
+  });
+});
+
+describe('BillDetailPage delete', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const confirmed = { ...draftBill, status: 'confirmed' };
+  const dialog = (): HTMLElement => screen.getByRole('dialog');
+
+  async function openDialog(label: RegExp): Promise<void> {
+    await userEvent.click(await screen.findByRole('button', { name: label }));
+    await screen.findByRole('dialog');
+  }
+
+  it('asks before deleting a confirmed bill and warns it is final', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete bill$/i);
+    expect(dialog()).toHaveTextContent('Delete this bill?');
+    expect(dialog()).toHaveTextContent(/won't have access to it/i);
+    expect(dialog()).toHaveTextContent(/can't be undone/i);
+    expect(mock.history.delete).toHaveLength(0);
+  });
+
+  it('words the action for a draft', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    renderAt('/bills/drafts/d1');
+    await openDialog(/^discard draft$/i);
+    expect(dialog()).toHaveTextContent('Discard this draft?');
+  });
+
+  it('words the action for a duplicate', async () => {
+    mock.onGet(DETAIL).reply(200, {
+      ...confirmed,
+      status: 'duplicate',
+      duplicate_of: {
+        id: 'b0',
+        bill_date: '2026-10-03',
+        total_amount: 7.2,
+        currency: 'EUR',
+        market_name: 'Lidl',
+        created_by_name: 'Ana',
+      },
+    });
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete copy$/i);
+    expect(dialog()).toHaveTextContent('Delete this copy?');
+  });
+
+  it('Cancel closes the dialog without deleting', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete bill$/i);
+    await userEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(mock.history.delete).toHaveLength(0);
+    expect(screen.getByTestId('loc')).toHaveTextContent('/bills/confirmed/d1');
+  });
+
+  it('deletes the bill and goes back to the list', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onDelete(DETAIL).reply(204);
+    renderAt('/bills/confirmed/d1?page=2');
+    await openDialog(/^delete bill$/i);
+    await userEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete bill$/i })
+    );
+    expect(await screen.findByText('Bill deleted')).toBeInTheDocument();
+    expect(mock.history.delete).toHaveLength(1);
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        /^\/bills\/confirmed$/
+      )
+    );
+    expect(screen.getByTestId('search')).toHaveTextContent('?page=2');
+  });
+
+  it('treats 404 as already deleted', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onDelete(DETAIL).reply(404, {});
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete bill$/i);
+    await userEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete bill$/i })
+    );
+    expect(
+      await screen.findByText('This bill was already deleted.')
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        /^\/bills\/confirmed$/
+      )
+    );
+  });
+
+  it('keeps the bill and allows a retry on 500', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onDelete(DETAIL).reply(500, {});
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete bill$/i);
+    await userEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete bill$/i })
+    );
+    expect(
+      await screen.findByText("Couldn't delete the bill. Try again.")
+    ).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByTestId('loc')).toHaveTextContent('/bills/confirmed/d1');
+    expect(
+      screen.getByRole('button', { name: /^delete bill$/i })
+    ).toBeEnabled();
+  });
+
+  it('disables Edit and Delete while the delete runs', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onDelete(DETAIL).reply(() => new Promise(() => undefined));
+    renderAt('/bills/confirmed/d1');
+    await openDialog(/^delete bill$/i);
+    await userEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete bill$/i })
+    );
+    await waitFor(() =>
+      expect(
+        within(dialog()).getByRole('button', { name: /^delete bill$/i })
+      ).toBeDisabled()
+    );
+    expect(
+      screen.getByRole('button', { name: /^edit$/i, hidden: true })
+    ).toBeDisabled();
   });
 });

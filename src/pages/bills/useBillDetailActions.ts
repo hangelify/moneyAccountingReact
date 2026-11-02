@@ -36,6 +36,11 @@ export interface BillDetailActions {
   save: () => void;
   isSaving: boolean;
   canSave: boolean;
+  // Deletes the bill for good (soft delete, no restore) and goes back to the
+  // list. Resolves once the request settles, success or not.
+  remove: () => Promise<void>;
+  isRemoving: boolean;
+  canRemove: boolean;
   // Back to the parent list, keeping its filters.
   close: () => void;
   // Drafts: the original chosen with Mark, sent as duplicate_of_id on Confirm.
@@ -197,6 +202,46 @@ export function useBillDetailActions(
     },
   });
 
+  const invalidateBillLists = (): void => {
+    // The bills prefix covers the list, drafts and duplicate suggestions.
+    void queryClient.invalidateQueries({
+      queryKey: ['households', hid, 'bills'],
+    });
+    void queryClient.invalidateQueries({
+      queryKey: ['households', hid, 'dashboard'],
+    });
+  };
+
+  const removeMutation = useMutation({
+    mutationFn: () => billsApi.remove(hid!, bill!.id),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ['households', hid, 'bill', id] });
+      invalidateBillLists();
+      toast({ title: t('confirmed.detail.deleted') });
+      close();
+    },
+    onError: (err) => {
+      if (isHouseholdForbidden(err)) return;
+      const status = err instanceof ApiError ? err.status : undefined;
+      if (status === 404) {
+        // Already gone (another member, another tab, draft cleanup): the
+        // user got what they wanted.
+        queryClient.removeQueries({
+          queryKey: ['households', hid, 'bill', id],
+        });
+        invalidateBillLists();
+        toast({ title: t('confirmed.detail.alreadyDeleted') });
+        close();
+      } else {
+        // Nothing changed: the bill stays and the user can retry.
+        toast({
+          variant: 'destructive',
+          title: t('confirmed.detail.deleteFailed'),
+        });
+      }
+    },
+  });
+
   const updateBody =
     bill && draft ? buildDetailUpdatePayload(bill, draft) : null;
 
@@ -214,22 +259,32 @@ export function useBillDetailActions(
     duplicates.unmark.isPending ||
     duplicates.dismiss.isPending ||
     confirmMutation.isPending ||
-    saveMutation.isPending;
+    saveMutation.isPending ||
+    removeMutation.isPending;
 
   const canConfirm =
     hid !== null &&
     !confirmMutation.isPending &&
     !saveMutation.isPending &&
+    !removeMutation.isPending &&
     (draft === null || isDraftValid(draft));
 
   const canSave =
     hid !== null &&
     !confirmMutation.isPending &&
     !saveMutation.isPending &&
+    !removeMutation.isPending &&
     draft !== null &&
     isDraftValid(draft) &&
     updateBody !== null &&
     Object.keys(updateBody).length > 0;
+
+  const canRemove =
+    hid !== null &&
+    bill !== undefined &&
+    !confirmMutation.isPending &&
+    !saveMutation.isPending &&
+    !removeMutation.isPending;
 
   return {
     bill,
@@ -244,6 +299,10 @@ export function useBillDetailActions(
     },
     isSaving: saveMutation.isPending,
     canSave,
+    // onError reports the failure; swallow it so the dialog can close.
+    remove: () => removeMutation.mutateAsync().catch(() => undefined),
+    isRemoving: removeMutation.isPending,
+    canRemove,
     close,
     pendingDuplicateOf,
     markPending: (original) => {
