@@ -147,6 +147,16 @@ describe('billsApi.confirm / create / remove', () => {
     expect(r.id).toBe('b1');
   });
 
+  it('update PUTs the body to /households/hh-1/bills/b1', async () => {
+    const body = { bill_date: '2026-05-20' };
+    mock.onPut('/households/hh-1/bills/b1').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [200, detail];
+    });
+    const r = await billsApi.update('hh-1', 'b1', body);
+    expect(r.id).toBe('b1');
+  });
+
   it('remove DELETEs /households/hh-1/bills/d1', async () => {
     mock.onDelete('/households/hh-1/bills/d1').reply(204);
     await expect(billsApi.remove('hh-1', 'd1')).resolves.toBeUndefined();

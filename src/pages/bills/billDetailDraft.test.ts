@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { BillDetailResponseDto } from '@/types/bills';
 import {
   buildDetailConfirmPayload,
+  buildDetailUpdatePayload,
   isDraftValid,
   toDraft,
 } from './billDetailDraft';
@@ -189,5 +190,75 @@ describe('buildDetailConfirmPayload duplicate link', () => {
     expect(
       buildDetailConfirmPayload(bill, toDraft(bill), null)
     ).not.toHaveProperty('duplicate_of_id');
+  });
+});
+
+describe('buildDetailUpdatePayload', () => {
+  it('sends nothing when nothing changed', () => {
+    const bill = makeBill();
+    expect(buildDetailUpdatePayload(bill, toDraft(bill))).toEqual({});
+  });
+
+  it('ignores edits that keep the same value', () => {
+    const bill = makeBill();
+    const draft = toDraft(bill);
+    draft.total = '7.20';
+    draft.market = ' Lidl ';
+    draft.items[0] = { ...draft.items[0]!, amount: '2.490' };
+    expect(buildDetailUpdatePayload(bill, draft)).toEqual({});
+  });
+
+  it('sends only the changed date and total', () => {
+    const bill = makeBill();
+    const draft = { ...toDraft(bill), date: '2026-10-27', total: '10.199' };
+    expect(buildDetailUpdatePayload(bill, draft)).toEqual({
+      bill_date: '2026-10-27',
+      total_amount: 10.2,
+    });
+  });
+
+  it('sends new_market when the market name changed', () => {
+    const bill = makeBill();
+    const draft = { ...toDraft(bill), market: ' Kaufland ' };
+    expect(buildDetailUpdatePayload(bill, draft)).toEqual({
+      new_market: { name: 'Kaufland' },
+    });
+  });
+
+  it('sends new_market for a bill that only had a raw market name', () => {
+    const bill = makeBill({ market: null, market_name_raw: 'N-1' });
+    expect(
+      buildDetailUpdatePayload(bill, { ...toDraft(bill), market: 'Lidl' })
+    ).toEqual({ new_market: { name: 'Lidl' } });
+  });
+
+  it('sends no market when the name was cleared', () => {
+    const bill = makeBill();
+    expect(
+      buildDetailUpdatePayload(bill, { ...toDraft(bill), market: ' ' })
+    ).toEqual({});
+  });
+
+  it('sends the full list of lines with their ids when one line changed', () => {
+    const bill = makeBill();
+    const draft = toDraft(bill);
+    draft.items[1] = { ...draft.items[1]!, amount: '5' };
+    expect(buildDetailUpdatePayload(bill, draft)).toEqual({
+      items: [
+        { id: 'l1', sub_category_id: 's1', product_count: 1, amount: 2.49 },
+        { id: 'l2', product_count: 1, amount: 5, product_weight: 0.942 },
+      ],
+    });
+  });
+
+  it('sends the lines when a sub-category or weight changed', () => {
+    const bill = makeBill();
+    const draft = toDraft(bill);
+    draft.items[0] = { ...draft.items[0]!, subCategory: null };
+    draft.items[1] = { ...draft.items[1]!, weight: '' };
+    expect(buildDetailUpdatePayload(bill, draft).items).toEqual([
+      { id: 'l1', product_count: 1, amount: 2.49 },
+      { id: 'l2', product_count: 1, amount: 4.71 },
+    ]);
   });
 });

@@ -109,6 +109,20 @@ export interface ConfirmBillRequest {
   purchase_time?: string;
 }
 
+// PUT /bills/:id. Omitted = keep; items, when sent, is the full new list.
+export interface UpdateBillRequest {
+  market_id?: string;
+  new_market?: ConfirmBillRequest['new_market'];
+  bill_date?: string;
+  currency?: Currency;
+  total_amount?: number;
+  description?: string;
+  fiscal_register_id?: string;
+  fiscal_receipt_number?: string;
+  purchase_time?: string;
+  items?: ConfirmBillItem[];
+}
+
 export interface CreateBillItem {
   sub_category_id: string;
   product_count: number;
