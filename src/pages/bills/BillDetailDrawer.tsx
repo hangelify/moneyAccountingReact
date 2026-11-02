@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { BillDetailContent } from './components/BillDetailContent';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
+import { DeleteBillButton } from './components/DeleteBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
 export function BillDetailDrawer(): ReactElement | null {
@@ -31,6 +32,9 @@ export function BillDetailDrawer(): ReactElement | null {
     save,
     isSaving,
     canSave,
+    remove,
+    isRemoving,
+    canRemove,
     close,
   } = actions;
 
@@ -67,7 +71,7 @@ export function BillDetailDrawer(): ReactElement | null {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isConfirming || isSaving}
+                disabled={isConfirming || isSaving || isRemoving}
                 onClick={toggleEdit}
               >
                 {draft
@@ -80,10 +84,12 @@ export function BillDetailDrawer(): ReactElement | null {
         {bill && <BillDuplicateSection bill={bill} actions={actions} />}
         <BillDetailContent id={id} draft={draft} onDraftChange={setDraft} />
         {bill && (
-          // Remove is wired in a follow-up; disabled until then.
-          <Button variant="destructive" className="mt-auto w-full" disabled>
-            {t('confirmed.detail.remove')}
-          </Button>
+          <DeleteBillButton
+            bill={bill}
+            onDelete={remove}
+            disabled={!canRemove}
+            className="mt-auto w-full"
+          />
         )}
       </SheetContent>
     </Sheet>
