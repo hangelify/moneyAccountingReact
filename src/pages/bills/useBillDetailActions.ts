@@ -11,23 +11,28 @@ import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
 import type {
   BillDetailResponseDto,
+  BillEdits,
   PossibleDuplicate,
   UpdateBillRequest,
 } from '@/types/bills';
 import { billsApi } from './api';
 import {
+  billToEdits,
   buildDetailConfirmPayload,
   buildDetailUpdatePayload,
-  isDraftValid,
-  toDraft,
-  type BillDetailDraft,
-} from './billDetailDraft';
+  isEditsValid,
+} from './billDetailEdits';
 
 export interface BillDetailActions {
   bill: BillDetailResponseDto | undefined;
-  // Non-null while in edit mode.
-  draft: BillDetailDraft | null;
-  setDraft: (draft: BillDetailDraft) => void;
+  // Non-null while the form is shown: always for a draft, after Edit for a
+  // confirmed bill.
+  edits: BillEdits | null;
+  setEdits: (edits: BillEdits) => void;
+  // Whether the form holds changes of the user's; a draft resets to the
+  // loaded values only then.
+  isEdited: boolean;
+  // Confirmed bill: Edit / Cancel. Draft: Reset.
   toggleEdit: () => void;
   confirm: () => void;
   isConfirming: boolean;
@@ -67,9 +72,16 @@ export function useBillDetailActions(
   // Keyed by bill id so opening another bill leaves edit mode.
   const [edit, setEdit] = useState<{
     id: string;
-    draft: BillDetailDraft;
+    edits: BillEdits;
   } | null>(null);
-  const draft = edit !== null && edit.id === id ? edit.draft : null;
+  const isEdited = edit !== null && edit.id === id;
+  const isDraft = bill?.status === 'draft';
+  // A draft is always in the form; without changes it shows the loaded bill.
+  const edits = isEdited
+    ? edit.edits
+    : bill && isDraft
+      ? billToEdits(bill)
+      : null;
   // Keyed by bill id too, so a link never carries over to another draft.
   const [pending, setPending] = useState<{
     id: string;
@@ -90,7 +102,7 @@ export function useBillDetailActions(
         bill!.id,
         buildDetailConfirmPayload(
           bill!,
-          draft ?? toDraft(bill!),
+          edits ?? billToEdits(bill!),
           pendingDuplicateOf?.id ?? null
         )
       ),
@@ -243,15 +255,16 @@ export function useBillDetailActions(
   });
 
   const updateBody =
-    bill && draft ? buildDetailUpdatePayload(bill, draft) : null;
+    bill && edits ? buildDetailUpdatePayload(bill, edits) : null;
 
-  const setDraft = (next: BillDetailDraft): void => {
-    if (id) setEdit({ id, draft: next });
+  const setEdits = (next: BillEdits): void => {
+    if (id) setEdit({ id, edits: next });
   };
 
   const toggleEdit = (): void => {
     if (!id || !bill) return;
-    setEdit(draft ? null : { id, draft: toDraft(bill) });
+    if (isDraft || edits) setEdit(null);
+    else setEdit({ id, edits: billToEdits(bill) });
   };
 
   const isDuplicateBusy =
@@ -267,15 +280,15 @@ export function useBillDetailActions(
     !confirmMutation.isPending &&
     !saveMutation.isPending &&
     !removeMutation.isPending &&
-    (draft === null || isDraftValid(draft));
+    (edits === null || isEditsValid(edits));
 
   const canSave =
     hid !== null &&
     !confirmMutation.isPending &&
     !saveMutation.isPending &&
     !removeMutation.isPending &&
-    draft !== null &&
-    isDraftValid(draft) &&
+    edits !== null &&
+    isEditsValid(edits) &&
     updateBody !== null &&
     Object.keys(updateBody).length > 0;
 
@@ -288,8 +301,9 @@ export function useBillDetailActions(
 
   return {
     bill,
-    draft,
-    setDraft,
+    edits,
+    setEdits,
+    isEdited,
     toggleEdit,
     confirm: () => confirmMutation.mutate(),
     isConfirming: confirmMutation.isPending,

@@ -143,6 +143,8 @@ describe('BillDetailDrawer', () => {
     market: { id: 'm1', name: 'Lidl', city: null },
     items: [
       {
+        id: 'l1',
+        raw_name: 'MILK',
         sub_category: { id: 's1', name: 'milk', category_name: 'Dairy' },
         product_count: 1,
         amount: 10,
@@ -180,7 +182,7 @@ describe('BillDetailDrawer', () => {
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
     expect(screen.queryByRole('button', { name: /^edit$/i })).toBeNull();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
-    expect(screen.getByLabelText('Market')).toHaveValue('Lidl');
+    expect(screen.getByLabelText('Market name')).toHaveValue('Lidl');
   });
 
   it('Cancel discards edits and restores the previous values', async () => {
@@ -188,26 +190,72 @@ describe('BillDetailDrawer', () => {
     mock.onGet('/households/hh-1/sub-categories').reply(200, subCategories);
     renderAt('/bills/confirmed/b1');
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
-    const category = screen.getByLabelText('Item 1 category');
+    const category = screen.getAllByLabelText('Category')[0]!;
     await waitFor(() => expect(category).toBeEnabled());
     await userEvent.selectOptions(category, 's2');
-    const market = screen.getByLabelText('Market');
+    const market = screen.getByLabelText('Market name');
     await userEvent.clear(market);
     await userEvent.type(market, 'Kaufland');
-    const total = screen.getByLabelText('Total');
+    const total = screen.getByLabelText('Total amount');
     await userEvent.clear(total);
     await userEvent.type(total, '99');
 
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByLabelText('Market')).toBeNull();
+    expect(screen.queryByLabelText('Market name')).toBeNull();
     expect(screen.getByText('Lidl')).toBeInTheDocument();
     expect(screen.queryByText('Kaufland')).toBeNull();
     expect(screen.getByText(/milk/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /edit/i }));
-    expect(screen.getByLabelText('Market')).toHaveValue('Lidl');
-    expect(screen.getByLabelText('Total')).toHaveValue(10);
-    expect(screen.getByLabelText('Item 1 category')).toHaveValue('s1');
+    expect(screen.getByLabelText('Market name')).toHaveValue('Lidl');
+    expect(screen.getByLabelText('Total amount')).toHaveValue(10);
+    expect(screen.getAllByLabelText('Category')[0]).toHaveValue('s1');
+  });
+
+  it('removes an item and saves the shorter list', async () => {
+    const twoLines = {
+      ...editableBill,
+      status: 'confirmed',
+      items: [
+        ...editableBill.items,
+        { ...editableBill.items[0]!, id: 'l2', raw_name: 'BREAD', amount: 2 },
+      ],
+    };
+    mock.onGet('/households/hh-1/bills/b1').reply(200, twoLines);
+    mock.onPut('/households/hh-1/bills/b1').reply(200, editableBill);
+    renderAt('/bills/confirmed/b1');
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    await userEvent.click(
+      screen.getAllByRole('button', { name: /delete item/i })[1]!
+    );
+    await userEvent.click(
+      within(
+        screen.getByRole('dialog', { name: /delete this item/i })
+      ).getByRole('button', { name: /^confirm$/i })
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    await waitFor(() => expect(mock.history.put).toHaveLength(1));
+    expect(JSON.parse(String(mock.history.put[0]?.data))).toEqual({
+      items: [
+        {
+          id: 'l1',
+          sub_category_id: 's1',
+          raw_name: 'MILK',
+          product_count: 1,
+          amount: 10,
+        },
+      ],
+    });
+  });
+
+  it('warns when the saved items do not match the total', async () => {
+    mock
+      .onGet('/households/hh-1/bills/b1')
+      .reply(200, { ...editableBill, total_amount: 12 });
+    renderAt('/bills/confirmed/b1');
+    expect(
+      await screen.findByText("Items don't match the bill total")
+    ).toBeInTheDocument();
   });
 
   describe('Confirm', () => {
@@ -249,7 +297,7 @@ describe('BillDetailDrawer', () => {
       return JSON.parse(String(post?.data));
     }
 
-    it('confirms the loaded data when not editing', async () => {
+    it('confirms the loaded data as opened', async () => {
       mock.onGet(DETAIL).reply(200, draftBill);
       mock.onPost(CONFIRM).reply(200, { ...draftBill, status: 'confirmed' });
       renderAt('/bills/drafts/d1');
@@ -262,10 +310,23 @@ describe('BillDetailDrawer', () => {
       expect(postedBody()).toEqual({
         market_id: 'm1',
         bill_date: '2026-10-28',
+        currency: 'EUR',
         total_amount: 7.2,
         items: [
-          { id: 'l1', sub_category_id: 's1', product_count: 1, amount: 2.49 },
-          { id: 'l2', product_count: 1, amount: 4.71, product_weight: 0.942 },
+          {
+            id: 'l1',
+            sub_category_id: 's1',
+            raw_name: 'MILK',
+            product_count: 1,
+            amount: 2.49,
+          },
+          {
+            id: 'l2',
+            raw_name: 'APPLES',
+            product_count: 1,
+            amount: 4.71,
+            product_weight: 0.942,
+          },
         ],
       });
       expect(await screen.findByText('Bill confirmed')).toBeInTheDocument();
@@ -293,21 +354,20 @@ describe('BillDetailDrawer', () => {
         .onPost(CONFIRM)
         .reply(200, { ...draftBill, status: 'confirmed', total_amount: 9 });
       renderAt('/bills/drafts/d1');
-      await userEvent.click(
-        await screen.findByRole('button', { name: /edit/i })
-      );
-      const market = screen.getByLabelText('Market');
+      const market = await screen.findByLabelText('Market name');
       await userEvent.clear(market);
       await userEvent.type(market, 'Kaufland');
-      const total = screen.getByLabelText('Total');
+      const total = screen.getByLabelText('Total amount');
       await userEvent.clear(total);
       await userEvent.type(total, '9');
-      const amount = screen.getByLabelText('Item 1 amount');
+      const amount = screen.getAllByTestId('item-final-price-0')[0]!;
       await userEvent.clear(amount);
       await userEvent.type(amount, '4.29');
 
       await userEvent.click(confirmButton());
-      await waitFor(() => expect(screen.queryByLabelText('Market')).toBeNull());
+      await waitFor(() =>
+        expect(screen.queryByLabelText('Market name')).toBeNull()
+      );
       expect(postedBody()).toMatchObject({
         new_market: { name: 'Kaufland' },
         total_amount: 9,
@@ -319,10 +379,7 @@ describe('BillDetailDrawer', () => {
     it('disables Confirm while the edited form is invalid', async () => {
       mock.onGet(DETAIL).reply(200, draftBill);
       renderAt('/bills/drafts/d1');
-      await userEvent.click(
-        await screen.findByRole('button', { name: /edit/i })
-      );
-      await userEvent.clear(screen.getByLabelText('Total'));
+      await userEvent.clear(await screen.findByLabelText('Total amount'));
       expect(confirmButton()).toBeDisabled();
     });
 
@@ -363,17 +420,14 @@ describe('BillDetailDrawer', () => {
         error: 'Bad Request',
       });
       renderAt('/bills/drafts/d1');
-      await userEvent.click(
-        await screen.findByRole('button', { name: /edit/i })
-      );
-      const total = screen.getByLabelText('Total');
+      const total = await screen.findByLabelText('Total amount');
       await userEvent.clear(total);
       await userEvent.type(total, '8');
       await userEvent.click(confirmButton());
       expect(
         await screen.findByText('SubCategory with ID s1 not found')
       ).toBeInTheDocument();
-      expect(screen.getByLabelText('Total')).toHaveValue(8);
+      expect(screen.getByLabelText('Total amount')).toHaveValue(8);
     });
 
     it('closes the drawer when the draft is gone (404)', async () => {

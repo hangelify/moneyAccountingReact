@@ -82,6 +82,20 @@ const DETAIL = '/households/hh-1/bills/d1';
 const CONFIRM = '/households/hh-1/bills/d1/confirm';
 const confirmButton = (): HTMLElement =>
   screen.getByRole('button', { name: /confirm/i });
+const priceInput = (index: number): HTMLElement =>
+  screen.getAllByTestId(`item-final-price-${index}`)[0]!;
+
+// Deletes an item through its row's button and the confirm dialog.
+async function deleteItem(index: number): Promise<void> {
+  await userEvent.click(
+    screen.getAllByRole('button', { name: /delete item/i })[index]!
+  );
+  await userEvent.click(
+    within(screen.getByRole('dialog')).getByRole('button', {
+      name: /^confirm$/i,
+    })
+  );
+}
 
 describe('BillDetailPage', () => {
   let mock: MockAdapter;
@@ -98,8 +112,8 @@ describe('BillDetailPage', () => {
   }
 
   it('renders the bill as a page with a heading and items table', async () => {
-    mock.onGet(DETAIL).reply(200, draftBill);
-    renderAt('/bills/drafts/d1');
+    mock.onGet(DETAIL).reply(200, { ...draftBill, status: 'confirmed' });
+    renderAt('/bills/confirmed/d1');
     expect(
       await screen.findByRole('heading', { name: 'Bill details' })
     ).toBeInTheDocument();
@@ -108,9 +122,76 @@ describe('BillDetailPage', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('switches between the items table and the chart', async () => {
+  it('opens a draft straight in the form', async () => {
     mock.onGet(DETAIL).reply(200, draftBill);
     renderAt('/bills/drafts/d1');
+    expect(await screen.findByLabelText('Market name')).toHaveValue('Lidl');
+    expect(screen.getAllByDisplayValue('MILK').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /^reset$/i })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /^edit$/i })).toBeNull();
+  });
+
+  it('Reset brings a draft back to the loaded values', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    renderAt('/bills/drafts/d1');
+    const market = await screen.findByLabelText('Market name');
+    await userEvent.clear(market);
+    await userEvent.type(market, 'Kaufland');
+    await userEvent.click(screen.getByRole('button', { name: /^reset$/i }));
+    expect(screen.getByLabelText('Market name')).toHaveValue('Lidl');
+  });
+
+  it('confirms a draft without a removed item', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    mock.onPost(CONFIRM).reply(200, { ...draftBill, status: 'confirmed' });
+    renderAt('/bills/drafts/d1');
+    await screen.findByLabelText('Market name');
+    await deleteItem(0);
+    await userEvent.click(confirmButton());
+    await waitFor(() =>
+      expect(mock.history.post.some((r) => r.url === CONFIRM)).toBe(true)
+    );
+    expect((postedBody() as { items: unknown }).items).toEqual([
+      {
+        id: 'l2',
+        raw_name: 'APPLES',
+        product_count: 1,
+        amount: 4.71,
+        product_weight: 0.942,
+      },
+    ]);
+  });
+
+  it('disables Confirm and Save when every item was removed', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    renderAt('/bills/drafts/d1');
+    await screen.findByLabelText('Market name');
+    await deleteItem(0);
+    await deleteItem(0);
+    expect(confirmButton()).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^save$/i })).toBeDisabled();
+  });
+
+  it('warns on a saved bill whose items do not match its total', async () => {
+    mock
+      .onGet(DETAIL)
+      .reply(200, { ...draftBill, status: 'confirmed', total_amount: 9 });
+    renderAt('/bills/confirmed/d1');
+    expect(
+      await screen.findByText("Items don't match the bill total")
+    ).toBeInTheDocument();
+  });
+
+  it('shows no warning when a saved bill adds up', async () => {
+    mock.onGet(DETAIL).reply(200, { ...draftBill, status: 'confirmed' });
+    renderAt('/bills/confirmed/d1');
+    await screen.findByRole('table');
+    expect(screen.queryByText("Items don't match the bill total")).toBeNull();
+  });
+
+  it('switches between the items table and the chart', async () => {
+    mock.onGet(DETAIL).reply(200, { ...draftBill, status: 'confirmed' });
+    renderAt('/bills/confirmed/d1');
     const items = await screen.findByRole('tab', { name: 'Items' });
     expect(items).toHaveAttribute('aria-selected', 'true');
     await userEvent.click(screen.getByRole('tab', { name: 'Chart' }));
@@ -136,14 +217,14 @@ describe('BillDetailPage', () => {
   });
 
   it('Edit turns cells into inputs and Cancel restores them', async () => {
-    mock.onGet(DETAIL).reply(200, draftBill);
-    renderAt('/bills/drafts/d1');
+    mock.onGet(DETAIL).reply(200, { ...draftBill, status: 'confirmed' });
+    renderAt('/bills/confirmed/d1');
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
-    const amount = screen.getByLabelText('Item 1 amount');
+    const amount = priceInput(0);
     await userEvent.clear(amount);
     await userEvent.type(amount, '9');
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(screen.queryByLabelText('Item 1 amount')).toBeNull();
+    expect(screen.queryAllByTestId('item-final-price-0')).toHaveLength(0);
     expect(screen.getByText('2.49 EUR')).toBeInTheDocument();
   });
 
@@ -153,19 +234,20 @@ describe('BillDetailPage', () => {
       .onPost(CONFIRM)
       .reply(200, { ...draftBill, status: 'confirmed', total_amount: 9 });
     renderAt('/bills/drafts/d1');
-    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
-    const market = screen.getByLabelText('Market');
+    const market = await screen.findByLabelText('Market name');
     await userEvent.clear(market);
     await userEvent.type(market, 'Kaufland');
-    const total = screen.getByLabelText('Total');
+    const total = screen.getByLabelText('Total amount');
     await userEvent.clear(total);
     await userEvent.type(total, '9');
-    const amount = screen.getByLabelText('Item 1 amount');
+    const amount = priceInput(0);
     await userEvent.clear(amount);
     await userEvent.type(amount, '4.29');
 
     await userEvent.click(confirmButton());
-    await waitFor(() => expect(screen.queryByLabelText('Market')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByLabelText('Market name')).toBeNull()
+    );
     expect(postedBody()).toMatchObject({
       new_market: { name: 'Kaufland' },
       total_amount: 9,
@@ -423,6 +505,23 @@ describe('BillDetailPage duplicates', () => {
     );
   });
 
+  it('edits of one draft do not show on another', async () => {
+    mock.onGet(DETAIL).reply(200, draftBill);
+    mock.onGet('/households/hh-1/bills/d2').reply(200, {
+      ...draftBill,
+      id: 'd2',
+      market: { id: 'm2', name: 'Aldi', city: null },
+    });
+    renderWithNav('/bills/drafts/d1');
+    const market = await screen.findByLabelText('Market name');
+    await userEvent.clear(market);
+    await userEvent.type(market, 'Kaufland');
+    await userEvent.click(screen.getByRole('link', { name: 'go d2' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Market name')).toHaveValue('Aldi')
+    );
+  });
+
   it('receipt fields show when set', async () => {
     mock.onGet(C1).reply(200, {
       ...confirmedBill,
@@ -453,9 +552,14 @@ describe('BillDetailPage save', () => {
   const putBody = (): unknown =>
     JSON.parse(String(mock.history.put?.[0]?.data));
 
-  async function editTotal(value: string): Promise<void> {
-    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
-    const total = screen.getByLabelText('Total');
+  // A confirmed bill needs Edit first; a draft is already in the form.
+  async function editTotal(value: string, clickEdit = true): Promise<void> {
+    if (clickEdit) {
+      await userEvent.click(
+        await screen.findByRole('button', { name: /edit/i })
+      );
+    }
+    const total = await screen.findByLabelText('Total amount');
     await userEvent.clear(total);
     await userEvent.type(total, value);
   }
@@ -466,7 +570,9 @@ describe('BillDetailPage save', () => {
     renderAt('/bills/confirmed/d1');
     await editTotal('9');
     await userEvent.click(saveButton());
-    await waitFor(() => expect(screen.queryByLabelText('Total')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByLabelText('Total amount')).toBeNull()
+    );
     expect(putBody()).toEqual({ total_amount: 9 });
     expect(screen.getAllByText('9.00 EUR').length).toBeGreaterThan(0);
     expect(await screen.findByText('Bill saved')).toBeInTheDocument();
@@ -478,17 +584,45 @@ describe('BillDetailPage save', () => {
     mock.onPut(DETAIL).reply(200, confirmed);
     renderAt('/bills/confirmed/d1');
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
-    const amount = screen.getByLabelText('Item 1 amount');
+    const amount = priceInput(0);
     await userEvent.clear(amount);
     await userEvent.type(amount, '3');
     await userEvent.click(saveButton());
     await waitFor(() => expect(mock.history.put).toHaveLength(1));
     expect(putBody()).toEqual({
       items: [
-        { id: 'l1', sub_category_id: 's1', product_count: 1, amount: 3 },
-        { id: 'l2', product_count: 1, amount: 4.71, product_weight: 0.942 },
+        {
+          id: 'l1',
+          sub_category_id: 's1',
+          raw_name: 'MILK',
+          product_count: 1,
+          amount: 3,
+        },
+        {
+          id: 'l2',
+          raw_name: 'APPLES',
+          product_count: 1,
+          amount: 4.71,
+          product_weight: 0.942,
+        },
       ],
     });
+  });
+
+  it('saves an added item as a new line', async () => {
+    mock.onGet(DETAIL).reply(200, confirmed);
+    mock.onPut(DETAIL).reply(200, confirmed);
+    renderAt('/bills/confirmed/d1');
+    await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
+    await userEvent.click(screen.getByRole('button', { name: /add item/i }));
+    const price = priceInput(2);
+    await userEvent.clear(price);
+    await userEvent.type(price, '1.5');
+    await userEvent.click(saveButton());
+    await waitFor(() => expect(mock.history.put).toHaveLength(1));
+    const items = (putBody() as { items: object[] }).items;
+    expect(items).toHaveLength(3);
+    expect(items[2]).toEqual({ product_count: 1, amount: 1.5 });
   });
 
   it('disables Save until something changed', async () => {
@@ -509,7 +643,7 @@ describe('BillDetailPage save', () => {
     mock.onGet(DETAIL).reply(200, draftBill);
     mock.onPut(DETAIL).reply(() => new Promise(() => undefined));
     renderAt('/bills/drafts/d1');
-    await editTotal('9');
+    await editTotal('9', false);
     await userEvent.click(saveButton());
     await waitFor(() => expect(saveButton()).toBeDisabled());
     expect(confirmButton()).toBeDisabled();
@@ -519,7 +653,7 @@ describe('BillDetailPage save', () => {
     mock.onGet(DETAIL).reply(200, draftBill);
     mock.onPut(DETAIL).reply(200, { ...draftBill, total_amount: 9 });
     renderAt('/bills/drafts/d1');
-    await editTotal('9');
+    await editTotal('9', false);
     await userEvent.click(saveButton());
     await waitFor(() => expect(mock.history.put).toHaveLength(1));
     expect(mock.history.post).toHaveLength(0);
@@ -539,7 +673,7 @@ describe('BillDetailPage save', () => {
     expect(
       await screen.findByText('SubCategory with ID s1 not found')
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Total')).toHaveValue(8);
+    expect(screen.getByLabelText('Total amount')).toHaveValue(8);
   });
 
   it('goes back to the list when the bill is gone (404)', async () => {

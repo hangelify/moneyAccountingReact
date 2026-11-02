@@ -6,7 +6,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { ApiError } from '@/auth/apiError';
+import { BillDescription } from './components/BillDescription';
 import { BillDetailTable } from './components/BillDetailTable';
+import { BillEditForm } from './components/BillEditForm';
+import { SavedBillTotalsBanner } from './components/BillTotalsBanner';
 import { BillDetailViews } from './components/BillDetailViews';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
 import { DeleteBillButton } from './components/DeleteBillButton';
@@ -20,8 +23,9 @@ export function BillDetailPage(): ReactElement | null {
   const actions = useBillDetailActions(id);
   const {
     bill,
-    draft,
-    setDraft,
+    edits,
+    setEdits,
+    isEdited,
     toggleEdit,
     confirm,
     isConfirming,
@@ -77,12 +81,16 @@ export function BillDetailPage(): ReactElement | null {
     return (
       <>
         <BillDuplicateSection bill={q.data} actions={actions} />
-        <BillDetailViews key={id} bill={q.data} editing={draft !== null}>
-          <BillDetailTable
-            bill={q.data}
-            draft={draft}
-            onDraftChange={setDraft}
-          />
+        {edits === null && <SavedBillTotalsBanner bill={q.data} />}
+        <BillDetailViews key={id} bill={q.data} editing={edits !== null}>
+          {edits ? (
+            <div className="flex flex-col gap-4">
+              <BillDescription bill={q.data} />
+              <BillEditForm edits={edits} onChange={setEdits} />
+            </div>
+          ) : (
+            <BillDetailTable bill={q.data} />
+          )}
         </BillDetailViews>
       </>
     );
@@ -109,19 +117,26 @@ export function BillDetailPage(): ReactElement | null {
                 {t('confirmed.detail.confirm')}
               </Button>
             )}
-            {draft && (
+            {edits && (
               <Button disabled={!canSave} onClick={save}>
                 {t('confirmed.detail.save')}
               </Button>
             )}
             <Button
               variant="outline"
-              disabled={isConfirming || isSaving || isRemoving}
+              disabled={
+                isConfirming ||
+                isSaving ||
+                isRemoving ||
+                (bill.status === 'draft' && !isEdited)
+              }
               onClick={toggleEdit}
             >
-              {draft
-                ? t('confirmed.detail.cancel')
-                : t('confirmed.detail.edit')}
+              {bill.status === 'draft'
+                ? t('confirmed.detail.reset')
+                : edits
+                  ? t('confirmed.detail.cancel')
+                  : t('confirmed.detail.edit')}
             </Button>
           </div>
         )}
