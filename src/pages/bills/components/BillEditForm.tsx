@@ -47,13 +47,19 @@ export function BillEditForm({
         />
         <BillItemsTable
           items={edits.items}
-          onUpdateItem={(index, patch) =>
+          onUpdateItem={(index, patch) => {
+            // Weight and price per kg only apply to kg; the disabled inputs
+            // would otherwise keep sending a weight the user can't clear.
+            const leavesKg = patch.unit !== undefined && patch.unit !== 'kg';
+            const next = leavesKg
+              ? { ...patch, weight_kg: null, price_per_kg: null }
+              : patch;
             setItems(
               edits.items.map((item, i) =>
-                i === index ? { ...item, ...patch } : item
+                i === index ? { ...item, ...next } : item
               )
-            )
-          }
+            );
+          }}
           onRemoveItem={(index) =>
             setItems(edits.items.filter((_, i) => i !== index))
           }

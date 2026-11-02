@@ -128,6 +128,26 @@ describe('isEditsValid', () => {
     expect(isEditsValid(edited(patch))).toBe(false);
   });
 
+  it('rejects a new line with neither a name nor a category', () => {
+    const edits = billToEdits(makeBill());
+    edits.items = [
+      ...edits.items,
+      {
+        name: '  ',
+        quantity: 1,
+        unit: 'piece',
+        weight_kg: null,
+        price_per_kg: null,
+        final_price: 1.5,
+        sub_category: null,
+        category_confidence: 1,
+      },
+    ];
+    expect(isEditsValid(edits)).toBe(false);
+    edits.items[2] = { ...edits.items[2]!, name: 'BREAD' };
+    expect(isEditsValid(edits)).toBe(true);
+  });
+
   it('rejects a line with a non-positive price, like a fresh empty row', () => {
     expect(isEditsValid(withItemPrice(1, 0))).toBe(false);
   });

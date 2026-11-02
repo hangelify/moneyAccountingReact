@@ -1,5 +1,5 @@
 import '@/i18n';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, type ReactElement } from 'react';
@@ -90,6 +90,47 @@ describe('BillEditForm', () => {
     renderForm();
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
     expect(screen.getAllByTestId('item-final-price-2')[0]).toHaveValue(0);
+  });
+
+  it('clears the weight when the unit changes away from kg', async () => {
+    const onChange = vi.fn();
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const edits = makeEdits({
+      items: [
+        makeItem({
+          id: 'l2',
+          name: 'APPLES',
+          unit: 'kg',
+          weight_kg: 0.942,
+          price_per_kg: 5,
+          final_price: 4.71,
+        }),
+      ],
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <HouseholdTestProvider>
+          <BillEditForm edits={edits} onChange={onChange} />
+        </HouseholdTestProvider>
+      </QueryClientProvider>
+    );
+    await userEvent.selectOptions(
+      screen.getAllByDisplayValue('kg')[0]!,
+      'piece'
+    );
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({
+            unit: 'piece',
+            weight_kg: null,
+            price_per_kg: null,
+          }),
+        ],
+      })
+    );
   });
 
   it('warns when the items do not add up to the total', () => {

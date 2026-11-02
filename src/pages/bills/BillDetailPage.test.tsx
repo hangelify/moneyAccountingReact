@@ -615,6 +615,11 @@ describe('BillDetailPage save', () => {
     renderAt('/bills/confirmed/d1');
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
+    // A new line needs a name or a category before it can be saved.
+    await userEvent.type(
+      document.querySelectorAll<HTMLInputElement>('[data-row-name="2"]')[0]!,
+      'BREAD'
+    );
     const price = priceInput(2);
     await userEvent.clear(price);
     await userEvent.type(price, '1.5');
@@ -622,7 +627,11 @@ describe('BillDetailPage save', () => {
     await waitFor(() => expect(mock.history.put).toHaveLength(1));
     const items = (putBody() as { items: object[] }).items;
     expect(items).toHaveLength(3);
-    expect(items[2]).toEqual({ product_count: 1, amount: 1.5 });
+    expect(items[2]).toEqual({
+      raw_name: 'BREAD',
+      product_count: 1,
+      amount: 1.5,
+    });
   });
 
   it('disables Save until something changed', async () => {
