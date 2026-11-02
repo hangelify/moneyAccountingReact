@@ -1,0 +1,248 @@
+{
+  "newBillModal": {
+    "title": "Upload new Bill",
+    "description": "Take a photo of your receipt — we'll parse the items, total, and date for you.",
+    "dropzone": {
+      "empty": "Drop an image here or click to browse",
+      "constraints": "JPEG / PNG / WEBP · up to 10 MB",
+      "remove": "Remove photo"
+    },
+    "pending": "Parsing receipt… this can take up to 10 seconds.",
+    "discardTitle": "Discard this photo?",
+    "discardDescription": "Your selection will be lost. You'll need to pick the photo again.",
+    "household": "Household",
+    "noHousehold": "No household available. New bills can't be added right now.",
+    "duplicate": "You already scanned this receipt. Continuing the existing draft.",
+    "saveFailedFallback": "The receipt was read, but the draft could not be saved. Check it and save it manually.",
+    "retryIn": "Try again in {{seconds}} s",
+    "cancelUpload": "Cancel"
+  },
+  "validation": {
+    "unsupportedFormat": "Unsupported format. Use JPEG, PNG, or WEBP.",
+    "fileTooLarge": "File too large. Maximum size is 10 MB."
+  },
+  "review": {
+    "title": "Review bill",
+    "description": "Verify the extracted details and edit any fields before saving.",
+    "noDraftRedirect": "No bill in progress",
+    "otherHousehold": "This draft belongs to {{name}}. Switch to that household to save it.",
+    "otherHouseholdUnknown": "This draft belongs to a household you can no longer access.",
+    "saved": "Bill saved",
+    "categoriseAll": "Pick a category for every line before saving.",
+    "marketNotSaved": "The shop name can't be saved for this bill.",
+    "draftGone": "This draft no longer exists.",
+    "alreadyConfirmed": "This bill was already confirmed.",
+    "fields": {
+      "marketName": "Market name",
+      "billDate": "Date",
+      "currency": "Currency",
+      "totalAmount": "Total amount"
+    },
+    "items": {
+      "heading": "Items",
+      "columns": {
+        "name": "Name",
+        "quantity": "Qty",
+        "unit": "Unit",
+        "weightKg": "Weight (kg)",
+        "pricePerKg": "Price / kg",
+        "finalPrice": "Price",
+        "category": "Category"
+      },
+      "lowConfidence": "Low category confidence",
+      "categoryReasoningHeading": "Why this category?",
+      "subCategoryPlaceholder": "—",
+      "subCategoryLoading": "Loading categories…",
+      "subCategoryError": "Couldn't load categories",
+      "subCategoryRetry": "Retry",
+      "deleteAria": "Delete item",
+      "deleteTitle": "Delete this item?",
+      "deleteDescription": "This will remove \"{{name}}\" from the bill.",
+      "deleteUnnamed": "this item",
+      "addRow": "Add item",
+      "totalsMismatch": {
+        "heading": "Items don't match the bill total",
+        "itemsSum": "Items sum: {{value}} {{currency}}",
+        "headerTotal": "Header total: {{value}} {{currency}}",
+        "difference": "Difference: {{value}} {{currency}}"
+      }
+    },
+    "discardTitle": "Discard this bill?",
+    "discardDescription": "Your edits will be lost."
+  },
+  "cards": {
+    "title": "Bills",
+    "open": "View bill",
+    "noMarket": "No market",
+    "itemsCount_one": "{{count}} item",
+    "itemsCount_other": "{{count}} items",
+    "mismatch": "Items don't add up to the total",
+    "dateInferred": "Date is a guess"
+  },
+  "tabs": {
+    "label": "Bill lists",
+    "confirmed": "Bills",
+    "drafts": "To review",
+    "draftsCount_one": "To review ({{count}})",
+    "draftsCount_other": "To review ({{count}})"
+  },
+  "drafts": {
+    "empty": "No bills waiting for review.",
+    "toReview_one": "You have {{count}} bill to review",
+    "toReview_other": "You have {{count}} bills to review"
+  },
+  "confirmed": {
+    "title": "Confirmed bills",
+    "empty": {
+      "noBills": "Once you confirm a bill, it will appear here.",
+      "noMatches": "No bills match these filters.",
+      "clear": "Clear filters",
+      "newBill": "New bill"
+    },
+    "filters": {
+      "heading": "Filters",
+      "open": "Filters",
+      "apply": "Apply",
+      "clear": "Clear",
+      "retry": "Retry",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "dateInvalid": "End date is before start date.",
+      "amountMin": "Min amount",
+      "amountMax": "Max amount",
+      "amountInvalid": "Minimum cannot be greater than maximum.",
+      "currency": "Currency",
+      "currencyAll": "All currencies",
+      "markets": "Markets",
+      "marketsAll": "All markets",
+      "marketsCount": "{{count}} markets",
+      "marketsLoading": "Loading markets…",
+      "marketsError": "Couldn't load markets",
+      "marketsEmpty": "Add a market on your next bill."
+    },
+    "table": {
+      "date": "Date",
+      "total": "Total",
+      "currency": "Currency",
+      "market": "Market",
+      "description": "Description",
+      "created": "Created",
+      "noMarket": "—",
+      "loadError": "Couldn't load bills.",
+      "rowAction": "View bill"
+    },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    },
+    "detail": {
+      "title": "Bill details",
+      "items": "Items",
+      "views": {
+        "label": "Bill view",
+        "items": "Items",
+        "chart": "Chart"
+      },
+      "noItems": "This bill has no line items.",
+      "loading": "Loading bill…",
+      "loadError": "Couldn't load this bill.",
+      "notFound": "Bill not found.",
+      "back": "Back to list",
+      "amount": "{{value}} {{currency}}",
+      "weight": "{{value}} kg",
+      "uncategorized": "Uncategorized",
+      "confirm": "Confirm",
+      "confirmed": "Bill confirmed",
+      "confirmFailed": "Couldn't confirm the bill.",
+      "save": "Save",
+      "saved": "Bill saved",
+      "saveFailed": "Couldn't save the bill.",
+      "gone": "This bill no longer exists.",
+      "delete": {
+        "bill": {
+          "action": "Delete bill",
+          "title": "Delete this bill?",
+          "description": "This bill will be deleted and you won't have access to it anymore. This can't be undone. If it has copies, the oldest copy becomes the main bill."
+        },
+        "draft": {
+          "action": "Discard draft",
+          "title": "Discard this draft?",
+          "description": "This draft will be deleted and you won't have access to it anymore. This can't be undone."
+        },
+        "copy": {
+          "action": "Delete copy",
+          "title": "Delete this copy?",
+          "description": "This copy will be deleted and you won't have access to it anymore. This can't be undone. The original bill is not affected."
+        }
+      },
+      "deleted": "Bill deleted",
+      "alreadyDeleted": "This bill was already deleted.",
+      "deleteFailed": "Couldn't delete the bill. Try again.",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "reset": "Reset",
+      "itemCategory": "Item {{index}} category",
+      "itemAmount": "Item {{index}} amount",
+      "itemCount": "Item {{index}} count",
+      "itemWeight": "Item {{index}} weight (kg)",
+      "amountColumn": "Amount",
+      "countColumn": "Count",
+      "weightColumn": "Weight (kg)",
+      "nameColumn": "Name",
+      "categoryColumn": "Category",
+      "itemsTotal": "Items total",
+      "rate": "1 {{from}} = {{rate}} {{to}} · rate of {{date}}",
+      "notConverted": {
+        "noCurrency": "Set a currency to convert this bill.",
+        "futureDate": "Check the bill date — no exchange rate for a future date.",
+        "pending": "Not converted yet."
+      }
+    }
+  },
+  "duplicates": {
+    "match": {
+      "fiscal": "{{name}} already added this receipt",
+      "strong": "{{name}} already added this on {{date}}",
+      "weak": "A bill with the same amount and date exists"
+    },
+    "someone": "Someone",
+    "several": "This may already be added",
+    "mark": "Mark as duplicate",
+    "keepBoth": "Keep both",
+    "pending": "Will be saved as a duplicate of {{name}}'s bill on {{date}}",
+    "undo": "Undo",
+    "duplicateOf": "Duplicate of {{name}}'s bill on {{date}}",
+    "unmark": "Unmark",
+    "badge": "Duplicate",
+    "showDuplicates": "Show duplicates",
+    "savedWithCandidates": "Bill saved. It may already be added — check it.",
+    "errors": {
+      "conflict": "This bill changed. Showing the latest version.",
+      "notFound": "That bill no longer exists.",
+      "invalid": "Couldn't mark this bill",
+      "originalGone": "Couldn't link: the original bill no longer exists."
+    },
+    "receipt": {
+      "registerId": "Receipt register ID",
+      "number": "Receipt number",
+      "time": "Purchase time",
+      "invalid": "Check the receipt fields: up to 64 characters, time as HH:MM."
+    },
+    "cleanup": {
+      "title": "Possible duplicates",
+      "tab": "Possible duplicates",
+      "tabCount": "Possible duplicates ({{count}})",
+      "empty": "No possible duplicates",
+      "isCopy": "This one is the copy",
+      "loadError": "Couldn't load possible duplicates",
+      "addedBy": "Added by {{name}}",
+      "matchLabel": {
+        "fiscal": "Same receipt",
+        "strong": "Very likely the same",
+        "weak": "Same amount and date"
+      }
+    },
+    "openDuplicate": "View bill (duplicate)"
+  }
+}

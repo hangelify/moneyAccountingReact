@@ -44,3 +44,12 @@ coverage
 # Temporary files
 *.tmp
 *.temp
+
+# Claude Code
+.claude
+CLAUDE.md
+
+/docs
+
+# Git worktrees
+.worktrees

@@ -1,0 +1,397 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import MockAdapter from 'axios-mock-adapter';
+import { apiClient } from '@/auth/apiClient';
+import { ApiError } from '@/auth/apiError';
+import { billsApi } from './api';
+import type { ConfirmedBillsFilters } from './buildBillsQueryParams';
+
+describe('billsApi.parsePhoto', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  function makeFile(): File {
+    return new File(['hello'], 'receipt.jpg', { type: 'image/jpeg' });
+  }
+
+  it('POSTs only an "image" field to /households/hh-1/bills/parse-photo', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply((config) => {
+      const body = config.data as FormData;
+      expect(body).toBeInstanceOf(FormData);
+      expect([...body.keys()]).toEqual(['image']);
+      expect((body.get('image') as File).name).toBe('receipt.jpg');
+      expect(config.timeout).toBe(120000);
+      // axios should let the browser set the Content-Type with a boundary.
+      // We assert we did NOT override it to plain 'application/json'.
+      const contentType = (config.headers?.['Content-Type'] ??
+        config.headers?.['content-type']) as string | undefined;
+      expect(contentType === 'application/json').toBe(false);
+      return [
+        200,
+        {
+          draft_id: 'd1',
+          request_id: 'r1',
+          duplicate: false,
+          market_name: 'Lidl',
+          bill_date: '2026-05-07',
+          currency: 'EUR',
+          total_amount: 23.45,
+          items: [],
+        },
+      ];
+    });
+
+    const result = await billsApi.parsePhoto('hh-1', makeFile());
+
+    expect(result.draft_id).toBe('d1');
+    expect(result.market_name).toBe('Lidl');
+    expect(result.items).toEqual([]);
+  });
+
+  it('passes the abort signal', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(200, {});
+    const controller = new AbortController();
+    controller.abort();
+
+    const promise = billsApi.parsePhoto('hh-1', makeFile(), {
+      signal: controller.signal,
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(ApiError);
+    await expect(promise).rejects.toMatchObject({ code: 'ERR_CANCELED' });
+  });
+
+  it('maps 400 responses to ApiError with the server message', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(400, {
+      message: 'File too large',
+      statusCode: 400,
+    });
+
+    await expect(billsApi.parsePhoto('hh-1', makeFile())).rejects.toMatchObject(
+      {
+        status: 400,
+        message: 'File too large',
+      }
+    );
+    await expect(
+      billsApi.parsePhoto('hh-1', makeFile())
+    ).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('maps 502 responses to ApiError and exposes the requestId in body', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photo').reply(502, {
+      message: 'AI providers failed',
+      requestId: 'req-abc-123',
+    });
+
+    await expect(billsApi.parsePhoto('hh-1', makeFile())).rejects.toMatchObject(
+      {
+        status: 502,
+        body: { requestId: 'req-abc-123' },
+      }
+    );
+  });
+});
+
+describe('billsApi.confirm / create / remove', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const detail = {
+    id: 'b1',
+    bill_date: '2026-05-19T00:00:00Z',
+    total_amount: 10,
+    currency: 'EUR',
+    description: null,
+    market: null,
+    created_at: '2026-05-19T10:00:00Z',
+    items: [],
+  };
+
+  it('confirm POSTs the body to /households/hh-1/bills/d1/confirm', async () => {
+    const body = {
+      bill_date: '2026-05-19',
+      total_amount: 10,
+      items: [{ product_count: 1, amount: 10 }],
+    };
+    mock.onPost('/households/hh-1/bills/d1/confirm').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [201, detail];
+    });
+    const r = await billsApi.confirm('hh-1', 'd1', body);
+    expect(r.id).toBe('b1');
+  });
+
+  it('create POSTs to /households/hh-1/bills', async () => {
+    const body = {
+      bill_date: '2026-05-19',
+      total_amount: 10,
+      items: [{ sub_category_id: 's1', product_count: 1, amount: 10 }],
+    };
+    mock.onPost('/households/hh-1/bills').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [201, detail];
+    });
+    const r = await billsApi.create('hh-1', body);
+    expect(r.id).toBe('b1');
+  });
+
+  it('update PUTs the body to /households/hh-1/bills/b1', async () => {
+    const body = { bill_date: '2026-05-20' };
+    mock.onPut('/households/hh-1/bills/b1').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual(body);
+      return [200, detail];
+    });
+    const r = await billsApi.update('hh-1', 'b1', body);
+    expect(r.id).toBe('b1');
+  });
+
+  it('remove DELETEs /households/hh-1/bills/d1', async () => {
+    mock.onDelete('/households/hh-1/bills/d1').reply(204);
+    await expect(billsApi.remove('hh-1', 'd1')).resolves.toBeUndefined();
+    expect(mock.history.delete).toHaveLength(1);
+  });
+});
+
+describe('billsApi.list', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const empty: ConfirmedBillsFilters = {
+    date_from: null,
+    date_to: null,
+    market_names: [],
+    amount_min: null,
+    amount_max: null,
+    currency: null,
+    include_duplicates: false,
+  };
+
+  it('GETs /bills with default page=1 and limit=20', async () => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
+      expect(config.params).toMatchObject({ page: '1', limit: '20' });
+      return [
+        200,
+        { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
+      ];
+    });
+    const r = await billsApi.list('hh-1', empty, 1, 20);
+    expect(r.data).toEqual([]);
+  });
+
+  it('serializes every filter into request params', async () => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
+      expect(config.params).toMatchObject({
+        date_from: '2026-01-01',
+        date_to: '2026-06-30',
+        market_names: ['Lidl', 'Kaufland'],
+        amount_range: 'gt_100,lt_500',
+        currency: 'EUR',
+        page: '2',
+        limit: '20',
+      });
+      return [
+        200,
+        { data: [], meta: { total: 0, page: 2, limit: 20, total_pages: 0 } },
+      ];
+    });
+    await billsApi.list(
+      'hh-1',
+      {
+        date_from: '2026-01-01',
+        date_to: '2026-06-30',
+        market_names: ['Lidl', 'Kaufland'],
+        amount_min: 100,
+        amount_max: 500,
+        currency: 'EUR',
+        include_duplicates: false,
+      },
+      2,
+      20
+    );
+  });
+
+  it('serializes market_names as repeated keys in the URL', async () => {
+    mock.onGet('/households/hh-1/bills').reply((config) => {
+      // Axios 1.x normalises a plain function to { serialize: fn }, so we
+      // unwrap accordingly. Fall back to empty string if absent.
+      const serializer = config.paramsSerializer;
+      const serializeFn =
+        typeof serializer === 'function'
+          ? serializer
+          : typeof serializer === 'object' && serializer !== null
+            ? (serializer as { serialize: (p: unknown) => string }).serialize
+            : null;
+      const url = serializeFn
+        ? serializeFn(config.params as Record<string, unknown>)
+        : '';
+      expect(url).toContain('market_names=Lidl');
+      expect(url).toContain('market_names=Kaufland');
+      return [
+        200,
+        { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
+      ];
+    });
+    await billsApi.list(
+      'hh-1',
+      { ...empty, market_names: ['Lidl', 'Kaufland'] },
+      1,
+      20
+    );
+  });
+});
+
+describe('billsApi.detail', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('GETs /bills/:id and returns BillDetailResponseDto', async () => {
+    mock.onGet('/households/hh-1/bills/abc-123').reply(200, {
+      id: 'abc-123',
+      bill_date: '2026-05-19T00:00:00Z',
+      total_amount: 52.3,
+      currency: 'EUR',
+      description: null,
+      market: { id: 'm1', name: 'Lidl', city: 'Bucharest' },
+      created_at: '2026-05-19T10:00:00Z',
+      items: [],
+    });
+    const r = await billsApi.detail('hh-1', 'abc-123');
+    expect(r.id).toBe('abc-123');
+    expect(r.items).toEqual([]);
+  });
+
+  it('throws ApiError on 404', async () => {
+    mock
+      .onGet('/households/hh-1/bills/missing')
+      .reply(404, { message: 'Bill not found' });
+    await expect(billsApi.detail('hh-1', 'missing')).rejects.toBeInstanceOf(
+      ApiError
+    );
+    await expect(billsApi.detail('hh-1', 'missing')).rejects.toMatchObject({
+      status: 404,
+      message: 'Bill not found',
+    });
+  });
+});
+
+describe('billsApi.listDrafts', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('GETs /bills/drafts with only page and limit', async () => {
+    mock.onGet('/households/hh-1/bills/drafts').reply((config) => {
+      expect(config.params).toEqual({ page: 2, limit: 20 });
+      return [
+        200,
+        {
+          data: [],
+          meta: { total: 0, page: 2, limit: 20, total_pages: 0 },
+        },
+      ];
+    });
+    const r = await billsApi.listDrafts('hh-1', 2, 20);
+    expect(r.meta.page).toBe(2);
+  });
+});
+
+describe('billsApi duplicate calls', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('markDuplicate POSTs { duplicate_of_id } to /households/hh-1/bills/b1/mark-duplicate', async () => {
+    mock.onPost('/households/hh-1/bills/b1/mark-duplicate').reply((config) => {
+      expect(JSON.parse(config.data as string)).toEqual({
+        duplicate_of_id: 'b0',
+      });
+      return [200, { id: 'b1', status: 'duplicate' }];
+    });
+
+    const result = await billsApi.markDuplicate('hh-1', 'b1', 'b0');
+
+    expect(result).toEqual({ id: 'b1', status: 'duplicate' });
+  });
+
+  it('unmarkDuplicate POSTs with no body to …/b1/unmark-duplicate', async () => {
+    mock
+      .onPost('/households/hh-1/bills/b1/unmark-duplicate')
+      .reply((config) => {
+        expect(config.data).toBeUndefined();
+        return [200, { id: 'b1', status: 'confirmed' }];
+      });
+
+    const result = await billsApi.unmarkDuplicate('hh-1', 'b1');
+
+    expect(result.status).toBe('confirmed');
+  });
+
+  it('dismissDuplicate POSTs { other_bill_id } to …/b1/dismiss-duplicate', async () => {
+    mock
+      .onPost('/households/hh-1/bills/b1/dismiss-duplicate')
+      .reply((config) => {
+        expect(JSON.parse(config.data as string)).toEqual({
+          other_bill_id: 'b2',
+        });
+        return [204];
+      });
+
+    await expect(
+      billsApi.dismissDuplicate('hh-1', 'b1', 'b2')
+    ).resolves.toBeUndefined();
+  });
+
+  it('duplicateSuggestions sends only set dates', async () => {
+    const seen: unknown[] = [];
+    mock
+      .onGet('/households/hh-1/bills/duplicate-suggestions')
+      .reply((config) => {
+        seen.push(config.params);
+        return [200, { pairs: [] }];
+      });
+
+    await billsApi.duplicateSuggestions('hh-1', {
+      date_from: '2026-10-01',
+      date_to: null,
+    });
+    const result = await billsApi.duplicateSuggestions('hh-1', {
+      date_from: null,
+      date_to: null,
+    });
+
+    expect(seen).toEqual([{ date_from: '2026-10-01' }, {}]);
+    expect(result).toEqual({ pairs: [] });
+  });
+});

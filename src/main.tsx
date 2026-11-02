@@ -2,7 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { HouseholdProvider } from '@/contexts/HouseholdContext';
+import { Toaster } from '@/components/ui/toaster';
 import './index.css';
+import '@/i18n';
 import App from './App.tsx';
 
 const queryClient = new QueryClient({
@@ -24,7 +28,12 @@ createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <HouseholdProvider>
+            <App />
+            <Toaster />
+          </HouseholdProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>

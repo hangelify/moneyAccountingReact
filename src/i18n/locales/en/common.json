@@ -1,0 +1,25 @@
+{
+  "loading": "Loading...",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "discard": "Discard",
+    "send": "Send",
+    "retry": "Try again"
+  },
+  "state": {
+    "loading": "Loading..."
+  },
+  "home": {
+    "greetingAuthed": "Welcome back, {{name}}",
+    "subtitleAuthed": "Ready to capture a new receipt?",
+    "ctaNewBill": "Upload a bill",
+    "ctaDashboard": "Go to Dashboard",
+    "headlineGuest": "Money Accounting App",
+    "subtitleGuest": "A simple way to capture and organize your receipts.",
+    "ctaLogin": "Login",
+    "ctaRegister": "Get started"
+  }
+}

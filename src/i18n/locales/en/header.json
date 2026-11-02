@@ -1,0 +1,20 @@
+{
+  "brand": "AccountingApp",
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "newBill": "New Bill",
+    "bills": "Bills",
+    "confirmedBills": "Confirmed bills"
+  },
+  "menu": {
+    "openMenu": "Open menu",
+    "userMenu": "User menu",
+    "logout": "Logout",
+    "householdSettings": "Household settings"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register"
+  }
+}

@@ -45,7 +45,7 @@ cp .env.example .env
 The project uses Vite's environment variable system. Create a `.env` file based on `.env.example`:
 
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3000
 VITE_API_TIMEOUT=30000
 VITE_NODE_ENV=development
 VITE_APP_NAME=Accounting App
