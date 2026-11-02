@@ -12,12 +12,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { BillDetailContent } from './components/BillDetailContent';
+import { BillDuplicateSection } from './components/BillDuplicateSection';
 import { useBillDetailActions } from './useBillDetailActions';
 
 export function BillDetailDrawer(): ReactElement | null {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation('bills');
   const isDesktop = useMediaQuery('(min-width: 768px)');
+  const actions = useBillDetailActions(id);
   const {
     bill,
     draft,
@@ -27,7 +29,7 @@ export function BillDetailDrawer(): ReactElement | null {
     isConfirming,
     canConfirm,
     close,
-  } = useBillDetailActions(id);
+  } = actions;
 
   if (!id) return null;
 
@@ -67,6 +69,7 @@ export function BillDetailDrawer(): ReactElement | null {
             </div>
           )}
         </SheetHeader>
+        {bill && <BillDuplicateSection bill={bill} actions={actions} />}
         <BillDetailContent id={id} draft={draft} onDraftChange={setDraft} />
         {bill && (
           // Remove is wired in a follow-up; disabled until then.

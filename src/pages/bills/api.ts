@@ -7,6 +7,8 @@ import type {
   ConfirmBillRequest,
   CreateBillRequest,
   DraftBillDto,
+  DuplicateRange,
+  DuplicateSuggestionsResponse,
   ParsePhotoResponse,
 } from '@/types/bills';
 import type { Paginated } from '@/types/pagination';
@@ -115,5 +117,53 @@ export const billsApi = {
 
   remove: async (hid: string, id: string): Promise<void> => {
     await apiClient.delete(householdPath(hid, BILLS_ENDPOINTS.DETAIL(id)));
+  },
+
+  markDuplicate: async (
+    hid: string,
+    id: string,
+    duplicateOfId: string
+  ): Promise<BillDetailResponseDto> => {
+    const { data } = await apiClient.post<BillDetailResponseDto>(
+      householdPath(hid, BILLS_ENDPOINTS.MARK_DUPLICATE(id)),
+      { duplicate_of_id: duplicateOfId }
+    );
+    return data;
+  },
+
+  unmarkDuplicate: async (
+    hid: string,
+    id: string
+  ): Promise<BillDetailResponseDto> => {
+    const { data } = await apiClient.post<BillDetailResponseDto>(
+      householdPath(hid, BILLS_ENDPOINTS.UNMARK_DUPLICATE(id))
+    );
+    return data;
+  },
+
+  // "Keep both": the pair is never suggested again.
+  dismissDuplicate: async (
+    hid: string,
+    id: string,
+    otherBillId: string
+  ): Promise<void> => {
+    await apiClient.post(
+      householdPath(hid, BILLS_ENDPOINTS.DISMISS_DUPLICATE(id)),
+      { other_bill_id: otherBillId }
+    );
+  },
+
+  duplicateSuggestions: async (
+    hid: string,
+    range: DuplicateRange
+  ): Promise<DuplicateSuggestionsResponse> => {
+    const params: Record<string, string> = {};
+    if (range.date_from) params.date_from = range.date_from;
+    if (range.date_to) params.date_to = range.date_to;
+    const { data } = await apiClient.get<DuplicateSuggestionsResponse>(
+      householdPath(hid, BILLS_ENDPOINTS.DUPLICATE_SUGGESTIONS),
+      { params }
+    );
+    return data;
   },
 };

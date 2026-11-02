@@ -43,6 +43,11 @@ const DraftBills = lazy(() =>
     default: m.DraftBills,
   }))
 );
+const DuplicateSuggestions = lazy(() =>
+  import('@/pages/bills/DuplicateSuggestions').then((m) => ({
+    default: m.DuplicateSuggestions,
+  }))
+);
 const BillDetailRoute = lazy(() =>
   import('@/pages/bills/BillDetailRoute').then((m) => ({
     default: m.BillDetailRoute,
@@ -93,6 +98,14 @@ function App(): ReactElement {
             >
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
+            <Route
+              path="/bills/duplicates"
+              element={
+                <RequireAuth>
+                  <DuplicateSuggestions />
+                </RequireAuth>
+              }
+            />
             <Route
               path="/bills"
               element={

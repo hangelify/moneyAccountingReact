@@ -4,11 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useBillDetail } from '@/hooks/useBillDetail';
+import { useDuplicateMutations } from '@/hooks/useDuplicateMutations';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
-import type { BillDetailResponseDto } from '@/types/bills';
+import type { BillDetailResponseDto, PossibleDuplicate } from '@/types/bills';
 import { billsApi } from './api';
 import {
   buildDetailConfirmPayload,
@@ -28,6 +29,15 @@ export interface BillDetailActions {
   canConfirm: boolean;
   // Back to the parent list, keeping its filters.
   close: () => void;
+  // Drafts: the original chosen with Mark, sent as duplicate_of_id on Confirm.
+  pendingDuplicateOf: PossibleDuplicate | null;
+  markPending: (original: PossibleDuplicate) => void;
+  undoPending: () => void;
+  // Confirmed bills: act right away.
+  markDuplicate: (original: PossibleDuplicate) => void;
+  unmarkDuplicate: () => void;
+  keepBoth: (other: PossibleDuplicate) => void;
+  isDuplicateBusy: boolean;
 }
 
 // Edit and confirm state shared by the detail drawer and the detail page.
@@ -46,6 +56,14 @@ export function useBillDetailActions(
     draft: BillDetailDraft;
   } | null>(null);
   const draft = edit !== null && edit.id === id ? edit.draft : null;
+  // Keyed by bill id too, so a link never carries over to another draft.
+  const [pending, setPending] = useState<{
+    id: string;
+    original: PossibleDuplicate;
+  } | null>(null);
+  const pendingDuplicateOf =
+    pending !== null && pending.id === id ? pending.original : null;
+  const duplicates = useDuplicateMutations(hid);
 
   const close = (): void => {
     void navigate({ pathname: '..', search: location.search });
@@ -56,7 +74,11 @@ export function useBillDetailActions(
       billsApi.confirm(
         hid!,
         bill!.id,
-        buildDetailConfirmPayload(bill!, draft ?? toDraft(bill!))
+        buildDetailConfirmPayload(
+          bill!,
+          draft ?? toDraft(bill!),
+          pendingDuplicateOf?.id ?? null
+        )
       ),
     onSuccess: (confirmed) => {
       queryClient.setQueryData(['households', hid, 'bill', id], confirmed);
@@ -71,6 +93,7 @@ export function useBillDetailActions(
         queryKey: ['households', hid, 'markets'],
       });
       setEdit(null);
+      setPending(null);
       toast({ title: t('confirmed.detail.confirmed') });
     },
     onError: (err) => {
@@ -90,6 +113,17 @@ export function useBillDetailActions(
           queryKey: ['households', hid, 'dashboard'],
         });
         toast({ title: t('review.alreadyConfirmed') });
+      } else if (status === 404 && pendingDuplicateOf !== null) {
+        // Most likely the original went away: drop the link, stay open, and
+        // refetch so a deleted original leaves the banner.
+        setPending(null);
+        void queryClient.invalidateQueries({
+          queryKey: ['households', hid, 'bill', id],
+        });
+        toast({
+          variant: 'destructive',
+          title: t('duplicates.errors.originalGone'),
+        });
       } else if (status === 404) {
         void queryClient.invalidateQueries({
           queryKey: ['households', hid, 'bills'],
@@ -120,6 +154,12 @@ export function useBillDetailActions(
     setEdit(draft ? null : { id, draft: toDraft(bill) });
   };
 
+  const isDuplicateBusy =
+    duplicates.mark.isPending ||
+    duplicates.unmark.isPending ||
+    duplicates.dismiss.isPending ||
+    confirmMutation.isPending;
+
   const canConfirm =
     hid !== null &&
     !confirmMutation.isPending &&
@@ -134,5 +174,22 @@ export function useBillDetailActions(
     isConfirming: confirmMutation.isPending,
     canConfirm,
     close,
+    pendingDuplicateOf,
+    markPending: (original) => {
+      if (id) setPending({ id, original });
+    },
+    undoPending: () => setPending(null),
+    markDuplicate: (original) => {
+      if (bill)
+        duplicates.mark.mutate({ id: bill.id, duplicateOfId: original.id });
+    },
+    unmarkDuplicate: () => {
+      if (bill) duplicates.unmark.mutate({ id: bill.id });
+    },
+    keepBoth: (other) => {
+      if (bill)
+        duplicates.dismiss.mutate({ id: bill.id, otherBillId: other.id });
+    },
+    isDuplicateBusy,
   };
 }

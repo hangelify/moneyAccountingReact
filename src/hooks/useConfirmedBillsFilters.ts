@@ -23,6 +23,7 @@ const EMPTY: ConfirmedBillsFilters = {
   amount_min: null,
   amount_max: null,
   currency: null,
+  include_duplicates: false,
 };
 
 export function useConfirmedBillsFilters(): UseConfirmedBillsFiltersResult {

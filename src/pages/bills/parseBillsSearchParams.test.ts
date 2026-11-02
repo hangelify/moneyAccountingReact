@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { buildBillsQueryParams } from './buildBillsQueryParams';
 import { parseBillsSearchParams } from './parseBillsSearchParams';
 
 function p(qs: string): URLSearchParams {
@@ -15,6 +16,7 @@ describe('parseBillsSearchParams', () => {
         amount_min: null,
         amount_max: null,
         currency: null,
+        include_duplicates: false,
       },
       page: 1,
       limit: 20,
@@ -37,6 +39,7 @@ describe('parseBillsSearchParams', () => {
         amount_min: 100,
         amount_max: 500,
         currency: 'EUR',
+        include_duplicates: false,
       },
       page: 2,
       limit: 50,
@@ -89,5 +92,26 @@ describe('parseBillsSearchParams', () => {
       p('market_names=Lidl&market_names=Lidl&market_names=')
     );
     expect(r.filters.market_names).toEqual(['Lidl']);
+  });
+});
+
+describe('parseBillsSearchParams include_duplicates', () => {
+  it("parses include_duplicates only from 'true'", () => {
+    expect(
+      parseBillsSearchParams(p('include_duplicates=true')).filters
+        .include_duplicates
+    ).toBe(true);
+    for (const qs of ['include_duplicates=yes', 'include_duplicates=1', '']) {
+      expect(parseBillsSearchParams(p(qs)).filters.include_duplicates).toBe(
+        false
+      );
+    }
+  });
+
+  it('round-trips through buildBillsQueryParams', () => {
+    const { filters } = parseBillsSearchParams(p('include_duplicates=true'));
+    const built = buildBillsQueryParams(filters, 1, 20);
+    const sp = new URLSearchParams(built as Record<string, string>);
+    expect(parseBillsSearchParams(sp).filters.include_duplicates).toBe(true);
   });
 });

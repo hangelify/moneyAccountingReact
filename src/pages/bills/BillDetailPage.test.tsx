@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
+  Link,
   MemoryRouter,
   Outlet,
   Route,
@@ -219,5 +220,220 @@ describe('BillDetailPage', () => {
       makeHouseholdValue({ status: 'loading', activeHousehold: null })
     );
     expect(screen.getByText('Loading bill…')).toBeInTheDocument();
+  });
+});
+
+describe('BillDetailPage duplicates', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const ORIGINAL = {
+    id: 'b0',
+    bill_date: '2026-10-03',
+    total_amount: 7.2,
+    currency: 'EUR',
+    market_name: 'Lidl',
+    created_by_name: 'Ana',
+  };
+  const CAND = { ...ORIGINAL, match: 'strong' };
+  const confirmedBill = {
+    ...draftBill,
+    id: 'c1',
+    status: 'confirmed',
+    possible_duplicates: [CAND],
+    duplicate_of: null,
+  };
+  const C1 = '/households/hh-1/bills/c1';
+
+  function Probe(): ReactElement {
+    return (
+      <>
+        <Link to="/bills/drafts/d2">go d2</Link>
+        <Outlet />
+      </>
+    );
+  }
+
+  function renderWithNav(path: string): void {
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <HouseholdTestProvider value={makeHouseholdValue()}>
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route path="/bills/confirmed" element={<Probe />}>
+                <Route path=":id" element={<BillDetailPage />} />
+              </Route>
+              <Route path="/bills/drafts" element={<Probe />}>
+                <Route path=":id" element={<BillDetailPage />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+          <Toaster />
+        </HouseholdTestProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  it('confirmed bill with candidates: Mark calls mark-duplicate and shows the badge', async () => {
+    const marked = {
+      ...confirmedBill,
+      status: 'duplicate',
+      possible_duplicates: [],
+      duplicate_of: ORIGINAL,
+    };
+    mock.onGet(C1).replyOnce(200, confirmedBill).onGet(C1).reply(200, marked);
+    let body: unknown;
+    mock.onPost(`${C1}/mark-duplicate`).reply((config) => {
+      body = JSON.parse(config.data as string);
+      return [200, marked];
+    });
+    renderWithNav('/bills/confirmed/c1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Mark as duplicate' })
+    );
+    expect(
+      await screen.findByRole('link', {
+        name: "Duplicate of Ana's bill on Oct 3",
+      })
+    ).toBeInTheDocument();
+    expect(body).toEqual({ duplicate_of_id: 'b0' });
+  });
+
+  it('Keep both calls dismiss-duplicate and refetches the bill', async () => {
+    mock
+      .onGet(C1)
+      .replyOnce(200, confirmedBill)
+      .onGet(C1)
+      .reply(200, { ...confirmedBill, possible_duplicates: [] });
+    mock.onPost(`${C1}/dismiss-duplicate`).reply(204);
+    renderWithNav('/bills/confirmed/c1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Keep both' })
+    );
+    await waitFor(() =>
+      expect(screen.queryByText(/Ana already added this/)).toBeNull()
+    );
+    expect(mock.history.get.filter((r) => r.url === C1)).toHaveLength(2);
+    expect(JSON.parse(String(mock.history.post[0]?.data))).toEqual({
+      other_bill_id: 'b0',
+    });
+  });
+
+  it('duplicate bill shows the badge; Unmark calls unmark-duplicate', async () => {
+    const unmarked = { ...confirmedBill, possible_duplicates: [] };
+    mock
+      .onGet(C1)
+      .replyOnce(200, {
+        ...confirmedBill,
+        status: 'duplicate',
+        possible_duplicates: [],
+        duplicate_of: ORIGINAL,
+      })
+      .onGet(C1)
+      .reply(200, unmarked);
+    mock.onPost(`${C1}/unmark-duplicate`).reply(200, unmarked);
+    renderWithNav('/bills/confirmed/c1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Unmark' })
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('link', { name: /Duplicate of/ })).toBeNull()
+    );
+  });
+
+  it('draft with candidates: Mark is pending and sent with Confirm', async () => {
+    mock
+      .onGet(DETAIL)
+      .reply(200, { ...draftBill, possible_duplicates: [CAND] });
+    mock.onPost(CONFIRM).reply(200, { ...draftBill, status: 'duplicate' });
+    renderWithNav('/bills/drafts/d1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Mark as duplicate' })
+    );
+    expect(
+      screen.getByText("Will be saved as a duplicate of Ana's bill on Oct 3")
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+    await waitFor(() =>
+      expect(mock.history.post.some((r) => r.url === CONFIRM)).toBe(true)
+    );
+    expect(
+      mock.history.post.some((r) => r.url?.includes('mark-duplicate'))
+    ).toBe(false);
+    const post = mock.history.post.find((r) => r.url === CONFIRM);
+    expect(JSON.parse(String(post?.data))).toMatchObject({
+      duplicate_of_id: 'b0',
+    });
+  });
+
+  it('404 on confirm with a pending link stays open and drops the link', async () => {
+    mock
+      .onGet(DETAIL)
+      .reply(200, { ...draftBill, possible_duplicates: [CAND] });
+    mock.onPost(CONFIRM).reply(404, {});
+    renderWithNav('/bills/drafts/d1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Mark as duplicate' })
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+    expect(
+      await screen.findByText(
+        "Couldn't link: the original bill no longer exists."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Bill details' })
+    ).toBeInTheDocument();
+    // The bill is refetched so a deleted original drops out of the banner.
+    await waitFor(() =>
+      expect(mock.history.get.filter((r) => r.url === DETAIL)).toHaveLength(2)
+    );
+  });
+
+  it('the pending link does not carry over to another draft', async () => {
+    mock
+      .onGet(DETAIL)
+      .reply(200, { ...draftBill, possible_duplicates: [CAND] });
+    mock
+      .onGet('/households/hh-1/bills/d2')
+      .reply(200, { ...draftBill, id: 'd2', possible_duplicates: [] });
+    mock
+      .onPost('/households/hh-1/bills/d2/confirm')
+      .reply(200, { ...draftBill, id: 'd2', status: 'confirmed' });
+    renderWithNav('/bills/drafts/d1');
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Mark as duplicate' })
+    );
+    await userEvent.click(screen.getByRole('link', { name: 'go d2' }));
+    await waitFor(() => expect(screen.queryByText(/Will be saved/)).toBeNull());
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^confirm$/i })
+    );
+    await waitFor(() => expect(mock.history.post).toHaveLength(1));
+    expect(JSON.parse(String(mock.history.post[0]?.data))).not.toHaveProperty(
+      'duplicate_of_id'
+    );
+  });
+
+  it('receipt fields show when set', async () => {
+    mock.onGet(C1).reply(200, {
+      ...confirmedBill,
+      possible_duplicates: [],
+      fiscal_register_id: 'J403001234',
+      fiscal_receipt_number: '0042',
+      purchase_time: '14:05',
+    });
+    renderWithNav('/bills/confirmed/c1');
+    expect(await screen.findByText('J403001234')).toBeInTheDocument();
+    expect(screen.getByText('0042')).toBeInTheDocument();
+    expect(screen.getByText('14:05')).toBeInTheDocument();
   });
 });

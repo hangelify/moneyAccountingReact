@@ -1,6 +1,7 @@
 import type { KeyboardEvent, ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HouseholdAmount } from '@/components/currency/HouseholdAmount';
+import { cn } from '@/lib/utils';
 import type { BillResponseDto } from '@/types/bills';
 
 export interface ConfirmedBillsTableProps {
@@ -49,13 +50,28 @@ export function ConfirmedBillsTable({
               key={b.id}
               data-bill-id={b.id}
               role="button"
-              aria-label={t('confirmed.table.rowAction')}
+              aria-label={
+                b.status === 'duplicate'
+                  ? t('duplicates.openDuplicate')
+                  : t('confirmed.table.rowAction')
+              }
               tabIndex={0}
-              className="cursor-pointer border-b last:border-b-0 outline-none focus-visible:bg-accent hover:bg-accent/40"
+              className={cn(
+                'cursor-pointer border-b last:border-b-0 outline-none focus-visible:bg-accent hover:bg-accent/40',
+                // Shown only with "Show duplicates"; not counted in totals.
+                b.status === 'duplicate' && 'opacity-60'
+              )}
               onClick={() => onRowClick(b.id)}
               onKeyDown={(e) => onKey(e, () => onRowClick(b.id))}
             >
-              <td className="px-3 py-2">{b.bill_date.slice(0, 10)}</td>
+              <td className="px-3 py-2">
+                {b.bill_date.slice(0, 10)}
+                {b.status === 'duplicate' && (
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {t('duplicates.badge')}
+                  </span>
+                )}
+              </td>
               <td className="px-3 py-2 font-mono">
                 {formatAmount(b)}
                 <HouseholdAmount bill={b} className="block text-xs" />

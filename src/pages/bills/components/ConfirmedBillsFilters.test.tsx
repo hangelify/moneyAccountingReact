@@ -17,6 +17,7 @@ const empty: Filters = {
   amount_min: null,
   amount_max: null,
   currency: null,
+  include_duplicates: false,
 };
 
 function wrap(ui: ReactNode): ReactElement {
@@ -66,5 +67,34 @@ describe('ConfirmedBillsFilters', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: /clear/i }));
     expect(onClear).toHaveBeenCalled();
+  });
+});
+
+describe('ConfirmedBillsFilters show duplicates', () => {
+  let mock: MockAdapter;
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    mock.onGet('/households/hh-1/markets').reply(200, []);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('Show duplicates checkbox toggles include_duplicates', async () => {
+    const onChange = vi.fn();
+    render(
+      wrap(
+        <ConfirmedBillsFilters
+          value={empty}
+          onChange={onChange}
+          onClear={vi.fn()}
+        />
+      )
+    );
+    await userEvent.click(screen.getByLabelText('Show duplicates'));
+    expect(onChange).toHaveBeenCalledWith({
+      ...empty,
+      include_duplicates: true,
+    });
   });
 });

@@ -8,7 +8,13 @@ import type { BillEdits } from '@/types/bills';
 interface BillReviewFieldsProps {
   edits: Pick<
     BillEdits,
-    'market_name' | 'bill_date' | 'currency' | 'total_amount'
+    | 'market_name'
+    | 'bill_date'
+    | 'currency'
+    | 'total_amount'
+    | 'fiscal_register_id'
+    | 'fiscal_receipt_number'
+    | 'purchase_time'
   >;
   onChange: (patch: Partial<BillEdits>) => void;
   marketHint?: string;
@@ -66,6 +72,37 @@ export function BillReviewFields({
           step="0.01"
           value={edits.total_amount}
           onChange={(e) => onChange({ total_amount: Number(e.target.value) })}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="fiscal_register_id">
+          {t('duplicates.receipt.registerId')}
+        </Label>
+        <Input
+          id="fiscal_register_id"
+          maxLength={64}
+          value={edits.fiscal_register_id}
+          onChange={(e) => onChange({ fiscal_register_id: e.target.value })}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="fiscal_receipt_number">
+          {t('duplicates.receipt.number')}
+        </Label>
+        <Input
+          id="fiscal_receipt_number"
+          maxLength={64}
+          value={edits.fiscal_receipt_number}
+          onChange={(e) => onChange({ fiscal_receipt_number: e.target.value })}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="purchase_time">{t('duplicates.receipt.time')}</Label>
+        <Input
+          id="purchase_time"
+          type="time"
+          value={edits.purchase_time}
+          onChange={(e) => onChange({ purchase_time: e.target.value })}
         />
       </div>
     </div>

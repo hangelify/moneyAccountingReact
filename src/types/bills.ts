@@ -21,7 +21,42 @@ export interface ParsedBillItem {
   category_reasoning?: string;
 }
 
-export interface ParsedBill {
+export type DuplicateMatch = 'fiscal' | 'strong' | 'weak';
+
+// Another bill that may be the same purchase, or the original of a duplicate.
+export interface PossibleDuplicate {
+  id: string;
+  bill_date: string; // YYYY-MM-DD
+  total_amount: number;
+  currency: string | null;
+  market_name: string | null;
+  created_by_name: string | null;
+  match?: DuplicateMatch; // absent on duplicate_of
+}
+
+// Fiscal ids printed on the receipt; null when not read.
+export interface ReceiptIdentity {
+  fiscal_register_id: string | null;
+  fiscal_receipt_number: string | null;
+  purchase_time: string | null; // HH:MM
+}
+
+export interface DuplicateSuggestionPair {
+  bill: PossibleDuplicate;
+  other: PossibleDuplicate;
+  match: DuplicateMatch;
+}
+
+export interface DuplicateSuggestionsResponse {
+  pairs: DuplicateSuggestionPair[];
+}
+
+export interface DuplicateRange {
+  date_from: string | null;
+  date_to: string | null;
+}
+
+export interface ParsedBill extends Partial<ReceiptIdentity> {
   draft_id: string;
   market_name: string | null;
   bill_date: string | null;
@@ -32,7 +67,10 @@ export interface ParsedBill {
 
 export interface ParsePhotoResponse extends ParsedBill {
   request_id: string | null;
+  // true = the same photo was uploaded again and its open draft came back.
   duplicate: boolean;
+  // Confirmed bills that may be the same purchase; always sent.
+  possible_duplicates: PossibleDuplicate[];
 }
 
 export interface AiErrorBody {
@@ -65,6 +103,10 @@ export interface ConfirmBillRequest {
   total_amount: number;
   description?: string;
   items: ConfirmBillItem[];
+  duplicate_of_id?: string;
+  fiscal_register_id?: string;
+  fiscal_receipt_number?: string;
+  purchase_time?: string;
 }
 
 export interface CreateBillItem {
@@ -81,6 +123,10 @@ export interface CreateBillRequest {
   total_amount: number;
   description?: string;
   items: CreateBillItem[];
+  duplicate_of_id?: string;
+  fiscal_register_id?: string;
+  fiscal_receipt_number?: string;
+  purchase_time?: string;
 }
 
 export interface BillEditItem {
@@ -102,6 +148,10 @@ export interface BillEdits {
   currency: string;
   total_amount: number;
   items: BillEditItem[];
+  // Receipt identity as typed; '' when empty.
+  fiscal_register_id: string;
+  fiscal_receipt_number: string;
+  purchase_time: string;
 }
 
 export interface MarketRef {
@@ -131,6 +181,9 @@ export interface BillResponseDto {
   // is null when the bill has no currency or no rate is available.
   household_currency?: Currency;
   household_amount?: number | null;
+  // Confirmed-list rows only; drafts have their own status.
+  status?: 'draft' | 'confirmed' | 'duplicate';
+  duplicate_of_id?: string | null;
 }
 
 export interface DraftBillItem {
@@ -147,7 +200,7 @@ export interface DraftBillItem {
 }
 
 // A row of GET /bills/drafts: the summary plus receipt fields and items.
-export interface DraftBillDto extends BillResponseDto {
+export interface DraftBillDto extends Omit<BillResponseDto, 'status'> {
   status: 'draft' | 'confirmed';
   market_name_raw?: string;
   // true = no date on the receipt; bill_date is the upload day.
@@ -164,11 +217,14 @@ export interface BillDetailItem {
   product_weight: number | null;
 }
 
-export interface BillDetailResponseDto extends BillResponseDto {
-  // Drafts only: the receipt's status and unmatched market name.
-  status?: 'draft' | 'confirmed';
+export interface BillDetailResponseDto
+  extends BillResponseDto, Partial<ReceiptIdentity> {
   market_name_raw?: string;
   items: BillDetailItem[];
   // null when already in the household currency or not convertible.
   exchange_rate?: ExchangeRate | null;
+  // Look-alikes of this bill; [] on a duplicate.
+  possible_duplicates?: PossibleDuplicate[];
+  // The original when status is 'duplicate'.
+  duplicate_of?: PossibleDuplicate | null;
 }

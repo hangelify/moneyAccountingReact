@@ -118,3 +118,36 @@ describe('BillCard', () => {
     expect(onClick).toHaveBeenCalledWith('b1');
   });
 });
+
+describe('BillCard duplicate', () => {
+  it('dims a duplicate and shows a badge', () => {
+    render(
+      <BillCard
+        bill={{ ...bill, status: 'duplicate', duplicate_of_id: 'b0' }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button')).toHaveClass('opacity-60');
+    expect(screen.getByText('Duplicate')).toBeInTheDocument();
+  });
+
+  it('leaves a confirmed bill as is', () => {
+    render(
+      <BillCard bill={{ ...bill, status: 'confirmed' }} onClick={vi.fn()} />
+    );
+    expect(screen.getByRole('button')).not.toHaveClass('opacity-60');
+    expect(screen.queryByText('Duplicate')).toBeNull();
+  });
+});
+
+describe('BillCard duplicate accessibility', () => {
+  it('announces a duplicate in the card label', () => {
+    render(
+      <BillCard
+        bill={{ ...bill, status: 'duplicate', duplicate_of_id: 'b0' }}
+        onClick={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button')).toHaveAccessibleName(/duplicate/i);
+  });
+});
