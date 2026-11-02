@@ -181,6 +181,7 @@
       "deleteFailed": "Couldn't delete the bill. Try again.",
       "edit": "Edit",
       "cancel": "Cancel",
+      "reset": "Reset",
       "itemCategory": "Item {{index}} category",
       "itemAmount": "Item {{index}} amount",
       "itemCount": "Item {{index}} count",

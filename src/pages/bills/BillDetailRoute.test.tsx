@@ -117,7 +117,8 @@ describe('BillDetailRoute', () => {
     await screen.findByRole('table');
     act(() => mm!.setMatches(false));
     const dialog = await screen.findByRole('dialog');
-    expect(await screen.findByText(/uncategorized/i)).toBeInTheDocument();
+    // A draft opens in the form on both layouts.
+    expect(await screen.findByLabelText('Market name')).toBeInTheDocument();
     expect(dialog).toBeInTheDocument();
     expect(screen.getByTestId('loc')).toHaveTextContent('/bills/drafts/d1');
   });

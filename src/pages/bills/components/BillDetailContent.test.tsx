@@ -9,7 +9,7 @@ import { BillDetailContent } from './BillDetailContent';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import type { BillDetailResponseDto } from '@/types/bills';
-import { toDraft } from '../billDetailDraft';
+import { billToEdits } from '../billDetailEdits';
 import { addDays } from '@/lib/isoDate';
 import { localIsoDate } from '@/pages/dashboard/period';
 
@@ -120,7 +120,7 @@ describe('BillDetailContent', () => {
       });
     };
     const loaded = async (): Promise<void> => {
-      await screen.findByText(/50\.00/);
+      await screen.findAllByText(/50\.00/);
     };
     const NO_CURRENCY = 'Set a currency to convert this bill.';
     const FUTURE = 'Check the bill date — no exchange rate for a future date.';
@@ -226,11 +226,11 @@ describe('BillDetailContent', () => {
     await waitFor(() => screen.getByText('N-1 Supermarket'));
   });
 
-  // Owns the draft the way the drawer does while editing.
+  // Owns the edits the way the drawer does while editing.
   function Editing({ bill }: { bill: BillDetailResponseDto }): ReactElement {
-    const [draft, setDraft] = useState(() => toDraft(bill));
+    const [edits, setEdits] = useState(() => billToEdits(bill));
     return (
-      <BillDetailContent id={bill.id} draft={draft} onDraftChange={setDraft} />
+      <BillDetailContent id={bill.id} edits={edits} onEditsChange={setEdits} />
     );
   }
 
@@ -263,43 +263,23 @@ describe('BillDetailContent', () => {
     expect(screen.queryByRole('spinbutton')).toBeNull();
   });
 
-  it('renders market, date, total and item inputs in edit mode', async () => {
+  it('renders the review form in edit mode', async () => {
     mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
     render(wrap(<Editing bill={editableBill} />));
-    await waitFor(() => screen.getByLabelText('Market'));
-    expect(screen.getByLabelText('Market')).toHaveValue('Lidl');
+    expect(await screen.findByLabelText('Market name')).toHaveValue('Lidl');
     expect(screen.getByLabelText('Date')).toHaveValue('2026-05-19');
-    expect(screen.getByLabelText('Total')).toHaveValue(52.3);
-    expect(screen.getByLabelText('Item 1 amount')).toHaveValue(14.5);
-    expect(screen.getByLabelText('Item 1 count')).toHaveValue(2);
-    expect(screen.getByLabelText('Item 1 weight (kg)')).toHaveValue(1);
+    expect(screen.getByLabelText('Total amount')).toHaveValue(52.3);
+    expect(screen.getAllByTestId('item-final-price-0')[0]).toHaveValue(14.5);
+    expect(
+      screen.getAllByRole('button', { name: /delete item/i }).length
+    ).toBeGreaterThan(0);
   });
 
-  it('lets the item sub-category be changed from the fetched list', async () => {
+  it('warns in view mode when the items do not match the total', async () => {
     mock.onGet('/households/hh-1/bills/e1').reply(200, editableBill);
-    mock.onGet('/households/hh-1/sub-categories').reply(200, [
-      {
-        id: 's1',
-        name: 'milk',
-        category_id: 'c1',
-        category_name: 'Dairy',
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-      },
-      {
-        id: 's2',
-        name: 'cheese',
-        category_id: 'c1',
-        category_name: 'Dairy',
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-      },
-    ]);
-    render(wrap(<Editing bill={editableBill} />));
-    const select = await screen.findByLabelText('Item 1 category');
-    await waitFor(() => expect(select).toBeEnabled());
-    expect(select).toHaveValue('s1');
-    await userEvent.selectOptions(select, 's2');
-    expect(select).toHaveValue('s2');
+    render(wrap(<BillDetailContent id="e1" />));
+    expect(
+      await screen.findByText("Items don't match the bill total")
+    ).toBeInTheDocument();
   });
 });

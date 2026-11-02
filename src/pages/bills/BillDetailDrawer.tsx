@@ -23,8 +23,9 @@ export function BillDetailDrawer(): ReactElement | null {
   const actions = useBillDetailActions(id);
   const {
     bill,
-    draft,
-    setDraft,
+    edits,
+    setEdits,
+    isEdited,
     toggleEdit,
     confirm,
     isConfirming,
@@ -39,6 +40,13 @@ export function BillDetailDrawer(): ReactElement | null {
   } = actions;
 
   if (!id) return null;
+
+  const editLabel = (status: string | undefined, editing: boolean): string =>
+    status === 'draft'
+      ? t('confirmed.detail.reset')
+      : editing
+        ? t('confirmed.detail.cancel')
+        : t('confirmed.detail.edit');
 
   const handleOpenChange = (next: boolean): void => {
     if (!next) close();
@@ -63,7 +71,7 @@ export function BillDetailDrawer(): ReactElement | null {
                   {t('confirmed.detail.confirm')}
                 </Button>
               )}
-              {draft && (
+              {edits && (
                 <Button size="sm" disabled={!canSave} onClick={save}>
                   {t('confirmed.detail.save')}
                 </Button>
@@ -71,18 +79,21 @@ export function BillDetailDrawer(): ReactElement | null {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={isConfirming || isSaving || isRemoving}
+                disabled={
+                  isConfirming ||
+                  isSaving ||
+                  isRemoving ||
+                  (bill.status === 'draft' && !isEdited)
+                }
                 onClick={toggleEdit}
               >
-                {draft
-                  ? t('confirmed.detail.cancel')
-                  : t('confirmed.detail.edit')}
+                {editLabel(bill.status, edits !== null)}
               </Button>
             </div>
           )}
         </SheetHeader>
         {bill && <BillDuplicateSection bill={bill} actions={actions} />}
-        <BillDetailContent id={id} draft={draft} onDraftChange={setDraft} />
+        <BillDetailContent id={id} edits={edits} onEditsChange={setEdits} />
         {bill && (
           <DeleteBillButton
             bill={bill}

@@ -1,12 +1,11 @@
 import '@/i18n';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
 import { HouseholdTestProvider } from '@/test/household';
 import type { BillDetailResponseDto } from '@/types/bills';
-import { toDraft, type BillDetailDraft } from '../billDetailDraft';
 import { BillDetailTable } from './BillDetailTable';
 
 function wrap(ui: ReactNode): ReactElement {
@@ -57,9 +56,7 @@ const bodyRows = (): HTMLElement[] => {
 
 describe('BillDetailTable', () => {
   it('renders a row per item with name, category, count, weight and amount', () => {
-    render(
-      wrap(<BillDetailTable bill={bill} draft={null} onDraftChange={vi.fn()} />)
-    );
+    render(wrap(<BillDetailTable bill={bill} />));
     const headers = screen
       .getAllByRole('columnheader')
       .map((h) => h.textContent);
@@ -83,9 +80,7 @@ describe('BillDetailTable', () => {
   });
 
   it('shows the items total next to the bill total', () => {
-    render(
-      wrap(<BillDetailTable bill={bill} draft={null} onDraftChange={vi.fn()} />)
-    );
+    render(wrap(<BillDetailTable bill={bill} />));
     const foot = screen.getByRole('table').querySelector('tfoot')!;
     expect(foot).toHaveTextContent('Items total');
     expect(foot).toHaveTextContent('7.20 EUR');
@@ -93,69 +88,17 @@ describe('BillDetailTable', () => {
 
   it('omits the currency when the bill has none', () => {
     const { currency: _omit, ...noCurrency } = bill;
-    render(
-      wrap(
-        <BillDetailTable
-          bill={noCurrency}
-          draft={null}
-          onDraftChange={vi.fn()}
-        />
-      )
-    );
+    render(wrap(<BillDetailTable bill={noCurrency} />));
     expect(screen.getByText('2.49')).toBeInTheDocument();
     expect(screen.queryByText(/undefined/)).toBeNull();
   });
 
   it('shows the no-items message instead of a table', () => {
-    render(
-      wrap(
-        <BillDetailTable
-          bill={{ ...bill, items: [] }}
-          draft={null}
-          onDraftChange={vi.fn()}
-        />
-      )
-    );
+    render(wrap(<BillDetailTable bill={{ ...bill, items: [] }} />));
     expect(
       screen.getByText('This bill has no line items.')
     ).toBeInTheDocument();
     expect(screen.queryByRole('table')).toBeNull();
-  });
-
-  it('renders inputs in edit mode and reports changes', async () => {
-    const onDraftChange = vi.fn();
-    render(
-      wrap(
-        <BillDetailTable
-          bill={bill}
-          draft={toDraft(bill)}
-          onDraftChange={onDraftChange}
-        />
-      )
-    );
-    expect(
-      screen.getByRole('spinbutton', { name: 'Item 1 amount' })
-    ).toHaveValue(2.49);
-    expect(screen.getByText('MILK')).toBeInTheDocument();
-    await userEvent.type(
-      screen.getByRole('spinbutton', { name: 'Item 2 count' }),
-      '2'
-    );
-    const last = onDraftChange.mock.lastCall?.[0] as BillDetailDraft;
-    expect(last.items[1]?.count).toBe('12');
-  });
-
-  it('footer sums the draft amounts while editing', () => {
-    const draft = toDraft(bill);
-    draft.items[0]!.amount = 'abc';
-    render(
-      wrap(
-        <BillDetailTable bill={bill} draft={draft} onDraftChange={vi.fn()} />
-      )
-    );
-    const foot = screen.getByRole('table').querySelector('tfoot')!;
-    expect(foot).toHaveTextContent('4.71 EUR');
-    expect(foot).not.toHaveTextContent('NaN');
   });
 });
 
@@ -170,12 +113,9 @@ describe('BillDetailTable household currency', () => {
     household_amount: 45.89,
     exchange_rate: { rate: 0.049763, rate_date: '2026-10-31' },
   };
-  const noop = (): void => undefined;
 
   it('shows the total in the household currency with the rate', async () => {
-    render(
-      wrap(<BillDetailTable bill={foreign} draft={null} onDraftChange={noop} />)
-    );
+    render(wrap(<BillDetailTable bill={foreign} />));
     const amount = screen.getByText('≈ 45.89 EUR');
     await userEvent.hover(amount);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
@@ -188,8 +128,6 @@ describe('BillDetailTable household currency', () => {
       wrap(
         <BillDetailTable
           bill={{ ...foreign, household_amount: null, exchange_rate: null }}
-          draft={null}
-          onDraftChange={noop}
         />
       )
     );

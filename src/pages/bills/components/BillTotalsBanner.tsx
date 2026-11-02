@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { BillDetailResponseDto } from '@/types/bills';
 
 interface BillTotalsBannerProps {
   items: { final_price: number }[];
@@ -53,5 +54,20 @@ export function BillTotalsBanner({
         })}
       </span>
     </div>
+  );
+}
+
+// The same warning for a saved bill.
+export function SavedBillTotalsBanner({
+  bill,
+}: {
+  bill: Pick<BillDetailResponseDto, 'items' | 'total_amount' | 'currency'>;
+}): ReactElement | null {
+  return (
+    <BillTotalsBanner
+      items={bill.items.map((item) => ({ final_price: item.amount }))}
+      totalAmount={bill.total_amount}
+      currency={bill.currency ?? ''}
+    />
   );
 }
