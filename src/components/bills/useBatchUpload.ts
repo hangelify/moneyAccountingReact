@@ -168,7 +168,11 @@ export function useBatchUpload(handlers: BatchUploadHandlers): {
           return;
         case 'budget':
           handlers.disableScan();
-          toast({ variant: 'destructive', title: failure.message });
+          toast({
+            variant: 'destructive',
+            title: failure.message,
+            description: t('bills:batch.budgetManual'),
+          });
           return;
         case 'disabled':
           handlers.onDisabled();

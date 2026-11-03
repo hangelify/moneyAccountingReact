@@ -5,6 +5,7 @@
     "dropzone": {
       "empty": "Drop an image here or click to browse",
       "constraints": "Up to 20 photos · JPEG, PNG or WebP",
+      "constraintsSingle": "JPEG, PNG or WebP, up to 10 MB",
       "remove": "Remove photo",
       "addMore": "Add more"
     },
@@ -254,6 +255,7 @@
     "uploading": "Uploading photos…",
     "busyRetrying": "Server busy, retrying…",
     "fewerPhotos": "Try again later, or send fewer photos.",
+    "budgetManual": "You can still enter receipts manually.",
     "disabled": "Several photos at once is not available right now. Send one photo at a time."
   },
   "failed": {

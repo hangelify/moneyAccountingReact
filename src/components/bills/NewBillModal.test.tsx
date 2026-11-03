@@ -775,6 +775,9 @@ describe('NewBillModal', () => {
           'Daily AI budget exceeded. Add the bill manually.'
         )
       ).toBeInTheDocument();
+      expect(
+        screen.getByText('You can still enter receipts manually.')
+      ).toBeInTheDocument();
       expect(send()).toBeDisabled();
 
       cleanup();

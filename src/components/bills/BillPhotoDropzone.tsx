@@ -192,7 +192,9 @@ export function BillPhotoDropzone({
             {t('newBillModal.dropzone.empty')}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t('newBillModal.dropzone.constraints')}
+            {multiple
+              ? t('newBillModal.dropzone.constraints')
+              : t('newBillModal.dropzone.constraintsSingle')}
           </p>
         </div>
       )}
