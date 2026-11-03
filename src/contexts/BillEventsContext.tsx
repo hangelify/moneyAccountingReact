@@ -147,7 +147,19 @@ function showCompletedToast(t: TFunction, c: BatchCompletedData): void {
   });
 }
 
-/** Patches a tracked, cached batch. Returns false when it can't. */
+function onCompleted(latest: Latest, data: BillEventData): void {
+  const c = data as BatchCompletedData;
+  if (latest.userId !== null && c.created_by_user_id === latest.userId) {
+    showCompletedToast(latest.t, c);
+  }
+  useBillBatchStore.getState().markUnseen(c.batch_id);
+}
+
+/**
+ * Applies an event to a tracked batch. Returns false for an untracked one.
+ * A tracked batch with no cache yet (restored, GET in flight) is refetched
+ * instead, with the in-flight GET cancelled so the answer follows the event.
+ */
 function applyTracked(
   latest: Latest,
   hid: string,
@@ -156,23 +168,23 @@ function applyTracked(
 ): boolean {
   const store = useBillBatchStore.getState();
   const id = data.batch_id;
+  if (!store.batches.some((b) => b.batchId === id)) return false;
   const key = batchKey(hid, id);
   const cached = latest.queryClient.getQueryData<BillBatch>(key);
-  const tracked = store.batches.some((b) => b.batchId === id);
-  if (!tracked || !cached) return false;
-
-  const { batch, waiting } = applyBatchEvent(cached, type, data);
-  latest.queryClient.setQueryData(key, batch);
-  if (waiting.set !== undefined || waiting.clear !== undefined) {
-    store.setWaiting(id, waiting);
-  }
-  if (type === 'batch.completed') {
-    const c = data as BatchCompletedData;
-    if (latest.userId !== null && c.created_by_user_id === latest.userId) {
-      showCompletedToast(latest.t, c);
+  if (!cached) {
+    // cancelRefetch is ignored while a first fetch has no data; cancel first.
+    const qc = latest.queryClient;
+    void qc
+      .cancelQueries({ queryKey: key })
+      .then(() => qc.invalidateQueries({ queryKey: key }));
+  } else {
+    const { batch, waiting } = applyBatchEvent(cached, type, data);
+    latest.queryClient.setQueryData(key, batch);
+    if (waiting.set !== undefined || waiting.clear !== undefined) {
+      store.setWaiting(id, waiting);
     }
-    store.markUnseen(id);
   }
+  if (type === 'batch.completed') onCompleted(latest, data);
   return true;
 }
 

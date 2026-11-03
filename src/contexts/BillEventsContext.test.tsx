@@ -142,6 +142,18 @@ function trackNow(batch: BillBatch): void {
   act(() => hooks.track(batch, 'hh-1', {}));
 }
 
+function storeRestored(batchId: string): void {
+  const stored: TrackedBatch = {
+    batchId,
+    hid: 'hh-1',
+    createdAt: '2026-11-03T10:00:00Z',
+    thumbnails: {},
+    waiting: [],
+    unseen: false,
+  };
+  sessionStorage.setItem('billBatches', JSON.stringify([stored]));
+}
+
 beforeEach(() => {
   streams.length = 0;
   auth.user = { id: 'u1' };
@@ -211,10 +223,11 @@ describe('BillEventsProvider', () => {
     expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(true);
   });
 
-  it('batch.completed by another user shows no toast but invalidates drafts', () => {
+  it('batch.completed by another user on a tracked batch: no toast, drafts invalidated, unseen', () => {
     const toastSpy = vi.mocked(toast);
     toastSpy.mockClear();
     const { qc } = setup();
+    trackNow(makeBatch('b7'));
     const spy = vi.spyOn(qc, 'invalidateQueries');
     fire('batch.completed', {
       batch_id: 'b7',
@@ -225,6 +238,54 @@ describe('BillEventsProvider', () => {
     });
     expect(toastSpy).not.toHaveBeenCalled();
     expect(spy).toHaveBeenCalledWith({ queryKey: DRAFTS_KEY });
+    expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(true);
+  });
+
+  it('a restored batch with a pending GET refetches on item.done', async () => {
+    storeRestored('b1');
+    let answerFirst: (b: BillBatch) => void = () => undefined;
+    const base = makeBatch('b1');
+    const doneBatch: BillBatch = {
+      ...base,
+      items: base.items.map((i) =>
+        i.position === 0 ? { ...i, status: 'done' as const } : i
+      ),
+    };
+    const api = vi
+      .spyOn(billsApi, 'batch')
+      .mockImplementationOnce(
+        () => new Promise<BillBatch>((r) => (answerFirst = r))
+      )
+      .mockResolvedValueOnce(doneBatch);
+    const { qc } = setup();
+    await waitFor(() => expect(api).toHaveBeenCalledTimes(1));
+    fire('item.done', itemEvent('b1', 0, 'done'));
+    await waitFor(() => expect(api).toHaveBeenCalledTimes(2));
+    act(() => answerFirst(makeBatch('b1')));
+    await waitFor(() =>
+      expect(
+        qc.getQueryData<BillBatch>(batchKey('hh-1', 'b1'))?.items[0]?.status
+      ).toBe('done')
+    );
+  });
+
+  it('a restored, uncached batch completed by me toasts and marks unseen', async () => {
+    storeRestored('b1');
+    const api = vi
+      .spyOn(billsApi, 'batch')
+      .mockImplementation(() => new Promise<BillBatch>(() => undefined));
+    setup();
+    await waitFor(() => expect(api).toHaveBeenCalled());
+    fire('batch.completed', {
+      batch_id: 'b1',
+      total: 2,
+      done: 1,
+      failed: 1,
+      created_by_user_id: 'u1',
+    });
+    expect(await screen.findByText('1 of 2 receipts read')).toBeInTheDocument();
+    expect(screen.getByText('Review failed')).toBeInTheDocument();
+    expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(true);
   });
 
   it('onReconnected invalidates only running batches', () => {
