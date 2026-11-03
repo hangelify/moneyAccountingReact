@@ -244,5 +244,9 @@
       }
     },
     "openDuplicate": "View bill (duplicate)"
+  },
+  "batch": {
+    "completedToast": "{{done}} of {{total}} receipts read",
+    "reviewFailed": "Review failed"
   }
 }
