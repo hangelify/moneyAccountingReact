@@ -1,5 +1,10 @@
 export const BILLS_ENDPOINTS = {
   PARSE_PHOTO: '/bills/parse-photo',
+  PARSE_PHOTOS: '/bills/parse-photos',
+  EVENTS: '/bills/events',
+  BATCH: (id: string): string => `/bill-batches/${id}`,
+  RETRY: (id: string): string => `/bills/${id}/retry`,
+  DRAFT_IMAGE: (id: string): string => `/bills/drafts/${id}/image`,
   LIST: '/bills',
   DRAFTS: '/bills/drafts',
   DETAIL: (id: string): string => `/bills/${id}`,
@@ -19,3 +24,9 @@ export const BILL_IMAGE_MIME_TYPES = [
 export type BillImageMime = (typeof BILL_IMAGE_MIME_TYPES)[number];
 
 export const BILL_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+
+// Batch photo upload: 2 to 20 photos; one photo uses the parse-photo flow.
+export const BATCH_MAX_FILES = 20;
+export const RESIZE_MAX_BYTES = 2.5 * 1024 * 1024;
+export const RESIZE_MAX_SIDE = 3000;
+export const RESIZE_JPEG_QUALITY = 0.85;
