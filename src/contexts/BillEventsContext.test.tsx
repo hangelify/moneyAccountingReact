@@ -352,6 +352,20 @@ describe('BillEventsProvider', () => {
     );
   });
 
+  it('drops a tracked batch on 403 without the access-lost flow', async () => {
+    storeRestored('mine-no-more');
+    vi.spyOn(billsApi, 'batch').mockRejectedValue(new ApiError(403, {}));
+    const { qc, value } = setup();
+    await waitFor(() =>
+      expect(useBillBatchStore.getState().batches).toEqual([])
+    );
+    expect(value.handleForbidden).not.toHaveBeenCalled();
+    expect(
+      qc.getQueryCache().find({ queryKey: batchKey('hh-1', 'mine-no-more') })
+        ?.meta
+    ).toEqual({ ownForbidden: true });
+  });
+
   it('buffers events for an unknown batch until it is tracked', () => {
     const { qc } = setup();
     fire('item.done', itemEvent('b9', 2, 'done', { bill_id: 'bill-9' }));

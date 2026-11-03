@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type UseQueryResult,
 } from '@tanstack/react-query';
+import { OWN_FORBIDDEN_META } from '@/contexts/HouseholdContext';
 import { billsApi } from '@/pages/bills/api';
 import { useBillBatchStore, type TrackedBatch } from '@/stores/billBatchStore';
 import type { BillBatch } from '@/types/bills';
@@ -40,6 +41,8 @@ export function useTrackedBatches(
       queryFn: () => billsApi.batch(t.hid, t.batchId),
       staleTime: Infinity,
       retry: false,
+      // A 403 only drops the batch (the provider dismisses it), spec §3.6.
+      meta: OWN_FORBIDDEN_META,
     })),
   });
   return mine.flatMap((tracked, i) => {
