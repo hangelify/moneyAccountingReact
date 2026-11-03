@@ -21,7 +21,8 @@ export function FailedBillsGroup(): ReactElement | null {
   const totalPages = q.data?.meta.total_pages ?? 1;
 
   // The list shrank below the current page.
-  if (q.data && page > totalPages) setPage(Math.max(1, totalPages));
+  const maxPage = Math.max(1, totalPages);
+  if (q.data && page > maxPage) setPage(maxPage);
 
   useEffect(() => {
     if (location.hash === '#failed' && total > 0 && !scrolled.current) {

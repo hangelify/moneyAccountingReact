@@ -87,7 +87,10 @@ describe('DraftBills (integration)', () => {
       .onGet('/households/hh-1/bills/drafts', {
         params: { page: 1, limit: 20, status: 'failed' },
       })
-      .reply(() => paged([]));
+      .reply(() => [
+        200,
+        { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
+      ]);
   });
   afterEach(() => mock.restore());
 

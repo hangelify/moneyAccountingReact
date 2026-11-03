@@ -120,12 +120,82 @@ describe('FailedBillsGroup', () => {
       );
   };
 
-  it('is hidden when the failed list is empty', async () => {
-    mock.onGet('/households/hh-1/bills/drafts').reply(() => paged([]));
+  const emptyReal = (): [number, unknown] => [
+    200,
+    { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
+  ];
+
+  it('is hidden when the failed list is empty (total_pages 0) without looping', async () => {
+    mock.onGet('/households/hh-1/bills/drafts').reply(() => emptyReal());
     renderIt();
-    await waitFor(() => expect(mock.history.get.length).toBeGreaterThan(0));
+    await waitFor(() => {
+      expect(qc.isFetching()).toBe(0);
+      expect(
+        qc.getQueryData([
+          'households',
+          'hh-1',
+          'bills',
+          'drafts',
+          'failed',
+          1,
+          20,
+        ])
+      ).toBeDefined();
+    });
     expect(screen.queryByRole('heading')).toBeNull();
     expect(screen.queryByText(/couldn't read/i)).toBeNull();
+  });
+
+  it('deleting the only item on page 2 moves the group to page 1', async () => {
+    let deleted = false;
+    mock.onGet('/households/hh-1/bills/drafts').reply((config) => {
+      const p = (config.params as { page: number }).page;
+      if (deleted) {
+        return p === 1
+          ? [
+              200,
+              {
+                data: [failed('f1', 'not_a_receipt', 'Only one left')],
+                meta: { total: 1, page: 1, limit: 20, total_pages: 1 },
+              },
+            ]
+          : [
+              200,
+              {
+                data: [],
+                meta: { total: 1, page: p, limit: 20, total_pages: 1 },
+              },
+            ];
+      }
+      return p === 2
+        ? [
+            200,
+            {
+              data: [failed('f21', 'not_a_receipt', 'On page two')],
+              meta: { total: 21, page: 2, limit: 20, total_pages: 2 },
+            },
+          ]
+        : [
+            200,
+            {
+              data: [failed('f1', 'not_a_receipt', 'Only one left')],
+              meta: { total: 21, page: 1, limit: 20, total_pages: 2 },
+            },
+          ];
+    });
+    mock.onDelete('/households/hh-1/bills/f21').reply(() => {
+      deleted = true;
+      return [204];
+    });
+    renderIt();
+    await screen.findByText('Only one left');
+    await userEvent.click(screen.getByRole('button', { name: /next/i }));
+    await screen.findByText('On page two');
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const btns = await screen.findAllByRole('button', { name: 'Delete' });
+    await userEvent.click(at(btns, btns.length - 1));
+    expect(await screen.findByText('Only one left')).toBeInTheDocument();
+    expect(screen.queryByText('On page two')).toBeNull();
   });
 
   it('shows the count and each message as is', async () => {
