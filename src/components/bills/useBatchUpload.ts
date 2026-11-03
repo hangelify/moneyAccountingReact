@@ -48,9 +48,12 @@ export async function preparePhotos(
   photos: SelectedPhoto[],
   t: TFunction
 ): Promise<{ prepared: File[]; errors: Map<number, string> }> {
-  const prepared = await Promise.all(
-    photos.map((p) => prepareBillImage(p.file))
-  );
+  // One at a time: each resize decodes a full bitmap, and 20 at once can
+  // exhaust a phone's memory. Keeps selection order.
+  const prepared: File[] = [];
+  for (const photo of photos) {
+    prepared.push(await prepareBillImage(photo.file));
+  }
   const errors = new Map<number, string>();
   prepared.forEach((file, i) => {
     const result = validateBillImage(file);

@@ -463,7 +463,7 @@ export function NewBillModal({
               <p className="px-6 text-center text-sm font-medium">
                 {batch.retrying
                   ? t('bills:batch.busyRetrying')
-                  : batch.isPending
+                  : batch.isPending || (preparing && photos.length > 1)
                     ? t('bills:batch.uploading')
                     : t('bills:newBillModal.pending')}
               </p>

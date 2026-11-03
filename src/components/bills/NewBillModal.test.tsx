@@ -26,6 +26,7 @@ import {
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
 import { BillEventsContext } from '@/hooks/useBillBatch';
 import type { BillBatch } from '@/types/bills';
+import { prepareBillImage } from '@/lib/resizeImage';
 
 vi.mock('@/lib/resizeImage', () => ({
   prepareBillImage: vi.fn((f: File) => Promise.resolve(f)),
@@ -129,6 +130,9 @@ describe('NewBillModal', () => {
   });
 
   afterEach(() => {
+    vi.mocked(prepareBillImage).mockImplementation((f: File) =>
+      Promise.resolve(f)
+    );
     vi.useRealTimers();
     tokenStorage.clear({ broadcast: false });
     mock.restore();
@@ -609,6 +613,35 @@ describe('NewBillModal', () => {
         )
       ).toBeInTheDocument();
       expect(document.body.dataset.pathname).not.toBe('/bills/review');
+    });
+
+    it('prepares photos one at a time, in selection order', async () => {
+      mock.onPost(BATCH_URL).reply(202, batch(3));
+      const pending: { file: File; resolve: (f: File) => void }[] = [];
+      vi.mocked(prepareBillImage).mockImplementation(
+        (file: File) =>
+          new Promise<File>((resolve) => pending.push({ file, resolve }))
+      );
+      const { onOpenChange } = renderModal();
+      await userEvent.upload(fileInput(), files(3));
+      await userEvent.click(send());
+
+      expect(await screen.findByText('Uploading photos…')).toBeInTheDocument();
+      for (let i = 0; i < 3; i++) {
+        await waitFor(() => expect(pending).toHaveLength(i + 1));
+        // The next photo has not started while this one is in progress.
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 20));
+        });
+        expect(pending).toHaveLength(i + 1);
+        const current = pending[i];
+        if (!current) throw new Error('no pending prepare');
+        expect(current.file.name).toBe(`p${i + 1}.jpg`);
+        current.resolve(current.file);
+      }
+
+      await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+      expect(sentNames(0)).toEqual(['p1.jpg', 'p2.jpg', 'p3.jpg']);
     });
 
     it('selecting more than 20 keeps 20 and shows tooManyFiles', async () => {
