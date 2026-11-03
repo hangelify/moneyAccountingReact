@@ -316,6 +316,35 @@ describe('BillEventsProvider', () => {
     await waitFor(() => expect(api).toHaveBeenCalledWith('hh-1', 'b1'));
   });
 
+  it('a completion seen only through a refetch marks the batch unseen, no toast', async () => {
+    const toastSpy = vi.mocked(toast);
+    toastSpy.mockClear();
+    const { qc } = setup();
+    trackNow(makeBatch('b1'));
+    expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(false);
+    vi.spyOn(billsApi, 'batch').mockResolvedValue(
+      makeBatch('b1', { completed: true })
+    );
+    await act(() => qc.invalidateQueries({ queryKey: batchKey('hh-1', 'b1') }));
+    await waitFor(() =>
+      expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(true)
+    );
+    expect(toastSpy).not.toHaveBeenCalled();
+  });
+
+  it('a restored batch already completed on its first GET keeps its seen state', async () => {
+    storeRestored('b1');
+    vi.spyOn(billsApi, 'batch').mockResolvedValue(
+      makeBatch('b1', { completed: true })
+    );
+    const { qc } = setup();
+    await waitFor(() =>
+      expect(qc.getQueryData(batchKey('hh-1', 'b1'))).toBeDefined()
+    );
+    await act(() => Promise.resolve());
+    expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(false);
+  });
+
   it('restores tracked batches from sessionStorage and fetches them', async () => {
     const stored: TrackedBatch = {
       batchId: 'b1',

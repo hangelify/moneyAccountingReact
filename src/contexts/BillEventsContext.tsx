@@ -279,9 +279,21 @@ export function BillEventsProvider({
   }, [hid, isAuthenticated, userId, buffer, gate]);
 
   // A batch that is gone (404) or no longer ours (403) leaves the store.
+  // A completion seen only through a refetch (no batch.completed event) still
+  // marks the batch unseen, without a toast. Only a known running → completed
+  // change counts: a restored batch completed on its first GET keeps its state.
   const tracked = useTrackedBatches(isAuthenticated ? hid : null);
+  const lastCompleted = useRef(new Map<string, boolean>());
   useEffect(() => {
     for (const { tracked: b, query } of tracked) {
+      const completed = query.data?.completed;
+      const before = lastCompleted.current.get(b.batchId);
+      if (completed === true && before === false && !b.unseen) {
+        useBillBatchStore.getState().markUnseen(b.batchId);
+      }
+      if (completed !== undefined) {
+        lastCompleted.current.set(b.batchId, completed);
+      }
       const err = query.error;
       if (
         err instanceof ApiError &&
