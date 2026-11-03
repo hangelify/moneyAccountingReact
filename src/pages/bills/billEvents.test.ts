@@ -49,7 +49,6 @@ async function open(opts: Opts, res: Response): Promise<void> {
 function makeHandlers(): BillEventHandlers {
   return {
     onOpen: vi.fn(),
-    onReconnected: vi.fn(),
     onEvent: vi.fn(),
     onForbidden: vi.fn(),
   };
@@ -119,18 +118,16 @@ describe('listenBillEvents', () => {
     expect(h.onEvent).not.toHaveBeenCalled();
   });
 
-  it('calls onOpen on every open and onReconnected only from the second open', async () => {
+  it('calls onOpen on every open, the first one included', async () => {
     const h = makeHandlers();
     listenBillEvents('h', h);
     await open(at(0), sseResponse());
     expect(h.onOpen).toHaveBeenCalledTimes(1);
-    expect(h.onReconnected).not.toHaveBeenCalled();
     close(at(0));
     vi.advanceTimersByTime(2000);
     expect(calls).toHaveLength(2);
     await open(at(1), sseResponse());
     expect(h.onOpen).toHaveBeenCalledTimes(2);
-    expect(h.onReconnected).toHaveBeenCalledTimes(1);
   });
 
   it('on 401 refreshes and starts a new fetchEventSource call with the new token', async () => {

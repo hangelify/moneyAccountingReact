@@ -8,8 +8,8 @@ import { env } from '@/lib/env';
 import type { BillEventData, BillEventType } from '@/types/bills';
 
 export interface BillEventHandlers {
+  /** Every open, the first one included: the caller refetches what it may have missed. */
   onOpen: () => void;
-  onReconnected: () => void;
   onEvent: (type: BillEventType, data: BillEventData) => void;
   onForbidden: () => void;
 }
@@ -35,7 +35,6 @@ export function listenBillEvents(
   const ctrl = new AbortController();
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let opens = 0;
   let backoff = BACKOFF_START_MS;
 
   function scheduleReconnect(ms: number): void {
@@ -77,9 +76,7 @@ export function listenBillEvents(
         const type = res.headers.get('content-type') ?? '';
         if (res.ok && type.includes('text/event-stream')) {
           backoff = BACKOFF_START_MS;
-          opens += 1;
           h.onOpen();
-          if (opens > 1) h.onReconnected();
           return;
         }
         if (res.status === 401) {

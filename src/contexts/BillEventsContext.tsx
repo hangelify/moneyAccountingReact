@@ -250,8 +250,13 @@ export function BillEventsProvider({
     if (!isAuthenticated || !hid) return;
     gate.reset();
     const stop = listenBillEvents(hid, {
-      onOpen: () => safe(() => gate.open()),
-      onReconnected: () => safe(() => refetchRunning(latest.current, hid)),
+      // Every open, the first included: a cached batch may be stale after a
+      // household switch back, or events may have been missed before opening.
+      onOpen: () =>
+        safe(() => {
+          gate.open();
+          refetchRunning(latest.current, hid);
+        }),
       onEvent: (type, data) =>
         safe(() => routeEvent(latest.current, buffer, hid, type, data)),
       onForbidden: () =>

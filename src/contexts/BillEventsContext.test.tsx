@@ -288,16 +288,32 @@ describe('BillEventsProvider', () => {
     expect(useBillBatchStore.getState().batches[0]?.unseen).toBe(true);
   });
 
-  it('onReconnected invalidates only running batches', () => {
+  it('every open invalidates only running batches', () => {
     const { qc } = setup();
     trackNow(makeBatch('run'));
     trackNow(makeBatch('fin', { completed: true }));
     const spy = vi.spyOn(qc, 'invalidateQueries');
-    act(() => last().h.onReconnected());
+    act(() => last().h.onOpen());
     expect(spy).toHaveBeenCalledWith({ queryKey: batchKey('hh-1', 'run') });
     expect(spy).not.toHaveBeenCalledWith({
       queryKey: batchKey('hh-1', 'fin'),
     });
+  });
+
+  it('a household switch A→B→A refetches a cached running batch on reopen', async () => {
+    const { rerender } = setup();
+    trackNow(makeBatch('b1'));
+    act(() => last().h.onOpen());
+    const api = vi.spyOn(billsApi, 'batch').mockResolvedValue(makeBatch('b1'));
+    rerender(
+      makeHouseholdValue({ activeHousehold: TEST_HOUSEHOLDS[1] ?? null })
+    );
+    rerender(makeHouseholdValue());
+    expect(streams).toHaveLength(3);
+    expect(last().hid).toBe('hh-1');
+    expect(api).not.toHaveBeenCalled();
+    act(() => last().h.onOpen());
+    await waitFor(() => expect(api).toHaveBeenCalledWith('hh-1', 'b1'));
   });
 
   it('restores tracked batches from sessionStorage and fetches them', async () => {
