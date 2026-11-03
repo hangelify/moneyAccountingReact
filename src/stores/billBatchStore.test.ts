@@ -119,6 +119,60 @@ describe('billBatchStore', () => {
     expect(store().batches).toEqual([]);
   });
 
+  it('restore() drops elements without the required string fields', () => {
+    sessionStorage.setItem(
+      'billBatches',
+      JSON.stringify([null, 1, { batchId: 'x' }])
+    );
+    store().restore();
+    expect(store().batches).toEqual([]);
+  });
+
+  it('restore() forces thumbnails to {} and defaults waiting and unseen', () => {
+    sessionStorage.setItem(
+      'billBatches',
+      JSON.stringify([
+        {
+          batchId: 'a',
+          hid: 'h1',
+          createdAt: 't',
+          thumbnails: { 0: 'blob:stale' },
+          waiting: [1, 'x', 2],
+          unseen: 'yes',
+        },
+        { batchId: 'b', hid: 'h1', createdAt: 't', waiting: 'nope' },
+        { batchId: 'c', hid: 'h1', createdAt: 't', waiting: [3], unseen: true },
+      ])
+    );
+    store().restore();
+    expect(store().batches).toEqual([
+      {
+        batchId: 'a',
+        hid: 'h1',
+        createdAt: 't',
+        thumbnails: {},
+        waiting: [1, 2],
+        unseen: false,
+      },
+      {
+        batchId: 'b',
+        hid: 'h1',
+        createdAt: 't',
+        thumbnails: {},
+        waiting: [],
+        unseen: false,
+      },
+      {
+        batchId: 'c',
+        hid: 'h1',
+        createdAt: 't',
+        thumbnails: {},
+        waiting: [3],
+        unseen: true,
+      },
+    ]);
+  });
+
   it('clear revokes all URLs and removes the storage key', () => {
     store().track(makeBatch('a'), 'h1', { 0: 'blob:a' });
     store().track(makeBatch('bb'), 'h2', { 0: 'blob:b' });

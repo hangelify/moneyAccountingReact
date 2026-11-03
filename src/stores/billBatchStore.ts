@@ -46,6 +46,30 @@ function persist(batches: TrackedBatch[]): void {
   }
 }
 
+/** A stored element, or null when it lacks the string ids we need. */
+function fromStorage(raw: unknown): TrackedBatch | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  const { batchId, hid, createdAt, waiting, unseen } = r;
+  if (
+    typeof batchId !== 'string' ||
+    typeof hid !== 'string' ||
+    typeof createdAt !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    batchId,
+    hid,
+    createdAt,
+    thumbnails: {}, // object URLs don't survive a reload
+    waiting: Array.isArray(waiting)
+      ? waiting.filter((p): p is number => typeof p === 'number')
+      : [],
+    unseen: typeof unseen === 'boolean' ? unseen : false,
+  };
+}
+
 function mutate(
   set: (partial: Partial<BillBatchState>) => void,
   get: () => BillBatchState,
@@ -119,7 +143,12 @@ export const useBillBatchStore = create<BillBatchState>((set, get) => ({
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       const parsed: unknown = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(parsed)) batches = parsed as TrackedBatch[];
+      if (Array.isArray(parsed)) {
+        batches = parsed.flatMap((raw) => {
+          const b = fromStorage(raw);
+          return b ? [b] : [];
+        });
+      }
     } catch {
       batches = [];
     }
