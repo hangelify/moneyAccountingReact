@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { BillDetailContent } from './components/BillDetailContent';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
+import { FailedBillNotice } from './components/FailedBillNotice';
 import { DeleteBillButton } from './components/DeleteBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
@@ -26,6 +27,7 @@ export function BillDetailDrawer(): ReactElement | null {
     edits,
     setEdits,
     isEdited,
+    isFailed,
     toggleEdit,
     confirm,
     isConfirming,
@@ -42,7 +44,7 @@ export function BillDetailDrawer(): ReactElement | null {
   if (!id) return null;
 
   const editLabel = (status: string | undefined, editing: boolean): string =>
-    status === 'draft'
+    status === 'draft' || status === 'failed'
       ? t('confirmed.detail.reset')
       : editing
         ? t('confirmed.detail.cancel')
@@ -66,7 +68,7 @@ export function BillDetailDrawer(): ReactElement | null {
           <SheetTitle>{t('confirmed.detail.title')}</SheetTitle>
           {bill && (
             <div className="flex gap-2 pr-6">
-              {bill.status === 'draft' && (
+              {(bill.status === 'draft' || isFailed) && (
                 <Button size="sm" disabled={!canConfirm} onClick={confirm}>
                   {t('confirmed.detail.confirm')}
                 </Button>
@@ -83,7 +85,7 @@ export function BillDetailDrawer(): ReactElement | null {
                   isConfirming ||
                   isSaving ||
                   isRemoving ||
-                  (bill.status === 'draft' && !isEdited)
+                  ((bill.status === 'draft' || isFailed) && !isEdited)
                 }
                 onClick={toggleEdit}
               >
@@ -92,7 +94,12 @@ export function BillDetailDrawer(): ReactElement | null {
             </div>
           )}
         </SheetHeader>
-        {bill && <BillDuplicateSection bill={bill} actions={actions} />}
+        {bill && isFailed && (
+          <FailedBillNotice bill={bill} collapsiblePhoto={!isDesktop} />
+        )}
+        {bill && !isFailed && (
+          <BillDuplicateSection bill={bill} actions={actions} />
+        )}
         <BillDetailContent id={id} edits={edits} onEditsChange={setEdits} />
         {bill && (
           <DeleteBillButton

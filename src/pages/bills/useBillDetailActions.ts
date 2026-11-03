@@ -32,6 +32,8 @@ export interface BillDetailActions {
   // Whether the form holds changes of the user's; a draft resets to the
   // loaded values only then.
   isEdited: boolean;
+  // A receipt that could not be read: a draft with no lines and an error.
+  isFailed: boolean;
   // Confirmed bill: Edit / Cancel. Draft: Reset.
   toggleEdit: () => void;
   confirm: () => void;
@@ -75,7 +77,9 @@ export function useBillDetailActions(
     edits: BillEdits;
   } | null>(null);
   const isEdited = edit !== null && edit.id === id;
-  const isDraft = bill?.status === 'draft';
+  const isFailed = bill?.status === 'failed';
+  // A failed receipt is entered by hand, so it behaves as a draft.
+  const isDraft = bill?.status === 'draft' || isFailed;
   // A draft is always in the form; without changes it shows the loaded bill.
   const edits = isEdited
     ? edit.edits
@@ -304,6 +308,7 @@ export function useBillDetailActions(
     edits,
     setEdits,
     isEdited,
+    isFailed,
     toggleEdit,
     confirm: () => confirmMutation.mutate(),
     isConfirming: confirmMutation.isPending,

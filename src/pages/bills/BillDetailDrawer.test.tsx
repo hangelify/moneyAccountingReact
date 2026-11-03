@@ -17,6 +17,7 @@ import { BillDetailDrawer } from './BillDetailDrawer';
 import type { ReactElement } from 'react';
 import { HouseholdTestProvider } from '@/test/household';
 import { Toaster } from '@/components/ui/toaster';
+import { mockMatchMedia } from '@/test/matchMedia';
 
 function LocationProbe(): ReactElement {
   const loc = useLocation();
@@ -632,5 +633,136 @@ describe('BillDetailDrawer delete', () => {
       queryKey: ['households', 'hh-1', 'bills'],
     });
     spy.mockRestore();
+  });
+});
+
+describe('BillDetailDrawer failed bill', () => {
+  let mock: MockAdapter;
+  const DETAIL = '/households/hh-1/bills/d1';
+  const CONFIRM = '/households/hh-1/bills/d1/confirm';
+  const failedBill = {
+    id: 'd1',
+    bill_date: '2026-10-28',
+    total_amount: 0,
+    amount_mismatch: false,
+    currency: 'EUR',
+    created_at: '2026-10-28T10:00:00Z',
+    status: 'failed',
+    parse_error_code: 'not_a_receipt',
+    parse_error_message: 'No receipt found in the photo',
+    market: null,
+    items: [],
+    possible_duplicates: [
+      {
+        id: 'x1',
+        bill_date: '2026-10-28',
+        total_amount: 7.5,
+        market_name: null,
+      },
+    ],
+  };
+  const confirmButton = (): HTMLElement =>
+    screen.getByRole('button', { name: /^confirm$/i });
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: () => 'blob:failed-photo',
+      revokeObjectURL: () => undefined,
+    });
+    mock
+      .onGet('/households/hh-1/bills/drafts/d1/image')
+      .reply(200, new Blob(['x'], { type: 'image/jpeg' }));
+  });
+  afterEach(() => {
+    mock.restore();
+    vi.unstubAllGlobals();
+  });
+
+  async function addBread(): Promise<void> {
+    await userEvent.click(screen.getByRole('button', { name: /add item/i }));
+    await userEvent.type(
+      document.querySelector('[data-row-name="0"]')!,
+      'Bread'
+    );
+    const price = screen.getAllByTestId('item-final-price-0')[0]!;
+    await userEvent.clear(price);
+    await userEvent.type(price, '7.5');
+    // The total of a failed bill starts at 0 and is not derived from lines.
+    const total = screen.getByLabelText('Total amount');
+    await userEvent.clear(total);
+    await userEvent.type(total, '7.5');
+  }
+
+  it('a failed bill opens in the form with the error banner and its photo', async () => {
+    mock.onGet(DETAIL).reply(200, failedBill);
+    renderAt('/bills/drafts/d1');
+    expect(await screen.findByLabelText('Market name')).toBeInTheDocument();
+    expect(screen.getByText('No receipt found in the photo')).toHaveAttribute(
+      'role',
+      'status'
+    );
+    expect(await screen.findByAltText('Receipt photo')).toHaveAttribute(
+      'src',
+      'blob:failed-photo'
+    );
+  });
+
+  it('Confirm is disabled until a line with a name and price is added', async () => {
+    mock.onGet(DETAIL).reply(200, failedBill);
+    renderAt('/bills/drafts/d1');
+    await screen.findByLabelText('Market name');
+    expect(confirmButton()).toBeDisabled();
+    await addBread();
+    await waitFor(() => expect(confirmButton()).toBeEnabled());
+  });
+
+  it('adding a line and confirming posts raw_name, product_count and amount', async () => {
+    mock.onGet(DETAIL).reply(200, failedBill);
+    mock.onPost(CONFIRM).reply(200, { ...failedBill, status: 'confirmed' });
+    renderAt('/bills/drafts/d1');
+    await screen.findByLabelText('Market name');
+    await addBread();
+    await userEvent.click(confirmButton());
+    await waitFor(() => expect(mock.history.post).toHaveLength(1));
+    const body = JSON.parse(String(mock.history.post[0]?.data)) as {
+      items: object[];
+    };
+    expect(body.items[0]).toMatchObject({
+      raw_name: 'Bread',
+      product_count: 1,
+      amount: 7.5,
+    });
+  });
+
+  it('no duplicate section for a failed bill', async () => {
+    mock.onGet(DETAIL).reply(200, failedBill);
+    renderAt('/bills/drafts/d1');
+    await screen.findByLabelText('Market name');
+    expect(screen.queryByText(/duplicate/i)).toBeNull();
+    expect(screen.queryByRole('button', { name: /^mark/i })).toBeNull();
+  });
+
+  it('on mobile the photo can be hidden and shown again', async () => {
+    mock.onGet(DETAIL).reply(200, failedBill);
+    renderAt('/bills/drafts/d1');
+    await screen.findByAltText('Receipt photo');
+    await userEvent.click(screen.getByRole('button', { name: 'Hide photo' }));
+    expect(screen.queryByAltText('Receipt photo')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Show photo' }));
+    expect(screen.getByAltText('Receipt photo')).toBeInTheDocument();
+  });
+
+  it('on desktop the photo is always shown', async () => {
+    const media = mockMatchMedia(true);
+    try {
+      mock.onGet(DETAIL).reply(200, failedBill);
+      renderAt('/bills/drafts/d1');
+      await screen.findByAltText('Receipt photo');
+      expect(screen.queryByRole('button', { name: /hide photo/i })).toBeNull();
+    } finally {
+      media.restore();
+    }
   });
 });
