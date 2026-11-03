@@ -48,6 +48,6 @@ export async function prepareBillImage(file: File): Promise<File> {
   } catch {
     return file;
   } finally {
-    bitmap.close?.();
+    bitmap.close();
   }
 }

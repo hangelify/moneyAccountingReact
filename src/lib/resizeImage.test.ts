@@ -15,7 +15,7 @@ describe('prepareBillImage', () => {
   let bitmapMock: ReturnType<typeof vi.fn>;
   let originalCreateImageBitmap: unknown;
 
-  function stubBitmap(width: number, height: number) {
+  function stubBitmap(width: number, height: number): void {
     bitmapMock = vi.fn().mockResolvedValue({ width, height, close: vi.fn() });
     vi.stubGlobal('createImageBitmap', bitmapMock);
   }
