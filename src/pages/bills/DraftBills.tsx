@@ -8,6 +8,7 @@ import { DEFAULT_LIMIT } from '@/types/pagination';
 import { parseBillsSearchParams } from './parseBillsSearchParams';
 import { BillCardGrid } from './components/BillCardGrid';
 import { BillsTabs } from './components/BillsTabs';
+import { FailedBillsGroup } from './components/FailedBillsGroup';
 import { Pagination } from './components/Pagination';
 import { useDetailOutlet } from './useDetailOutlet';
 
@@ -40,6 +41,8 @@ export function DraftBills(): ReactElement {
       <div className="container mx-auto flex flex-col gap-4 px-4 py-6 sm:py-8">
         <h1 className="text-2xl font-bold sm:text-3xl">{t('cards.title')}</h1>
         <BillsTabs />
+
+        <FailedBillsGroup />
 
         {q.isLoading && (
           <p className="text-sm text-muted-foreground">

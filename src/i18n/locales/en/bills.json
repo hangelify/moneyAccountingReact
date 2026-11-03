@@ -255,5 +255,20 @@
     "busyRetrying": "Server busy, retrying…",
     "fewerPhotos": "Try again later, or send fewer photos.",
     "disabled": "Several photos at once is not available right now. Send one photo at a time."
+  },
+  "failed": {
+    "title": "Couldn't read these receipts ({{count}})",
+    "retry": "Retry",
+    "retryTomorrow": "Retry tomorrow",
+    "enterManually": "Enter manually",
+    "delete": "Delete",
+    "retryStarted": "Reading the receipt again. Follow progress from the bell.",
+    "gone": "This receipt was already handled. The list is refreshed.",
+    "retryIn": "Try again in {{seconds}} s",
+    "deleteTitle": "Delete this receipt?",
+    "deleteDescription": "The photo and the failed bill will be removed.",
+    "photoAlt": "Receipt photo",
+    "retryFailed": "Could not retry this receipt",
+    "deleteFailed": "Could not delete this receipt"
   }
 }
