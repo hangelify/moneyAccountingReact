@@ -37,8 +37,8 @@ describe('billBatchStore', () => {
     expect(store().batches.map((b) => b.batchId)).toEqual(['bb', 'a']);
     store().track(makeBatch('a'), 'h1', { 0: 'blob:other' });
     expect(store().batches.map((b) => b.batchId)).toEqual(['bb', 'a']);
-    expect(store().batches[1]!.thumbnails).toEqual({ 0: 'blob:a0' });
-    expect(store().batches[1]!).toMatchObject({
+    expect(store().batches[1]?.thumbnails).toEqual({ 0: 'blob:a0' });
+    expect(store().batches[1]).toMatchObject({
       hid: 'h1',
       waiting: [],
       unseen: false,
@@ -51,9 +51,9 @@ describe('billBatchStore', () => {
     store().setWaiting('a', { set: 2 });
     store().setWaiting('a', { set: 2 });
     store().setWaiting('a', { set: 3 });
-    expect(store().batches[0]!.waiting).toEqual([2, 3]);
+    expect(store().batches[0]?.waiting).toEqual([2, 3]);
     store().setWaiting('a', { clear: 2 });
-    expect(store().batches[0]!.waiting).toEqual([3]);
+    expect(store().batches[0]?.waiting).toEqual([3]);
   });
 
   it('markUnseen then markAllSeen(hid) clears unseen only for that hid', () => {

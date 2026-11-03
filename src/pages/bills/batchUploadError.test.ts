@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../auth/apiError';
 import { fileIndexFromMessage, toBatchUploadFailure } from './batchUploadError';
 
-const body = (message: string, extra: Record<string, unknown> = {}) => ({
+const body = (
+  message: string,
+  extra: Record<string, unknown> = {}
+): Record<string, unknown> => ({
   statusCode: 0,
   error: 'x',
   message,

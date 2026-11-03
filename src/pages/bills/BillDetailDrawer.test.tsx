@@ -682,11 +682,11 @@ describe('BillDetailDrawer failed bill', () => {
 
   async function addBread(): Promise<void> {
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
-    await userEvent.type(
-      document.querySelector('[data-row-name="0"]')!,
-      'Bread'
-    );
-    const price = screen.getAllByTestId('item-final-price-0')[0]!;
+    const name = document.querySelector<HTMLElement>('[data-row-name="0"]');
+    if (!name) throw new Error('no name input for row 0');
+    await userEvent.type(name, 'Bread');
+    const price = screen.getAllByTestId('item-final-price-0')[0];
+    if (!price) throw new Error('no price input for row 0');
     await userEvent.clear(price);
     await userEvent.type(price, '7.5');
     // The total of a failed bill starts at 0 and is not derived from lines.
