@@ -233,19 +233,26 @@ export function BillEventsProvider({
   const [buffer] = useState(() => new EventBuffer());
   const [gate] = useState(() => new OpenGate());
 
-  // Restore once signed in; clear everything on sign-out.
+  // Restore once signed in; clear everything on sign-out, or when another
+  // user signs in (another tab) without a sign-out in between.
   const wasAuthenticated = useRef(false);
+  const prevUserId = useRef<string | null>(null);
   useEffect(() => {
     const store = useBillBatchStore.getState();
+    const userSwitched =
+      prevUserId.current !== null &&
+      userId !== null &&
+      prevUserId.current !== userId;
     if (isAuthenticated && !wasAuthenticated.current) store.restore();
-    if (!isAuthenticated && wasAuthenticated.current) {
+    if ((!isAuthenticated && wasAuthenticated.current) || userSwitched) {
       store.clear();
       buffer.clear();
     }
     wasAuthenticated.current = isAuthenticated;
-  }, [isAuthenticated, buffer]);
+    prevUserId.current = userId;
+  }, [isAuthenticated, userId, buffer]);
 
-  // One stream per hid; only hid or sign-in state reopens it.
+  // One stream per hid and user; only hid, user or sign-in state reopens it.
   useEffect(() => {
     if (!isAuthenticated || !hid) return;
     gate.reset();
@@ -268,7 +275,8 @@ export function BillEventsProvider({
       gate.reset();
       stop();
     };
-  }, [hid, isAuthenticated, buffer, gate]);
+    // userId is not read inside: it only reopens the stream for a new user.
+  }, [hid, isAuthenticated, userId, buffer, gate]);
 
   // A batch that is gone (404) or no longer ours (403) leaves the store.
   const tracked = useTrackedBatches(isAuthenticated ? hid : null);

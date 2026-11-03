@@ -392,4 +392,22 @@ describe('BillEventsProvider', () => {
     expect(useBillBatchStore.getState().batches).toEqual([]);
     expect(last().stop).toHaveBeenCalledTimes(1);
   });
+
+  it('a user switch without sign-out clears the store and reopens the stream', () => {
+    const { qc, rerender, value } = setup();
+    trackNow(makeBatch('b1'));
+    fire('item.done', itemEvent('b9', 0, 'done'));
+    expect(streams).toHaveLength(1);
+    auth.user = { id: 'u2' };
+    rerender({ ...value });
+    expect(useBillBatchStore.getState().batches).toEqual([]);
+    expect(sessionStorage.getItem('billBatches')).toBeNull();
+    expect(streams).toHaveLength(2);
+    expect(streams[0]?.stop).toHaveBeenCalledTimes(1);
+    // The buffered event of u1 is gone too.
+    trackNow(makeBatch('b9'));
+    expect(
+      qc.getQueryData<BillBatch>(batchKey('hh-1', 'b9'))?.items[0]?.status
+    ).toBe('queued');
+  });
 });
