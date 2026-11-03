@@ -35,13 +35,15 @@ function BatchSection({
         {query.isError ? (
           <>
             <span className="text-destructive">{t('batches.loadFailed')}</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void query.refetch()}
-            >
-              {tc('actions.retry')}
-            </Button>
+            <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void query.refetch()}
+              >
+                {tc('actions.retry')}
+              </Button>
+            </DropdownMenuItem>
           </>
         ) : (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -65,15 +67,17 @@ function BatchSection({
           {t('batches.summary', { total: batch.total, done, failed, pending })}
         </span>
         {batch.completed && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            aria-label={t('batches.dismiss')}
-            onClick={() => onDismiss(tracked.batchId)}
-          >
-            <X className="h-3 w-3" />
-          </Button>
+          <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              aria-label={t('batches.dismiss')}
+              onClick={() => onDismiss(tracked.batchId)}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </DropdownMenuItem>
         )}
       </div>
       <div className="mx-2 mt-1 h-1 overflow-hidden rounded bg-muted">
@@ -116,7 +120,9 @@ export function BatchBell(): ReactElement | null {
 
   if (count === 0 || !hid) return null;
 
-  const running = entries.some((e) => e.query.data?.completed !== true);
+  const running = entries.some(
+    (e) => !e.query.isError && e.query.data?.completed !== true
+  );
   const unseen = entries.filter((e) => e.tracked.unseen).length;
   const completedIds = entries
     .filter((e) => e.query.data?.completed === true)

@@ -221,7 +221,7 @@ describe('BatchBell', () => {
     seed(makeBatch('run', [item(0, 'queued'), item(1, 'queued')]));
     renderBell();
     await open();
-    const dismiss = await screen.findAllByRole('button', { name: 'Dismiss' });
+    const dismiss = await screen.findAllByRole('menuitem', { name: 'Dismiss' });
     expect(dismiss).toHaveLength(2);
     await userEvent.click(dismiss.at(0) ?? document.body);
     expect(
@@ -271,9 +271,52 @@ describe('BatchBell', () => {
     renderBell();
     await open();
     expect(await screen.findByText("Couldn't load")).toBeInTheDocument();
-    const retry = screen.getByRole('button', { name: 'Try again' });
+    const retry = screen.getByRole('menuitem', { name: 'Try again' });
     await userEvent.click(retry);
     expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2);
+    spy.mockRestore();
+  });
+
+  it('Dismiss is reachable by keyboard and Enter dismisses', async () => {
+    seed(
+      makeBatch(
+        'k',
+        [item(0, 'done', { bill_id: 'b' }), item(1, 'done', { bill_id: 'c' })],
+        true
+      )
+    );
+    renderBell();
+    await open();
+    await screen.findByRole('menuitem', { name: 'Dismiss' });
+    for (let i = 0; i < 6; i++) {
+      if (document.activeElement?.getAttribute('aria-label') === 'Dismiss')
+        break;
+      await userEvent.keyboard('{ArrowDown}');
+    }
+    expect(document.activeElement).toHaveAttribute('aria-label', 'Dismiss');
+    await userEvent.keyboard('{Enter}');
+    expect(useBillBatchStore.getState().batches).toHaveLength(0);
+  });
+
+  it('an errored batch alone does not show the trigger spinner', async () => {
+    useBillBatchStore
+      .getState()
+      .track(
+        makeBatch('e', [item(0, 'queued'), item(1, 'queued')]),
+        TEST_HID,
+        {}
+      );
+    const { billsApi } = await import('@/pages/bills/api');
+    const { vi } = await import('vitest');
+    const spy = vi.spyOn(billsApi, 'batch').mockRejectedValue(new Error('x'));
+    renderBell();
+    const trigger = screen.getByRole('button', { name: 'Upload progress' });
+    await vi.waitFor(() =>
+      expect(trigger.querySelector('.animate-spin')).toBeNull()
+    );
+    await vi.waitFor(() => expect(spy).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(trigger.querySelector('.animate-spin')).toBeNull();
     spy.mockRestore();
   });
 });
