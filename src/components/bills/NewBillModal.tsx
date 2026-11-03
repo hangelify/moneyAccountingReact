@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { BillPhotoDropzone } from './BillPhotoDropzone';
+import { BillPhotoDropzone, type SelectedPhoto } from './BillPhotoDropzone';
+import { preparePhotos, useBatchUpload } from './useBatchUpload';
 import { billsApi } from '@/pages/bills/api';
 import { validateBillImage } from '@/lib/imageValidation';
+import { BATCH_MAX_FILES } from '@/const/bills';
 import { useBillDraftStore } from '@/stores/billDraftStore';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
@@ -29,10 +31,12 @@ import { HouseholdSelect } from './HouseholdSelect';
 // keeps counting down, and "not available" lasts until a page reload.
 let retryUntil: number | null = null;
 let scanDisabled = false;
+let batchDisabled = false;
 
 export function __resetNewBillModalState(): void {
   retryUntil = null;
   scanDisabled = false;
+  batchDisabled = false;
 }
 
 function secondsUntil(deadline: number | null): number {
@@ -71,8 +75,8 @@ export function NewBillModal({
   const setDraft = useBillDraftStore((s) => s.setDraft);
   const userId = useAuth().user?.id ?? null;
 
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
+  const [preparing, setPreparing] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -80,10 +84,21 @@ export function NewBillModal({
     secondsUntil(retryUntil)
   );
   const [unavailable, setUnavailable] = useState(scanDisabled);
+  const [singleOnly, setSingleOnly] = useState(batchDisabled);
   const abortRef = useRef<AbortController | null>(null);
+  // Preview URLs this modal must revoke. A sent batch hands its URLs to the
+  // batch store, so they leave this set without being revoked.
+  const ownedUrls = useRef(new Set<string>());
 
   // A scan must not outlive the modal or the session that started it.
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => {
+    const owned = ownedUrls.current;
+    return () => {
+      abortRef.current?.abort();
+      owned.forEach((url) => URL.revokeObjectURL(url));
+      owned.clear();
+    };
+  }, []);
   // A different user doesn't inherit the rate limit or "not available".
   const lastUserId = useRef(userId);
   useEffect(() => {
@@ -97,6 +112,7 @@ export function NewBillModal({
     setShownUserId(userId);
     setSecondsLeft(0);
     setUnavailable(false);
+    setSingleOnly(false);
   }
 
   const counting = secondsLeft > 0;
@@ -110,19 +126,55 @@ export function NewBillModal({
     return () => clearInterval(id);
   }, [counting]);
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+  const release = (list: SelectedPhoto[], revoke: boolean): void => {
+    for (const { previewUrl } of list) {
+      if (revoke) URL.revokeObjectURL(previewUrl);
+      ownedUrls.current.delete(previewUrl);
+    }
+  };
 
-  const resetLocal = (): void => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(null);
-    setPreviewUrl(null);
+  const clearSelection = (revoke: boolean): void => {
+    release(photos, revoke);
+    setPhotos([]);
     setClientError(null);
     setServerError(null);
   };
+  const resetLocal = (): void => clearSelection(true);
+
+  const startCountdown = (sec: number): void => {
+    retryUntil = Date.now() + sec * 1000;
+    setSecondsLeft(sec);
+  };
+  const disableScan = (): void => {
+    scanDisabled = true;
+    setUnavailable(true);
+  };
+  const markPhotos = (errors: Map<number, string>): void =>
+    setPhotos((prev) =>
+      prev.map((p, i) => {
+        const error = errors.get(i);
+        return error === undefined ? p : { ...p, error };
+      })
+    );
+
+  const batch = useBatchUpload({
+    onSent: () => {
+      clearSelection(false);
+      onOpenChange(false);
+    },
+    onSessionEnded: () => onOpenChange(false),
+    onForbidden: (err) => void handleForbidden(err),
+    markPhotos,
+    showError: setServerError,
+    startCountdown,
+    disableScan,
+    onDisabled: () => {
+      batchDisabled = true;
+      setSingleOnly(true);
+      release(photos.slice(1), true);
+      setPhotos((prev) => prev.slice(0, 1));
+    },
+  });
 
   const mutation = useMutation({
     mutationFn: async ({ file: f, hid: sendHid, controller }: SendVars) => {
@@ -187,13 +239,11 @@ export function NewBillModal({
           return;
         }
         case 'retry-later':
-          retryUntil = Date.now() + failure.retryAfterSec * 1000;
-          setSecondsLeft(failure.retryAfterSec);
+          startCountdown(failure.retryAfterSec);
           toast({ variant: 'destructive', title: failure.message });
           return;
         case 'unavailable':
-          scanDisabled = true;
-          setUnavailable(true);
+          disableScan();
           toast({ variant: 'destructive', title: failure.message });
           return;
         case 'failed': {
@@ -216,26 +266,83 @@ export function NewBillModal({
     },
   });
 
-  const handleFileSelected = (picked: File): void => {
+  const busy = preparing || mutation.isPending || batch.isPending;
+
+  const toSelected = (file: File): SelectedPhoto => {
+    const previewUrl = URL.createObjectURL(file);
+    ownedUrls.current.add(previewUrl);
+    // Size is checked after resizing, on Send.
+    const check = validateBillImage(file);
+    const badType = !check.ok && check.reason === 'unsupported_format';
+    return {
+      file,
+      previewUrl,
+      error: badType ? t('bills:validation.unsupportedFormat') : null,
+    };
+  };
+
+  const handleAdd = (picked: File[]): void => {
     setServerError(null);
-    const result = validateBillImage(picked);
-    if (!result.ok) {
-      setClientError(
-        result.reason === 'file_too_large'
-          ? t('bills:validation.fileTooLarge')
-          : t('bills:validation.unsupportedFormat')
-      );
+    if (singleOnly) {
+      const [first] = picked;
+      if (!first) return;
+      release(photos, true);
+      setClientError(null);
+      setPhotos([toSelected(first)]);
       return;
     }
+    const room = Math.max(0, BATCH_MAX_FILES - photos.length);
+    setClientError(
+      picked.length > room ? t('bills:validation.tooManyFiles') : null
+    );
+    const added = picked.slice(0, room).map(toSelected);
+    setPhotos((prev) => [...prev, ...added]);
+  };
+
+  const handleRemove = (index: number): void => {
+    const photo = photos[index];
+    if (!photo) return;
+    release([photo], true);
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
     setClientError(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setFile(picked);
-    setPreviewUrl(URL.createObjectURL(picked));
+    setServerError(null);
+  };
+
+  const handleSend = async (): Promise<void> => {
+    if (!hid || photos.length === 0) return;
+    const sendHid = hid;
+    const selection = photos;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setServerError(null);
+    setPreparing(true);
+    const { prepared, errors } = await preparePhotos(selection, t).finally(() =>
+      setPreparing(false)
+    );
+    if (controller.signal.aborted) return;
+    if (errors.size > 0) {
+      markPhotos(errors);
+      return;
+    }
+
+    const [single] = prepared;
+    if (prepared.length === 1 || singleOnly) {
+      if (single) mutation.mutate({ file: single, hid: sendHid, controller });
+      return;
+    }
+    batch.send({
+      files: prepared,
+      hid: sendHid,
+      controller,
+      thumbnails: Object.fromEntries(
+        selection.map((p, i) => [i, p.previewUrl])
+      ),
+    });
   };
 
   const attemptClose = (): void => {
-    if (mutation.isPending) return;
-    if (file) {
+    if (busy) return;
+    if (photos.length > 0) {
       setConfirmDiscard(true);
     } else {
       onOpenChange(false);
@@ -257,9 +364,10 @@ export function NewBillModal({
   };
 
   const canSend =
-    file !== null &&
+    photos.length > 0 &&
+    photos.every((p) => p.error === null) &&
     hid !== null &&
-    !mutation.isPending &&
+    !busy &&
     secondsLeft <= 0 &&
     !unavailable;
 
@@ -269,12 +377,12 @@ export function NewBillModal({
         <DialogContent
           className="relative"
           onInteractOutside={(e) => {
-            if (mutation.isPending) e.preventDefault();
+            if (busy) e.preventDefault();
           }}
           onEscapeKeyDown={(e) => {
-            if (mutation.isPending) e.preventDefault();
+            if (busy) e.preventDefault();
           }}
-          hideCloseButton={mutation.isPending}
+          hideCloseButton={busy}
         >
           <DialogHeader>
             <DialogTitle>{t('bills:newBillModal.title')}</DialogTitle>
@@ -288,7 +396,7 @@ export function NewBillModal({
               households={households}
               value={activeHousehold.id}
               onChange={setActiveHouseholdId}
-              disabled={mutation.isPending}
+              disabled={busy}
             />
           )}
           {status === 'empty' && (
@@ -314,12 +422,12 @@ export function NewBillModal({
 
           <div className="space-y-2">
             <BillPhotoDropzone
-              file={file}
-              previewUrl={previewUrl}
+              photos={photos}
+              multiple={!singleOnly}
               clientError={clientError}
-              disabled={mutation.isPending}
-              onFileSelected={handleFileSelected}
-              onClear={resetLocal}
+              disabled={busy}
+              onAdd={handleAdd}
+              onRemove={handleRemove}
             />
             {serverError && (
               <p className="text-sm font-medium text-destructive">
@@ -333,37 +441,31 @@ export function NewBillModal({
               type="button"
               variant="outline"
               onClick={attemptClose}
-              disabled={mutation.isPending}
+              disabled={busy}
             >
               {t('common:actions.cancel')}
             </Button>
             <Button
               type="button"
-              onClick={() =>
-                file &&
-                hid &&
-                mutation.mutate({
-                  file,
-                  hid,
-                  controller: new AbortController(),
-                })
-              }
+              onClick={() => void handleSend()}
               disabled={!canSend}
             >
-              {mutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {secondsLeft > 0
                 ? t('bills:newBillModal.retryIn', { seconds: secondsLeft })
                 : t('common:actions.send')}
             </Button>
           </DialogFooter>
 
-          {mutation.isPending && (
+          {busy && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/70 backdrop-blur-sm">
               <Loader2 className="h-8 w-8 animate-spin" />
               <p className="px-6 text-center text-sm font-medium">
-                {t('bills:newBillModal.pending')}
+                {batch.retrying
+                  ? t('bills:batch.busyRetrying')
+                  : batch.isPending
+                    ? t('bills:batch.uploading')
+                    : t('bills:newBillModal.pending')}
               </p>
               <Button
                 type="button"
