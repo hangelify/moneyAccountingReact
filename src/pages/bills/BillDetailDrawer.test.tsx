@@ -189,11 +189,22 @@ describe('BillDetailDrawer', () => {
   it('Cancel discards edits and restores the previous values', async () => {
     mock.onGet('/households/hh-1/bills/b1').reply(200, editableBill);
     mock.onGet('/households/hh-1/sub-categories').reply(200, subCategories);
+    mock
+      .onGet('/households/hh-1/categories')
+      .reply(200, [
+        { id: 'c1', name: 'Dairy', created_at: '', updated_at: '' },
+      ]);
     renderAt('/bills/confirmed/b1');
     await userEvent.click(await screen.findByRole('button', { name: /edit/i }));
     const category = screen.getAllByLabelText('Category')[0]!;
     await waitFor(() => expect(category).toBeEnabled());
-    await userEvent.selectOptions(category, 's2');
+    await userEvent.click(category);
+    await userEvent.click(
+      await screen.findByRole('option', { name: 'cheese' })
+    );
+    expect(screen.getAllByLabelText('Category')[0]).toHaveTextContent(
+      'Dairy › cheese'
+    );
     const market = screen.getByLabelText('Market name');
     await userEvent.clear(market);
     await userEvent.type(market, 'Kaufland');
@@ -210,7 +221,9 @@ describe('BillDetailDrawer', () => {
     await userEvent.click(screen.getByRole('button', { name: /edit/i }));
     expect(screen.getByLabelText('Market name')).toHaveValue('Lidl');
     expect(screen.getByLabelText('Total amount')).toHaveValue('10');
-    expect(screen.getAllByLabelText('Category')[0]).toHaveValue('s1');
+    expect(screen.getAllByLabelText('Category')[0]).toHaveTextContent(
+      'Dairy › milk'
+    );
   });
 
   it('removes an item and saves the shorter list', async () => {

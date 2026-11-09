@@ -3,7 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
-import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
+import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
   Tooltip,
@@ -103,14 +103,15 @@ export function BillItemRow({
             )}
           <OverflowTooltip text={formatLineCategory(item) ?? ''}>
             <div className="min-w-0 flex-1">
-              <SubCategorySelect
+              <CategoryPicker
                 aria-label={cols.category}
-                value={item.sub_category}
-                category={item.category}
-                onChange={(next, category) =>
+                value={{
+                  category: item.category,
+                  sub_category: item.sub_category,
+                }}
+                onChange={(next) =>
                   onChange({
-                    sub_category: next,
-                    category,
+                    ...next,
                     category_confidence: 1,
                     category_reasoning: undefined,
                   })

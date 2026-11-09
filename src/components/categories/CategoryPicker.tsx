@@ -115,7 +115,10 @@ export function CategoryPicker({
           <ChevronsUpDown aria-hidden className="h-4 w-4 shrink-0 opacity-50" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-64">
+      <PopoverContent
+        inline
+        className="w-[var(--radix-popover-trigger-width)] min-w-64"
+      >
         <Command shouldFilter={false} defaultValue={current}>
           <CommandInput
             aria-label={t('review.items.categorySearch')}
