@@ -116,6 +116,52 @@ describe('buildConfirmPayload', () => {
   });
 });
 
+describe('line categories', () => {
+  const dairy = { id: 'c1', name: 'Dairy' };
+  const cheese = { id: 's1', name: 'Cheese', category_name: 'Dairy' };
+
+  it('sends only sub_category_id when both are set', () => {
+    const [item] = buildConfirmPayload(
+      makeEdits({
+        items: [makeItem({ sub_category: cheese, category: dairy })],
+      }),
+      TODAY
+    ).items;
+    expect(item).toMatchObject({ sub_category_id: 's1' });
+    expect(item).not.toHaveProperty('category_id');
+  });
+
+  it('sends category_id for a line with only a category', () => {
+    const [item] = buildConfirmPayload(
+      makeEdits({ items: [makeItem({ sub_category: null, category: dairy })] }),
+      TODAY
+    ).items;
+    expect(item).toMatchObject({ category_id: 'c1' });
+    expect(item).not.toHaveProperty('sub_category_id');
+  });
+
+  it('sends neither for an uncategorised line', () => {
+    const [item] = buildConfirmPayload(
+      makeEdits({ items: [makeItem({ sub_category: null, category: null })] }),
+      TODAY
+    ).items;
+    expect(item).not.toHaveProperty('category_id');
+    expect(item).not.toHaveProperty('sub_category_id');
+  });
+
+  it('creates a line with only a category', () => {
+    const p = buildCreatePayload(
+      makeEdits({ items: [makeItem({ sub_category: null, category: dairy })] }),
+      TODAY
+    );
+    expect(p.items[0]).toEqual({
+      category_id: 'c1',
+      product_count: 1,
+      amount: 1.2,
+    });
+  });
+});
+
 describe('hasMissingAmounts', () => {
   it('is false when the total and every line have amounts', () => {
     expect(hasMissingAmounts(makeEdits())).toBe(false);

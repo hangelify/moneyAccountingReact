@@ -44,10 +44,20 @@ function productWeight(item: BillEditItem): { product_weight?: number } {
   return item.weight_kg ? { product_weight: round3(item.weight_kg) } : {};
 }
 
+// The server derives the category from a sub-category, so it is sent only
+// for a line without one; sending both risks a 400 if they disagree.
+export function categoryFields(
+  item: Pick<BillEditItem, 'sub_category' | 'category'>
+): { sub_category_id?: string; category_id?: string } {
+  if (item.sub_category) return { sub_category_id: item.sub_category.id };
+  if (item.category) return { category_id: item.category.id };
+  return {};
+}
+
 export function toConfirmItem(item: BillEditItem): ConfirmBillItem {
   return {
     ...(item.id ? { id: item.id } : {}),
-    ...(item.sub_category ? { sub_category_id: item.sub_category.id } : {}),
+    ...categoryFields(item),
     ...(item.name ? { raw_name: item.name } : {}),
     product_count: productCount(item),
     amount: round2(requireAmount(item.final_price)),
@@ -56,9 +66,9 @@ export function toConfirmItem(item: BillEditItem): ConfirmBillItem {
 }
 
 function toCreateItem(item: BillEditItem): CreateBillItem {
-  if (!item.sub_category) throw new Error('uncategorised');
+  if (!item.sub_category && !item.category) throw new Error('uncategorised');
   return {
-    sub_category_id: item.sub_category.id,
+    ...categoryFields(item),
     product_count: productCount(item),
     amount: round2(requireAmount(item.final_price)),
     ...productWeight(item),

@@ -208,7 +208,8 @@ export function NewBillReview(): ReactElement | null {
   const otherHouseholdName = households.find((h) => h.id === hid)?.name;
   const createMode = mode === 'create';
   const uncategorised =
-    createMode && edits.items.some((item) => item.sub_category === null);
+    createMode &&
+    edits.items.some((item) => item.sub_category === null && !item.category);
   // Empty amounts are flagged on their own fields.
   const saveDisabled =
     saveMutation.isPending ||
