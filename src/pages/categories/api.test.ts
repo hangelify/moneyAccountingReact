@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { ApiError } from '@/auth/apiError';
-import { subCategoriesApi } from './api';
+import { categoriesApi, subCategoriesApi } from './api';
 
 describe('subCategoriesApi.list', () => {
   let mock: MockAdapter;
@@ -40,5 +40,32 @@ describe('subCategoriesApi.list', () => {
     await expect(subCategoriesApi.list('hh-1')).rejects.toBeInstanceOf(
       ApiError
     );
+  });
+});
+
+describe('categoriesApi.list', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+  afterEach(() => {
+    mock.restore();
+  });
+
+  it('GETs /households/hh-1/categories and returns the array', async () => {
+    mock.onGet('/households/hh-1/categories').reply(200, [
+      {
+        id: 'c1',
+        name: 'Dairy',
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    const result = await categoriesApi.list('hh-1');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]!.name).toBe('Dairy');
   });
 });
