@@ -38,3 +38,22 @@ afterEach(() => {
 expect.extend({
   // Add custom matchers if needed
 });
+
+// jsdom has neither; Radix Popover measures its trigger and cmdk scrolls the
+// active row into view.
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe(): void {
+      // no-op
+    }
+    unobserve(): void {
+      // no-op
+    }
+    disconnect(): void {
+      // no-op
+    }
+  };
+}
+Element.prototype.scrollIntoView = (): void => {
+  // no-op
+};
