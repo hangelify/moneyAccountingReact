@@ -4,12 +4,19 @@ let canvas: HTMLCanvasElement | null = null;
 const SELECT_ARROW_PX = 24;
 
 /**
- * True when the text shown by an input (its value) or a select (its chosen
- * option) is wider than the box it sits in. `el` may be the control itself
+ * True when the text shown by an input (its value), a select (its chosen
+ * option) or a button (its label) is wider than the box it sits in. `el` may be the control itself
  * or a wrapper around it. Inputs and selects don't report their text
  * overflow through scrollWidth everywhere, so the text is measured instead.
  */
 export function isControlOverflowing(el: Element | null): boolean {
+  // A button (a picker's trigger) truncates its text in a child element,
+  // which reports the overflow through scrollWidth.
+  const button = el?.matches('button') ? el : el?.querySelector('button');
+  if (button instanceof HTMLButtonElement) {
+    const text = button.querySelector('span') ?? button;
+    return text.scrollWidth > text.clientWidth;
+  }
   const control = el?.matches('input, select')
     ? el
     : el?.querySelector('input, select');

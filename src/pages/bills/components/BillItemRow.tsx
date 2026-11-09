@@ -11,7 +11,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
-import { formatLineCategory } from '../lineCategory';
 
 const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
 
@@ -101,24 +100,23 @@ export function BillItemRow({
                 aria-label={t('review.items.lowConfidence')}
               />
             )}
-          <OverflowTooltip text={formatLineCategory(item) ?? ''}>
-            <div className="min-w-0 flex-1">
-              <CategoryPicker
-                aria-label={cols.category}
-                value={{
-                  category: item.category,
-                  sub_category: item.sub_category,
-                }}
-                onChange={(next) =>
-                  onChange({
-                    ...next,
-                    category_confidence: 1,
-                    category_reasoning: undefined,
-                  })
-                }
-              />
-            </div>
-          </OverflowTooltip>
+          <div className="min-w-0 flex-1">
+            <CategoryPicker
+              overflowTooltip
+              aria-label={cols.category}
+              value={{
+                category: item.category,
+                sub_category: item.sub_category,
+              }}
+              onChange={(next) =>
+                onChange({
+                  ...next,
+                  category_confidence: 1,
+                  category_reasoning: undefined,
+                })
+              }
+            />
+          </div>
           {item.category_reasoning && (
             <Tooltip>
               <TooltipTrigger asChild>
