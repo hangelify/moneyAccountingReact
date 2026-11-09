@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MDL } from '@/test/spending';
+import { MDL, MDL_NO_SUB } from '@/test/spending';
 import { SpendingLegend } from './SpendingLegend';
 
 describe('SpendingLegend', () => {
@@ -109,5 +109,57 @@ describe('SpendingLegend', () => {
       <SpendingLegend data={data} zoomedKey={null} highlightedKey={null} />
     );
     expect(screen.getByText('archived')).toBeInTheDocument();
+  });
+
+  describe('no sub-category row', () => {
+    it('lists it last in its category, translated, with a striped swatch', async () => {
+      render(
+        <SpendingLegend
+          data={MDL_NO_SUB}
+          zoomedKey={null}
+          highlightedKey={null}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Food/ }));
+      const rows = within(
+        screen.getByRole('list', { name: 'Food' })
+      ).getAllByRole('listitem');
+      expect(rows).toHaveLength(3);
+      expect(rows[2]).toHaveTextContent('No sub-category');
+      expect(rows[2]).toHaveTextContent('2 lines');
+      expect(rows[2]).not.toHaveTextContent('raw no-sub name');
+      const swatch = rows[2]!.querySelector<HTMLElement>('[aria-hidden]')!;
+      expect(swatch.style.backgroundImage).toContain(
+        'repeating-linear-gradient'
+      );
+    });
+
+    it('expands a category that has nothing but it', async () => {
+      render(
+        <SpendingLegend
+          data={MDL_NO_SUB}
+          zoomedKey={null}
+          highlightedKey={null}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Tea/ }));
+      expect(screen.getByRole('list', { name: 'Tea' })).toHaveTextContent(
+        'No sub-category'
+      );
+    });
+
+    it('highlights it by its category key while zoomed', () => {
+      render(
+        <SpendingLegend
+          data={MDL_NO_SUB}
+          zoomedKey="food"
+          highlightedKey="food:none"
+        />
+      );
+      const rows = screen.getAllByRole('listitem');
+      expect(rows[2]).toHaveTextContent('No sub-category');
+      expect(rows[2]).toHaveAttribute('data-highlighted', 'true');
+      expect(rows[0]).not.toHaveAttribute('data-highlighted');
+    });
   });
 });

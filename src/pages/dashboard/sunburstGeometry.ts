@@ -1,4 +1,8 @@
-import type { SpendingCategory, SpendingCurrency } from '@/types/dashboard';
+import type {
+  SpendingCategory,
+  SpendingCurrency,
+  SpendingSubCategory,
+} from '@/types/dashboard';
 
 /** Radii as fractions of the unit `viewBox="-1 -1 2 2"`. */
 export const RADII = {
@@ -21,7 +25,8 @@ export interface SunburstArc {
   tint: number; // 0 for categories; 1..n for subs
   muted: boolean;
   uncategorized: boolean;
-  label: string; // raw name; callers translate Uncategorized
+  noSub: boolean; // the category's lines without a sub-category
+  label: string; // raw name; callers translate Uncategorized and noSub
   total: number;
   share: number;
 }
@@ -30,6 +35,10 @@ const TAU = 2 * Math.PI;
 
 export const categoryKey = (c: SpendingCategory): string =>
   c.id ?? UNCATEGORIZED_KEY;
+
+/** A sub-category's key; the no-sub-category slice is keyed by its parent. */
+export const subKey = (c: SpendingCategory, s: SpendingSubCategory): string =>
+  s.id ?? `${categoryKey(c)}:none`;
 
 function subArcs(
   c: SpendingCategory,
@@ -49,7 +58,7 @@ function subArcs(
   subs.forEach((s, i) => {
     const next = at + (s.total / denom) * (end - start);
     arcs.push({
-      key: s.id,
+      key: subKey(c, s),
       ring: 'outer',
       kind: 'sub',
       categoryKey: categoryKey(c),
@@ -59,6 +68,7 @@ function subArcs(
       tint: i + 1,
       muted: s.archived,
       uncategorized: false,
+      noSub: s.id === null,
       label: s.name,
       total: s.total,
       share: s.share_of_category,
@@ -85,6 +95,7 @@ function categoryArc(
     tint: 0,
     muted: c.archived,
     uncategorized: c.id === null,
+    noSub: false,
     label: c.name,
     total: c.total,
     share: c.share,

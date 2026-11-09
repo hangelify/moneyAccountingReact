@@ -182,6 +182,7 @@ export function SpendingBreakdownCard(): ReactElement {
                       tint: 0,
                       muted: zoomed.archived,
                       uncategorized: zoomed.id === null,
+                      noSub: false,
                     },
                     total: zoomed.total,
                     share: zoomed.share,

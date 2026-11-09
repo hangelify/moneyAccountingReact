@@ -103,8 +103,7 @@ describe('billToSpending', () => {
 
     it('counts a line without a sub-category in its category', () => {
       const data = billToSpending(
-        bill([item(2, milk, dairy), item(3, null, dairy), item(1, null, null)]),
-        'No sub-category'
+        bill([item(2, milk, dairy), item(3, null, dairy), item(1, null, null)])
       );
       expect(data.categories.map((c) => [c.id, c.name, c.total])).toEqual([
         ['c1', 'Dairy', 5],
@@ -112,8 +111,9 @@ describe('billToSpending', () => {
       ]);
       const subs = data.categories[0]?.sub_categories;
       expect(subs?.map((s) => [s.id, s.name, s.total, s.lines])).toEqual([
-        ['none:c1', 'No sub-category', 3, 1],
         ['s1', 'milk', 2, 1],
+        // Like the API: id null and last, even when it is the largest.
+        [null, 'No sub-category', 3, 1],
       ]);
     });
 
