@@ -81,6 +81,30 @@ describe('BillDetailContent', () => {
     expect(screen.getByText(/uncategorized/i)).toBeInTheDocument();
   });
 
+  it('shows a line with only a category by the category name', async () => {
+    mock.onGet('/households/hh-1/bills/b1').reply(200, {
+      id: 'b1',
+      bill_date: '2026-05-19T00:00:00Z',
+      total_amount: 30,
+      currency: 'EUR',
+      market: { id: 'm1', name: 'Lidl', city: null },
+      created_at: '2026-05-19T10:00:00Z',
+      items: [
+        {
+          sub_category: null,
+          category: { id: 'c1', name: 'Dairy' },
+          product_count: 1,
+          amount: 30,
+          product_weight: null,
+        },
+      ],
+    });
+    render(wrap(<BillDetailContent id="b1" />));
+    await waitFor(() => screen.getByText('Lidl'));
+    expect(screen.getByText('Dairy')).toBeInTheDocument();
+    expect(screen.queryByText(/uncategorized/i)).not.toBeInTheDocument();
+  });
+
   it('shows the bill as a chart on the Chart tab', async () => {
     mock.onGet('/households/hh-1/bills/b1').reply(200, {
       id: 'b1',

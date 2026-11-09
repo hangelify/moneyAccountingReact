@@ -17,7 +17,11 @@ export interface BillChartProps {
 export function BillChart({ bill }: BillChartProps): ReactElement {
   const { t } = useTranslation('bills');
   const { t: tDashboard } = useTranslation('dashboard');
-  const data = useMemo(() => billToSpending(bill), [bill]);
+  const noSubCategory = t('confirmed.detail.noSubCategory');
+  const data = useMemo(
+    () => billToSpending(bill, noSubCategory),
+    [bill, noSubCategory]
+  );
   const [zoomedKey, setZoomedKey] = useState<string | null>(null);
   const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
 

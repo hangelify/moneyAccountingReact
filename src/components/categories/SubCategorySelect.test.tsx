@@ -95,11 +95,14 @@ describe('SubCategorySelect', () => {
       '1'
     );
 
-    expect(onChange).toHaveBeenCalledWith({
-      id: '1',
-      name: 'milk',
-      category_name: 'Dairy',
-    } satisfies SubCategoryRef);
+    expect(onChange).toHaveBeenCalledWith(
+      {
+        id: '1',
+        name: 'milk',
+        category_name: 'Dairy',
+      } satisfies SubCategoryRef,
+      { id: 'c1', name: 'Dairy' }
+    );
   });
 
   it('emits null when the placeholder is selected', async () => {
@@ -133,7 +136,7 @@ describe('SubCategorySelect', () => {
       ''
     );
 
-    expect(onChange).toHaveBeenCalledWith(null);
+    expect(onChange).toHaveBeenCalledWith(null, null);
   });
 
   it('disables and shows error state with a retry button on failure', async () => {
@@ -189,5 +192,27 @@ describe('SubCategorySelect', () => {
     await waitFor(() => {
       expect(combobox).not.toBeDisabled();
     });
+  });
+
+  it('shows the line category when there is no sub-category', async () => {
+    mock.onGet('/households/hh-1/sub-categories').reply(200, []);
+
+    render(
+      <Wrapper>
+        <SubCategorySelect
+          aria-label="Category"
+          value={null}
+          category={{ id: 'c1', name: 'Dairy' }}
+          onChange={() => undefined}
+        />
+      </Wrapper>
+    );
+
+    const combobox = screen.getByRole('combobox', { name: 'Category' });
+    await waitFor(() => {
+      expect(combobox).not.toBeDisabled();
+    });
+    const selected = (combobox as HTMLSelectElement).selectedOptions[0];
+    expect(selected?.textContent).toBe('Dairy');
   });
 });

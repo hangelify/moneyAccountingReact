@@ -5,13 +5,15 @@ import { billToSpending } from './billToSpending';
 let n = 0;
 function item(
   amount: number,
-  sub: { id: string; name: string; category_name: string } | null
+  sub: { id: string; name: string; category_name: string } | null,
+  category?: { id: string; name: string } | null
 ): BillDetailItem {
   n += 1;
   return {
     id: `l${n}`,
     raw_name: `ITEM ${n}`,
     sub_category: sub,
+    ...(category !== undefined ? { category } : {}),
     product_count: 1,
     amount,
     product_weight: null,
@@ -94,5 +96,38 @@ describe('billToSpending', () => {
   it('keeps a missing currency as null', () => {
     const data = billToSpending({ ...bill([item(1, milk)]), currency: null });
     expect(data.currency).toBeNull();
+  });
+
+  describe('with the line category', () => {
+    const dairy = { id: 'c1', name: 'Dairy' };
+
+    it('counts a line without a sub-category in its category', () => {
+      const data = billToSpending(
+        bill([item(2, milk, dairy), item(3, null, dairy), item(1, null, null)]),
+        'No sub-category'
+      );
+      expect(data.categories.map((c) => [c.id, c.name, c.total])).toEqual([
+        ['c1', 'Dairy', 5],
+        [null, 'Uncategorized', 1],
+      ]);
+      const subs = data.categories[0]?.sub_categories;
+      expect(subs?.map((s) => [s.id, s.name, s.total, s.lines])).toEqual([
+        ['none:c1', 'No sub-category', 3, 1],
+        ['s1', 'milk', 2, 1],
+      ]);
+    });
+
+    it('groups by category id, not name', () => {
+      const other = { id: 'c2', name: 'Dairy' };
+      const data = billToSpending(
+        bill([item(1, null, dairy), item(1, null, other)])
+      );
+      expect(data.categories.map((c) => c.id)).toEqual(['c1', 'c2']);
+    });
+
+    it('leaves Uncategorized out when every line has a category', () => {
+      const data = billToSpending(bill([item(1, null, dairy)]));
+      expect(data.categories.map((c) => c.id)).toEqual(['c1']);
+    });
   });
 });

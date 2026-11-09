@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { HouseholdTotal } from './HouseholdTotal';
+import { formatLineCategory } from '../lineCategory';
 
 export interface BillDetailTableProps {
   bill: BillDetailResponseDto;
@@ -91,9 +92,8 @@ export function BillDetailTable({ bill }: BillDetailTableProps): ReactElement {
                       {item.raw_name}
                     </td>
                     <td className="px-2 py-2">
-                      {item.sub_category
-                        ? `${item.sub_category.category_name} › ${item.sub_category.name}`
-                        : t('confirmed.detail.uncategorized')}
+                      {formatLineCategory(item) ??
+                        t('confirmed.detail.uncategorized')}
                     </td>
                     <td className="px-2 py-2">{item.product_count}</td>
                     <td className="px-2 py-2">{item.product_weight ?? '—'}</td>

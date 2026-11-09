@@ -2,11 +2,14 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSubCategories } from '@/hooks/useSubCategories';
 import { toSubCategoryRef } from '@/types/categories';
-import type { SubCategoryRef } from '@/types/bills';
+import type { CategoryRef, SubCategoryRef } from '@/types/bills';
 
 interface SubCategorySelectProps {
   value: SubCategoryRef | null;
-  onChange: (next: SubCategoryRef | null) => void;
+  // The line's own category; shown when it has no sub-category.
+  category?: CategoryRef | null;
+  // The category is the picked sub-category's, or null when cleared.
+  onChange: (next: SubCategoryRef | null, category: CategoryRef | null) => void;
   disabled?: boolean;
   id?: string;
   'aria-label'?: string | undefined;
@@ -14,6 +17,7 @@ interface SubCategorySelectProps {
 
 export function SubCategorySelect({
   value,
+  category,
   onChange,
   disabled,
   id,
@@ -30,15 +34,22 @@ export function SubCategorySelect({
   // a transient <option> so the controlled <select> stays in sync and the
   // user sees the existing label instead of a blank.
   const showTransient = value !== null && !byId.has(value.id);
+  // A line with a category but no sub-category: nothing in the list matches,
+  // so it gets its own option, keyed apart from sub-category ids.
+  const categoryOnly = value === null && category ? category : null;
+  const categoryOnlyValue = categoryOnly ? `category:${categoryOnly.id}` : '';
 
   const handleChange = (next: string): void => {
     if (next === '') {
-      onChange(null);
+      onChange(null, null);
       return;
     }
     const sc = byId.get(next);
     if (!sc) return;
-    onChange(toSubCategoryRef(sc));
+    onChange(toSubCategoryRef(sc), {
+      id: sc.category_id,
+      name: sc.category_name,
+    });
   };
 
   return (
@@ -47,7 +58,7 @@ export function SubCategorySelect({
         id={id}
         aria-label={ariaLabel}
         className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-60"
-        value={value?.id ?? ''}
+        value={value?.id ?? categoryOnlyValue}
         disabled={disabled === true || isLoading || isError}
         onChange={(e) => handleChange(e.target.value)}
       >
@@ -58,6 +69,9 @@ export function SubCategorySelect({
               ? t('review.items.subCategoryError')
               : t('review.items.subCategoryPlaceholder')}
         </option>
+        {categoryOnly && (
+          <option value={categoryOnlyValue}>{categoryOnly.name}</option>
+        )}
         {showTransient && value && (
           <option value={value.id}>
             {value.category_name} › {value.name}

@@ -4,6 +4,7 @@ import type {
   SpendingCurrency,
   SpendingSubCategory,
 } from '@/types/dashboard';
+import { lineCategory } from './lineCategory';
 
 const cents = (n: number): number => Math.round(n * 100) / 100;
 const percent = (part: number, whole: number): number =>
@@ -11,11 +12,16 @@ const percent = (part: number, whole: number): number =>
 
 /**
  * One bill's items in the dashboard's spending shape, so the sunburst can
- * draw it. Items carry only the category's name, so the name stands in for
- * its id. Shares are of the items' sum, which can differ from total_amount.
- * Largest first; Uncategorized always last.
+ * draw it. Items are grouped by their category's id; older responses carry
+ * only its name, which then stands in for the id. A line with a category but
+ * no sub-category goes to that category's "no sub-category" slice. Shares
+ * are of the items' sum, which can differ from total_amount. Largest first;
+ * Uncategorized always last.
  */
-export function billToSpending(bill: BillDetailResponseDto): SpendingCurrency {
+export function billToSpending(
+  bill: BillDetailResponseDto,
+  noSubCategoryName = 'No sub-category'
+): SpendingCurrency {
   const categories = new Map<
     string,
     { name: string; total: number; subs: Map<string, SpendingSubCategory> }
@@ -25,20 +31,23 @@ export function billToSpending(bill: BillDetailResponseDto): SpendingCurrency {
 
   for (const item of bill.items) {
     total += item.amount;
-    const sub = item.sub_category;
-    if (!sub) {
+    const line = lineCategory(item);
+    if (!line) {
       uncategorized += item.amount;
       continue;
     }
-    let category = categories.get(sub.category_name);
+    let category = categories.get(line.key);
     if (!category) {
-      category = { name: sub.category_name, total: 0, subs: new Map() };
-      categories.set(sub.category_name, category);
+      category = { name: line.name, total: 0, subs: new Map() };
+      categories.set(line.key, category);
     }
     category.total += item.amount;
-    const row = category.subs.get(sub.id) ?? {
-      id: sub.id,
-      name: sub.name,
+    const sub = item.sub_category;
+    // Prefixed so it can't share a key with a real sub-category.
+    const subId = sub ? sub.id : `none:${line.key}`;
+    const row = category.subs.get(subId) ?? {
+      id: subId,
+      name: sub ? sub.name : noSubCategoryName,
       total: 0,
       share_of_category: 0,
       lines: 0,
@@ -46,17 +55,17 @@ export function billToSpending(bill: BillDetailResponseDto): SpendingCurrency {
     };
     row.total += item.amount;
     row.lines += 1;
-    category.subs.set(sub.id, row);
+    category.subs.set(subId, row);
   }
 
   const byTotal = (a: { total: number }, b: { total: number }): number =>
     b.total - a.total;
 
-  const list: SpendingCategory[] = [...categories.values()]
+  const list: SpendingCategory[] = [...categories.entries()]
+    .map(([id, c]) => ({ id, ...c }))
     .sort(byTotal)
     .map((c) => ({
-      // Prefixed so a category named "uncategorized" can't share its key.
-      id: `name:${c.name}`,
+      id: c.id,
       name: c.name,
       total: cents(c.total),
       share: percent(c.total, total),
@@ -68,7 +77,7 @@ export function billToSpending(bill: BillDetailResponseDto): SpendingCurrency {
       })),
     }));
 
-  if (bill.items.some((i) => !i.sub_category)) {
+  if (bill.items.some((i) => !lineCategory(i))) {
     list.push({
       id: null,
       name: 'Uncategorized',

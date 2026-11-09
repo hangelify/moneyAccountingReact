@@ -9,6 +9,7 @@ import { BillEditForm } from './BillEditForm';
 import { BillDescription } from './BillDescription';
 import { SavedBillTotalsBanner } from './BillTotalsBanner';
 import { HouseholdTotal } from './HouseholdTotal';
+import { formatLineCategory } from '../lineCategory';
 
 export interface BillDetailContentProps {
   id: string;
@@ -135,9 +136,8 @@ function BillDetailSummary({
               >
                 <div className="flex flex-col">
                   <span>
-                    {item.sub_category
-                      ? `${item.sub_category.category_name} › ${item.sub_category.name}`
-                      : t('confirmed.detail.uncategorized')}
+                    {formatLineCategory(item) ??
+                      t('confirmed.detail.uncategorized')}
                   </span>
                   {item.product_weight != null && (
                     <span className="text-xs text-muted-foreground">

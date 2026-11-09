@@ -159,6 +159,7 @@ describe('billDraftStore', () => {
       price_per_kg: null,
       final_price: 0,
       sub_category: null,
+      category: null,
       category_confidence: 1,
     });
   });
@@ -210,6 +211,31 @@ describe('billDraftStore', () => {
     expect(s.parsed).toBeNull();
     expect(s.edits.items).toEqual([]);
   });
+  it('setDraft keeps the line category through edits of other fields', () => {
+    const dairy = { id: 'c1', name: 'Dairy' };
+    const parsed = makeParsed({
+      items: [{ ...makeParsed().items[0]!, category: dairy }],
+    });
+    useBillDraftStore
+      .getState()
+      .setDraft({ file: makeFile(), parsed, hid: 'h1', mode: 'confirm' });
+    useBillDraftStore.getState().updateItem(0, { name: 'Cheese' });
+
+    expect(useBillDraftStore.getState().edits.items[0]!.category).toEqual(
+      dairy
+    );
+  });
+
+  it('setDraft defaults a missing line category to null', () => {
+    useBillDraftStore.getState().setDraft({
+      file: makeFile(),
+      parsed: makeParsed(),
+      hid: 'h1',
+      mode: 'confirm',
+    });
+    expect(useBillDraftStore.getState().edits.items[0]!.category).toBeNull();
+  });
+
   it('setDraft keeps line ids on edit items', () => {
     const parsed = makeParsed({
       items: [{ ...makeParsed().items[0]!, id: 'l1' }],

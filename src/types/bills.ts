@@ -8,6 +8,11 @@ export interface SubCategoryRef {
   category_name: string;
 }
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+}
+
 export interface ParsedBillItem {
   id?: string;
   name: string;
@@ -17,6 +22,9 @@ export interface ParsedBillItem {
   price_per_kg: number | null;
   final_price: number;
   sub_category: SubCategoryRef | null;
+  // The line's own category, set with or without a sub-category. Absent on
+  // responses from before the API sent it.
+  category?: CategoryRef | null;
   category_confidence: number;
   category_reasoning?: string;
 }
@@ -153,6 +161,7 @@ export interface BillEditItem {
   price_per_kg: number | null;
   final_price: number | null;
   sub_category: SubCategoryRef | null;
+  category: CategoryRef | null;
   category_confidence: number;
   category_reasoning?: string | undefined;
 }
@@ -205,6 +214,7 @@ export interface DraftBillItem {
   id: string;
   raw_name: string;
   sub_category: SubCategoryRef | null;
+  category?: CategoryRef | null;
   product_count: number;
   amount: number;
   product_weight?: number;
@@ -229,6 +239,7 @@ export interface BillDetailItem {
   id: string;
   raw_name: string;
   sub_category: SubCategoryRef | null;
+  category?: CategoryRef | null;
   product_count: number;
   amount: number;
   product_weight: number | null;

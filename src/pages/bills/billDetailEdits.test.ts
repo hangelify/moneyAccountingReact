@@ -67,8 +67,18 @@ describe('billToEdits', () => {
       price_per_kg: 5,
       final_price: 4.71,
       sub_category: null,
+      category: null,
       category_confidence: 1,
     });
+  });
+
+  it('keeps the line category the server sent', () => {
+    const dairy = { id: 'c1', name: 'Dairy' };
+    const bill = makeBill();
+    const items = bill.items.map((i) => ({ ...i, category: dairy }));
+    expect(
+      billToEdits({ ...bill, items }).items.map((i) => i.category)
+    ).toEqual([dairy, dairy]);
   });
 
   it('maps a line without weight to a piece', () => {
@@ -141,6 +151,7 @@ describe('isEditsValid', () => {
         price_per_kg: null,
         final_price: 1.5,
         sub_category: null,
+        category: null,
         category_confidence: 1,
       },
     ];
@@ -268,6 +279,7 @@ describe('buildDetailUpdatePayload', () => {
         price_per_kg: null,
         final_price: 1.5,
         sub_category: null,
+        category: null,
         category_confidence: 1,
       },
     ];

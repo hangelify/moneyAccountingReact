@@ -79,6 +79,25 @@ describe('BillDetailTable', () => {
     expect(apples).toHaveTextContent('4.71 EUR');
   });
 
+  it('shows a line with only a category by the category name', () => {
+    const items = [
+      { ...bill.items[0]!, category: { id: 'c1', name: 'Dairy' } },
+      {
+        ...bill.items[1]!,
+        sub_category: null,
+        category: { id: 'c1', name: 'Dairy' },
+      },
+      { ...bill.items[1]!, id: 'l3', sub_category: null, category: null },
+    ];
+    render(wrap(<BillDetailTable bill={{ ...bill, items }} />));
+    const [full, onlyCategory, none] = bodyRows();
+    expect(full).toHaveTextContent('Dairy › milk');
+    expect(onlyCategory).toHaveTextContent('Dairy');
+    expect(onlyCategory).not.toHaveTextContent('›');
+    expect(onlyCategory).not.toHaveTextContent('Uncategorized');
+    expect(none).toHaveTextContent('Uncategorized');
+  });
+
   it('shows the items total next to the bill total', () => {
     render(wrap(<BillDetailTable bill={bill} />));
     const foot = screen.getByRole('table').querySelector('tfoot')!;

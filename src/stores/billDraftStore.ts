@@ -56,6 +56,7 @@ function toEditItem(item: ParsedBillItem): BillEditItem {
     price_per_kg: item.price_per_kg,
     final_price: item.final_price,
     sub_category: item.sub_category,
+    category: item.category ?? null,
     category_confidence: item.category_confidence,
     ...(item.category_reasoning !== undefined
       ? { category_reasoning: item.category_reasoning }
@@ -140,6 +141,7 @@ export const useBillDraftStore = create<BillDraftState>((set, get) => ({
       price_per_kg: null,
       final_price: 0,
       sub_category: null,
+      category: null,
       category_confidence: 1,
     };
     const newIndex = get().edits.items.length;
