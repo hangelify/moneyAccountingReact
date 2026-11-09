@@ -676,16 +676,16 @@ describe('NewBillModal', () => {
       expect(send()).toBeEnabled();
     });
 
-    it('400 "File 2: …" marks photo 2 and keeps all photos', async () => {
+    it('400 "File 1: …" (0-based) marks the second photo and keeps all photos', async () => {
       mock
         .onPost(BATCH_URL)
-        .reply(400, { message: 'File 2: image is unreadable' });
+        .reply(400, { message: 'File 1: image is unreadable' });
       renderModal();
       await userEvent.upload(fileInput(), files(3));
       await userEvent.click(send());
 
       expect(
-        await within(tile(1)).findByText('File 2: image is unreadable')
+        await within(tile(1)).findByText('File 1: image is unreadable')
       ).toBeInTheDocument();
       expect(
         screen.getAllByRole('button', { name: 'Remove photo' })

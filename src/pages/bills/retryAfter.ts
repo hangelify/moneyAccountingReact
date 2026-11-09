@@ -10,9 +10,13 @@ export function isCancel(err: unknown): boolean {
   );
 }
 
-export function retryAfterSec(err: ApiError, message: string): number {
+export function retryAfterSec(
+  err: ApiError,
+  message: string,
+  fallbackSec: number = DEFAULT_RETRY_AFTER_SEC
+): number {
   const fromHeader = err.retryAfterSeconds();
   if (fromHeader !== null) return fromHeader;
   const match = /in (\d+) s/.exec(message);
-  return match?.[1] ? parseInt(match[1], 10) : DEFAULT_RETRY_AFTER_SEC;
+  return match?.[1] ? parseInt(match[1], 10) : fallbackSec;
 }

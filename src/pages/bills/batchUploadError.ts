@@ -21,12 +21,15 @@ export type BatchUploadFailure =
 const DISABLED_503_MESSAGE = 'Batch photo parsing is disabled';
 const BUDGET_429_PREFIX = 'Daily AI budget exceeded';
 
-/** Server "File N:" is 1-based; returns a 0-based index, or null. Kept in one place so it is easy to flip. */
+// The server sends Retry-After: 5 on a busy 503, but CORS does not expose
+// the header and the message carries no seconds.
+const BUSY_503_RETRY_AFTER_SEC = 5;
+
+/** Server "File N:" is already 0-based (append order); returns N, or null. */
 export function fileIndexFromMessage(message: string): number | null {
   const match = /^File (\d+):/.exec(message);
   if (!match?.[1]) return null;
-  const n = parseInt(match[1], 10);
-  return n >= 1 ? n - 1 : null;
+  return parseInt(match[1], 10);
 }
 
 export function toBatchUploadFailure(err: unknown): BatchUploadFailure {
@@ -71,7 +74,7 @@ export function toBatchUploadFailure(err: unknown): BatchUploadFailure {
       return {
         kind: 'busy',
         message,
-        retryAfterSec: retryAfterSec(err, message),
+        retryAfterSec: retryAfterSec(err, message, BUSY_503_RETRY_AFTER_SEC),
       };
     default:
       return {

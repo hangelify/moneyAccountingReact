@@ -14,30 +14,30 @@ const body = (
 });
 
 describe('fileIndexFromMessage', () => {
-  it('turns a 1-based "File N:" into a 0-based index', () => {
-    expect(fileIndexFromMessage('File 3: bad')).toBe(2);
+  it('keeps the server\'s 0-based "File N:" index', () => {
+    expect(fileIndexFromMessage('File 3: bad')).toBe(3);
+    expect(fileIndexFromMessage('File 0: x')).toBe(0);
   });
   it('returns null without a match', () => {
     expect(fileIndexFromMessage('Too large')).toBeNull();
-    expect(fileIndexFromMessage('File 0: x')).toBeNull();
   });
 });
 
 describe('toBatchUploadFailure', () => {
-  it('400 with File 2 is bad-file index 1', () => {
+  it('400 with File 1 is bad-file index 1 (the second file)', () => {
     expect(
       toBatchUploadFailure(
-        new ApiError(400, body('File 2: The image could not be decoded'))
+        new ApiError(400, body('File 1: The image could not be decoded'))
       )
     ).toEqual({
       kind: 'bad-file',
       fileIndex: 1,
-      message: 'File 2: The image could not be decoded',
+      message: 'File 1: The image could not be decoded',
     });
   });
-  it('415 with File 1 is index 0', () => {
+  it('415 with File 0 is index 0', () => {
     expect(
-      toBatchUploadFailure(new ApiError(415, body('File 1: Unsupported type')))
+      toBatchUploadFailure(new ApiError(415, body('File 0: Unsupported type')))
     ).toMatchObject({ kind: 'bad-file', fileIndex: 0 });
   });
   it('413 without File has null index', () => {
@@ -85,9 +85,19 @@ describe('toBatchUploadFailure', () => {
       )
     ).toEqual({ kind: 'busy', message: 'Busy', retryAfterSec: 5 });
   });
-  it('503 without header defaults to 30', () => {
-    expect(toBatchUploadFailure(new ApiError(503, body('Busy')))).toMatchObject(
-      { kind: 'busy', retryAfterSec: 30 }
+  it('503 busy without a readable header defaults to 5', () => {
+    expect(
+      toBatchUploadFailure(
+        new ApiError(
+          503,
+          body('Too many batch uploads in progress, try again shortly')
+        )
+      )
+    ).toMatchObject({ kind: 'busy', retryAfterSec: 5 });
+  });
+  it('429 without header or seconds still defaults to 30', () => {
+    expect(toBatchUploadFailure(new ApiError(429, body('Slow')))).toMatchObject(
+      { kind: 'retry-later', retryAfterSec: 30 }
     );
   });
   it('401 auth, 403 forbidden', () => {
