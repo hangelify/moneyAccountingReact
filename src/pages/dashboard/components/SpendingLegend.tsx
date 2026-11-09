@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SpendingCategory, SpendingCurrency } from '@/types/dashboard';
 import { formatAmount } from '../format';
-import { PALETTE_SIZE, categoryKey } from '../sunburstGeometry';
+import { PALETTE_SIZE, categoryKey, subKey } from '../sunburstGeometry';
 import { swatchStyle, type SegmentLook } from './segmentStyle';
 
 export interface SpendingLegendProps {
@@ -23,13 +23,23 @@ interface Row {
   lines?: number;
 }
 
-const subRows = (c: SpendingCategory, colorIndex: number): Row[] =>
+const subRows = (
+  c: SpendingCategory,
+  colorIndex: number,
+  noSubName: string
+): Row[] =>
   c.sub_categories.map((s, i) => ({
-    key: s.id,
-    name: s.name,
+    key: subKey(c, s),
+    name: s.id === null ? noSubName : s.name,
     total: s.total,
     share: s.share_of_category,
-    look: { colorIndex, tint: i + 1, muted: s.archived, uncategorized: false },
+    look: {
+      colorIndex,
+      tint: i + 1,
+      muted: s.archived,
+      uncategorized: false,
+      noSub: s.id === null,
+    },
     lines: s.lines,
   }));
 
@@ -103,8 +113,8 @@ export function SpendingLegend({
   if (zoomed) {
     return (
       <ul className="w-full space-y-1 text-sm">
-        {subRows(zoomed, zoomedIndex % PALETTE_SIZE).map((row) =>
-          plainRow(row)
+        {subRows(zoomed, zoomedIndex % PALETTE_SIZE, t('noSubCategory')).map(
+          (row) => plainRow(row)
         )}
       </ul>
     );
@@ -124,6 +134,7 @@ export function SpendingLegend({
             tint: 0,
             muted: c.archived,
             uncategorized: c.id === null,
+            noSub: false,
           },
         };
         if (c.sub_categories.length === 0) {
@@ -164,7 +175,9 @@ export function SpendingLegend({
                 aria-label={row.name}
                 className="mb-1 ml-6 space-y-0.5 border-l pl-2 text-xs sm:text-sm"
               >
-                {subRows(c, colorIndex).map((sub) => plainRow(sub))}
+                {subRows(c, colorIndex, t('noSubCategory')).map((sub) =>
+                  plainRow(sub)
+                )}
               </ul>
             )}
           </li>

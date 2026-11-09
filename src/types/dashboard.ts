@@ -34,7 +34,7 @@ export interface SpendingCategory {
 }
 
 export interface SpendingSubCategory {
-  id: string;
+  id: string | null; // null = the category's lines without a sub-category; last
   name: string;
   total: number;
   share_of_category: number; // % of the parent category, 2 decimals

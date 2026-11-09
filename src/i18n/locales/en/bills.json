@@ -162,7 +162,6 @@
       "amount": "{{value}} {{currency}}",
       "weight": "{{value}} kg",
       "uncategorized": "Uncategorized",
-      "noSubCategory": "No sub-category",
       "confirm": "Confirm",
       "confirmed": "Bill confirmed",
       "confirmFailed": "Couldn't confirm the bill.",

@@ -14,17 +14,18 @@ const percent = (part: number, whole: number): number =>
  * One bill's items in the dashboard's spending shape, so the sunburst can
  * draw it. Items are grouped by their category's id; older responses carry
  * only its name, which then stands in for the id. A line with a category but
- * no sub-category goes to that category's "no sub-category" slice. Shares
- * are of the items' sum, which can differ from total_amount. Largest first;
- * Uncategorized always last.
+ * no sub-category goes to that category's "no sub-category" slice (id null,
+ * like the API's). Shares are of the items' sum, which can differ from
+ * total_amount. Largest first; Uncategorized and no sub-category always last.
  */
-export function billToSpending(
-  bill: BillDetailResponseDto,
-  noSubCategoryName = 'No sub-category'
-): SpendingCurrency {
+export function billToSpending(bill: BillDetailResponseDto): SpendingCurrency {
   const categories = new Map<
     string,
-    { name: string; total: number; subs: Map<string, SpendingSubCategory> }
+    {
+      name: string;
+      total: number;
+      subs: Map<string | null, SpendingSubCategory>;
+    }
   >();
   let uncategorized = 0;
   let total = 0;
@@ -43,11 +44,11 @@ export function billToSpending(
     }
     category.total += item.amount;
     const sub = item.sub_category;
-    // Prefixed so it can't share a key with a real sub-category.
-    const subId = sub ? sub.id : `none:${line.key}`;
+    const subId = sub ? sub.id : null;
     const row = category.subs.get(subId) ?? {
       id: subId,
-      name: sub ? sub.name : noSubCategoryName,
+      // The chart translates it; the API sends the same placeholder.
+      name: sub ? sub.name : 'No sub-category',
       total: 0,
       share_of_category: 0,
       lines: 0,
@@ -60,6 +61,8 @@ export function billToSpending(
 
   const byTotal = (a: { total: number }, b: { total: number }): number =>
     b.total - a.total;
+  const noSubLast = (a: SpendingSubCategory, b: SpendingSubCategory): number =>
+    a.id === null ? 1 : b.id === null ? -1 : byTotal(a, b);
 
   const list: SpendingCategory[] = [...categories.entries()]
     .map(([id, c]) => ({ id, ...c }))
@@ -70,7 +73,7 @@ export function billToSpending(
       total: cents(c.total),
       share: percent(c.total, total),
       archived: false,
-      sub_categories: [...c.subs.values()].sort(byTotal).map((s) => ({
+      sub_categories: [...c.subs.values()].sort(noSubLast).map((s) => ({
         ...s,
         total: cents(s.total),
         share_of_category: percent(s.total, c.total),

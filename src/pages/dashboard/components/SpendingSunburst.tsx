@@ -1,11 +1,12 @@
 import type { KeyboardEvent, PointerEvent, ReactElement } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 import type { SpendingCurrency } from '@/types/dashboard';
 import { formatAmount } from '../format';
 import {
+  PALETTE_SIZE,
   RADII,
   arcCentroid,
   arcPath,
@@ -13,7 +14,7 @@ import {
   categoryKey,
   type SunburstArc,
 } from '../sunburstGeometry';
-import { segmentStyle } from './segmentStyle';
+import { hatchId, segmentStyle } from './segmentStyle';
 
 export interface SpendingSunburstProps {
   data: SpendingCurrency;
@@ -45,6 +46,8 @@ export function SpendingSunburst({
   const canHover = useMediaQuery('(hover: hover)');
   const wrapRef = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<Tip | null>(null);
+  // Pattern ids must be unique per chart and safe inside url(#…).
+  const hatch = `sunburst${useId().replace(/[^\w-]/g, '')}`;
 
   const zoomed = zoomedKey
     ? data.categories.find((c) => categoryKey(c) === zoomedKey)
@@ -79,7 +82,11 @@ export function SpendingSunburst({
   const money = (n: number): string =>
     formatAmount(n, data.currency, i18n.language);
   const nameOf = (arc: SunburstArc): string =>
-    arc.uncategorized ? t('uncategorized') : arc.label;
+    arc.uncategorized
+      ? t('uncategorized')
+      : arc.noSub
+        ? t('noSubCategory')
+        : arc.label;
 
   const activate = (arc: SunburstArc): void => {
     if (arc.kind === 'sub') onHighlight(arc.key);
@@ -129,6 +136,30 @@ export function SpendingSunburst({
       onPointerLeave={() => setTip(null)}
     >
       <svg viewBox="-1 -1 2 2" className="h-full w-full">
+        <defs>
+          {/* Stripes for each palette colour, for no-sub-category slices. */}
+          {Array.from({ length: PALETTE_SIZE }, (_, i) => (
+            <pattern
+              key={i}
+              id={hatchId(hatch, i)}
+              patternUnits="userSpaceOnUse"
+              width={0.05}
+              height={0.05}
+              patternTransform="rotate(45)"
+            >
+              <rect
+                width={0.05}
+                height={0.05}
+                style={{ fill: `hsl(var(--chart-${i + 1}))`, fillOpacity: 0.3 }}
+              />
+              <rect
+                width={0.025}
+                height={0.05}
+                style={{ fill: `hsl(var(--chart-${i + 1}))` }}
+              />
+            </pattern>
+          ))}
+        </defs>
         {/* Mouse shortcut back out; the breadcrumb is the keyboard path. */}
         <circle
           r={RADII.centre}
@@ -163,7 +194,7 @@ export function SpendingSunburst({
                 amount: money(arc.total),
                 share: arc.share.toFixed(2),
               })}
-              style={segmentStyle(arc)}
+              style={segmentStyle(arc, hatch)}
               stroke="hsl(var(--card))"
               strokeWidth={active ? 0.02 : 0.006}
               className="cursor-pointer outline-none transition-[stroke-width] focus-visible:opacity-80"

@@ -10,7 +10,7 @@ import {
   TEST_HOUSEHOLDS,
   makeHouseholdValue,
 } from '@/test/household';
-import { EUR, MDL, breakdown, inHousehold } from '@/test/spending';
+import { EUR, MDL, MDL_NO_SUB, breakdown, inHousehold } from '@/test/spending';
 import { SpendingBreakdownCard } from './SpendingBreakdownCard';
 
 const URL = '/households/hh-1/bills/dashboard/spending-breakdown';
@@ -340,6 +340,26 @@ describe('SpendingBreakdownCard', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Previous period' }));
       await waitFor(() => expect(search()).toContain('anchor=2026-09-30'));
       expect(screen.queryByRole('list', { name: 'Food' })).toBeNull();
+    });
+
+    it('zooms into a category that has only the no-sub-category slice', async () => {
+      mock.onGet(URL).reply(200, breakdown([MDL_NO_SUB]));
+      renderCard(MONTH);
+      fireEvent.click(await screen.findByRole('button', { name: /^Tea,/ }));
+      await waitFor(() => expect(search()).toContain('category=tea'));
+      expect(currentCrumb()).toBe('Tea');
+      expect(crumbs()).toHaveTextContent(/MDL\s?50\.00/);
+      expect(legendRows()).toEqual([
+        expect.stringContaining('No sub-category'),
+      ]);
+
+      // The slice only highlights; there is nothing deeper to zoom into.
+      fireEvent.click(
+        screen.getByRole('button', { name: /^No sub-category,/ })
+      );
+      expect(search()).toContain('category=tea');
+      expect(currentCrumb()).toBe('Tea');
+      expect(legendItems()[0]).toHaveAttribute('data-highlighted', 'true');
     });
 
     it('drops a category that is not in the data', async () => {

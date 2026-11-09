@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { mockMatchMedia } from '@/test/matchMedia';
-import { MDL } from '@/test/spending';
+import { MDL, MDL_NO_SUB } from '@/test/spending';
 import { SpendingSunburst } from './SpendingSunburst';
 
 function renderChart(
@@ -156,5 +156,57 @@ describe('SpendingSunburst', () => {
     });
     await userEvent.hover(screen.getByRole('button', { name: /^Food,/ }));
     expect(screen.getByRole('tooltip')).toHaveTextContent('archived');
+  });
+
+  describe('no sub-category slice', () => {
+    const noSubArcs = (): HTMLElement[] =>
+      screen.getAllByRole('button', { name: /^No sub-category,/ });
+
+    it('labels it translated, once per category', () => {
+      renderChart({ data: MDL_NO_SUB });
+      expect(noSubArcs()).toHaveLength(2);
+      expect(noSubArcs()[0]).toHaveAccessibleName(
+        /^No sub-category, MDL\s?50\.00, 5\.21%$/
+      );
+      expect(
+        screen.queryByRole('button', { name: /raw no-sub name/ })
+      ).toBeNull();
+    });
+
+    it('fills it with the hatch pattern of its category colour', () => {
+      const { container } = render(
+        <SpendingSunburst
+          data={MDL_NO_SUB}
+          centreLabel="October 2026"
+          zoomedKey={null}
+          onZoom={vi.fn()}
+          highlightedKey={null}
+          onHighlight={vi.fn()}
+        />
+      );
+      const tea = screen.getAllByRole('button', {
+        name: /^No sub-category,/,
+      })[1]!;
+      const ref = /^url\(#(.+)\)$/.exec(tea.style.fill)?.[1];
+      expect(ref).toBeDefined();
+      const pattern = container.querySelector(`pattern[id="${ref}"]`);
+      expect(pattern).not.toBeNull();
+      // Tea is the second category: palette colour 2.
+      expect(pattern!.innerHTML).toContain('--chart-2');
+    });
+
+    it('clicking it highlights it by its category key and does not zoom', async () => {
+      const { onZoom, onHighlight } = renderChart({ data: MDL_NO_SUB });
+      await userEvent.click(noSubArcs()[1]!);
+      expect(onHighlight).toHaveBeenCalledWith('tea:none');
+      expect(onZoom).not.toHaveBeenCalled();
+    });
+
+    it('shows the translated name in the tooltip', async () => {
+      mm = mockMatchMedia(true);
+      renderChart({ data: MDL_NO_SUB });
+      await userEvent.hover(noSubArcs()[0]!);
+      expect(screen.getByRole('tooltip')).toHaveTextContent('No sub-category');
+    });
   });
 });

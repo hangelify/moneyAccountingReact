@@ -3,6 +3,7 @@ import type {
   SpendingCategory,
   SpendingCurrency,
   SpendingHouseholdCurrency,
+  SpendingSubCategory,
   UnconvertedBucket,
 } from '@/types/dashboard';
 
@@ -75,3 +76,48 @@ export const breakdown = (
   by_currency,
   ...(in_household_currency && { in_household_currency }),
 });
+
+/**
+ * The no-sub-category slice as the API sends it: id null. The client
+ * translates its name, so the raw one here differs from the translation.
+ */
+export const noSub = (
+  total: number,
+  share_of_category: number,
+  lines = 1
+): SpendingSubCategory => ({
+  id: null,
+  name: 'raw no-sub name',
+  total,
+  share_of_category,
+  lines,
+  archived: false,
+});
+
+// Food with lines that have only the category, and Tea with nothing but those.
+export const MDL_NO_SUB: SpendingCurrency = {
+  currency: 'MDL',
+  total: 1350.4,
+  lines: 61,
+  categories: [
+    {
+      ...FOOD,
+      total: 960.4,
+      share: 71.12,
+      sub_categories: [
+        { ...FOOD.sub_categories[0]!, share_of_category: 52.1 },
+        { ...FOOD.sub_categories[1]!, share_of_category: 42.69 },
+        noSub(50, 5.21, 2),
+      ],
+    },
+    {
+      id: 'tea',
+      name: 'Tea',
+      total: 50,
+      share: 3.7,
+      archived: false,
+      sub_categories: [noSub(50, 100)],
+    },
+    { ...UNCATEGORIZED, share: 25.18 },
+  ],
+};

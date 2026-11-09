@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { SpendingCategory, SpendingCurrency } from '@/types/dashboard';
-import { arcPath, buildSunburst, type SunburstArc } from './sunburstGeometry';
+import {
+  arcPath,
+  buildSunburst,
+  subKey,
+  type SunburstArc,
+} from './sunburstGeometry';
 
 const TAU = 2 * Math.PI;
 
@@ -163,6 +168,72 @@ describe('buildSunburst', () => {
     for (const a of arcs) {
       expect(Number.isFinite(a.start) && Number.isFinite(a.end)).toBe(true);
     }
+  });
+
+  describe('no sub-category slice', () => {
+    const noSub = (total: number) => ({
+      id: null,
+      name: 'No sub-category',
+      total,
+      share_of_category: 0,
+      lines: 1,
+      archived: false,
+    });
+    const tea: SpendingCategory = {
+      id: 'tea',
+      name: 'Tea',
+      total: 50,
+      share: 4,
+      archived: false,
+      sub_categories: [noSub(50)],
+    };
+    const withNoSub = currency([
+      {
+        ...food,
+        total: 960.4,
+        sub_categories: [...food.sub_categories, noSub(50)],
+      },
+      tea,
+    ]);
+
+    it('keys it by its category, so two categories never share a key', () => {
+      const subs = outer(buildSunburst(withNoSub, null));
+      expect(subs.map((a) => a.key)).toEqual([
+        'bread',
+        'dairy',
+        'food:none',
+        'tea:none',
+      ]);
+    });
+
+    it('marks it and keeps the category colour', () => {
+      const arc = outer(buildSunburst(withNoSub, null)).find(
+        (a) => a.key === 'tea:none'
+      )!;
+      expect(arc).toMatchObject({
+        noSub: true,
+        colorIndex: 1,
+        categoryKey: 'tea',
+        uncategorized: false,
+      });
+      expect(
+        outer(buildSunburst(withNoSub, null)).find((a) => a.key === 'bread')!
+          .noSub
+      ).toBe(false);
+    });
+
+    it('fills the outer ring when zoomed into a category that has only it', () => {
+      const arcs = buildSunburst(withNoSub, 'tea');
+      expect(outer(arcs).map((a) => a.key)).toEqual(['tea:none']);
+      expect(outer(arcs)[0]!.end).toBeCloseTo(TAU, 6);
+    });
+  });
+
+  it('subKey falls back to the category key', () => {
+    expect(subKey(food, food.sub_categories[0]!)).toBe('bread');
+    expect(subKey(food, { ...food.sub_categories[0]!, id: null })).toBe(
+      'food:none'
+    );
   });
 
   it('keeps subs inside parent when they sum over the category total', () => {
