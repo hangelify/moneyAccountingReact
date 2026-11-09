@@ -8,7 +8,9 @@ import type {
 } from '@/types/bills';
 import {
   buildConfirmPayload,
+  hasMissingAmounts,
   receiptFieldErrors,
+  requireAmount,
   toConfirmItem,
   todayIso,
 } from './buildConfirmPayload';
@@ -53,9 +55,10 @@ export function billToEdits(bill: BillDetailResponseDto): BillEdits {
 export function isEditsValid(edits: BillEdits): boolean {
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(edits.bill_date) &&
-    edits.total_amount > 0 &&
+    !hasMissingAmounts(edits) &&
+    (edits.total_amount ?? 0) > 0 &&
     edits.items.length > 0 &&
-    edits.items.every((item) => item.final_price > 0) &&
+    edits.items.every((item) => (item.final_price ?? 0) > 0) &&
     // The server needs a name or a category to create a line.
     edits.items.every(
       (item) => item.id || item.name.trim() || item.sub_category
@@ -97,7 +100,8 @@ export function buildDetailConfirmPayload(
  * Builds the PUT body with only the fields that differ from the loaded bill,
  * compared as sent so 2.490 vs 2.49 is no change. Lines go as the full list
  * when any of them changed, was added or was removed. A cleared market or
- * receipt field is left out: the endpoint cannot clear them.
+ * receipt field is left out: the endpoint cannot clear them. Throws on an
+ * empty amount, so callers check isEditsValid first.
  */
 export function buildDetailUpdatePayload(
   bill: BillDetailResponseDto,
@@ -110,8 +114,8 @@ export function buildDetailUpdatePayload(
     Object.assign(body, marketFields(bill, market));
   }
   if (edits.bill_date !== initial.bill_date) body.bill_date = edits.bill_date;
-  const total = round2(edits.total_amount);
-  if (total !== round2(initial.total_amount)) body.total_amount = total;
+  const total = round2(requireAmount(edits.total_amount));
+  if (total !== round2(bill.total_amount)) body.total_amount = total;
   if (edits.currency && edits.currency !== initial.currency) {
     body.currency = edits.currency as Currency;
   }

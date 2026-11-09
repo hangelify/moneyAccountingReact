@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
@@ -56,12 +57,11 @@ export function BillItemCard({
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label htmlFor={`item-${index}-qty`}>{cols.quantity}</Label>
-          <Input
+          <DecimalInput
             id={`item-${index}-qty`}
-            type="number"
-            step="0.001"
             value={item.quantity}
-            onChange={(e) => onChange({ quantity: Number(e.target.value) })}
+            onValueChange={(quantity) => onChange({ quantity })}
+            missingMessage={t('review.missing.quantity')}
           />
         </div>
         <div className="space-y-1">
@@ -84,45 +84,30 @@ export function BillItemCard({
       </div>
       <div className="space-y-1">
         <Label htmlFor={`item-${index}-price`}>{cols.finalPrice}</Label>
-        <Input
+        <DecimalInput
           id={`item-${index}-price`}
           data-testid={`item-final-price-${index}`}
-          type="number"
-          step="0.01"
           value={item.final_price}
-          onChange={(e) => onChange({ final_price: Number(e.target.value) })}
+          onValueChange={(final_price) => onChange({ final_price })}
+          missingMessage={t('review.missing.amount')}
         />
       </div>
       {item.unit === 'kg' && (
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label htmlFor={`item-${index}-weight`}>{cols.weightKg}</Label>
-            <Input
+            <DecimalInput
               id={`item-${index}-weight`}
-              type="number"
-              step="0.001"
-              value={item.weight_kg ?? ''}
-              onChange={(e) =>
-                onChange({
-                  weight_kg:
-                    e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
+              value={item.weight_kg}
+              onValueChange={(weight_kg) => onChange({ weight_kg })}
             />
           </div>
           <div className="space-y-1">
             <Label htmlFor={`item-${index}-ppk`}>{cols.pricePerKg}</Label>
-            <Input
+            <DecimalInput
               id={`item-${index}-ppk`}
-              type="number"
-              step="0.01"
-              value={item.price_per_kg ?? ''}
-              onChange={(e) =>
-                onChange({
-                  price_per_kg:
-                    e.target.value === '' ? null : Number(e.target.value),
-                })
-              }
+              value={item.price_per_kg}
+              onValueChange={(price_per_kg) => onChange({ price_per_kg })}
             />
           </div>
         </div>

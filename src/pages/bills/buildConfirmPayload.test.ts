@@ -3,6 +3,7 @@ import type { BillEditItem, BillEdits } from '@/types/bills';
 import {
   buildConfirmPayload,
   buildCreatePayload,
+  hasMissingAmounts,
   receiptFieldErrors,
 } from './buildConfirmPayload';
 
@@ -111,6 +112,34 @@ describe('buildConfirmPayload', () => {
       buildConfirmPayload(makeEdits({ total_amount: 10.194 }), TODAY)
         .total_amount
     ).toBe(10.19);
+  });
+});
+
+describe('hasMissingAmounts', () => {
+  it('is false when the total and every line have amounts', () => {
+    expect(hasMissingAmounts(makeEdits())).toBe(false);
+  });
+
+  it.each<[string, Partial<BillEdits>]>([
+    ['an empty total', { total_amount: null }],
+    ['an empty price', { items: [makeItem({ final_price: null })] }],
+    ['an empty quantity', { items: [makeItem({ quantity: null })] }],
+  ])('is true for %s', (_, patch) => {
+    expect(hasMissingAmounts(makeEdits(patch))).toBe(true);
+  });
+});
+
+describe.each([
+  ['buildConfirmPayload', buildConfirmPayload],
+  ['buildCreatePayload', buildCreatePayload],
+])('%s with an empty field', (_, build) => {
+  // An empty field must never reach the server as 0.
+  it.each<[string, Partial<BillEdits>]>([
+    ['total', { total_amount: null }],
+    ['price', { items: [makeItem({ final_price: null })] }],
+    ['quantity', { items: [makeItem({ quantity: null })] }],
+  ])('throws for an empty %s', (_, patch) => {
+    expect(() => build(makeEdits(patch), TODAY)).toThrow('missing amount');
   });
 });
 

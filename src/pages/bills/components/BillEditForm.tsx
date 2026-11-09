@@ -11,7 +11,7 @@ const NEW_ITEM: BillEditItem = {
   unit: 'piece',
   weight_kg: null,
   price_per_kg: null,
-  final_price: 0,
+  final_price: null,
   sub_category: null,
   category_confidence: 1,
 };

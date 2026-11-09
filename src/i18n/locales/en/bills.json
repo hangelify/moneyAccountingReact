@@ -41,6 +41,10 @@
       "currency": "Currency",
       "totalAmount": "Total amount"
     },
+    "missing": {
+      "amount": "Enter an amount",
+      "quantity": "Enter a quantity"
+    },
     "items": {
       "heading": "Items",
       "columns": {

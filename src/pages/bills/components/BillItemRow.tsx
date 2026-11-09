@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
 import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
@@ -43,11 +44,11 @@ export function BillItemRow({
         </OverflowTooltip>
       </td>
       <td className="px-2 py-2">
-        <Input
-          type="number"
-          step="0.001"
+        <DecimalInput
+          aria-label={cols.quantity}
           value={item.quantity}
-          onChange={(e) => onChange({ quantity: Number(e.target.value) })}
+          onValueChange={(quantity) => onChange({ quantity })}
+          missingMessage={t('review.missing.quantity')}
         />
       </td>
       <td className="px-2 py-2">
@@ -66,41 +67,28 @@ export function BillItemRow({
         </select>
       </td>
       <td className="px-2 py-2">
-        <Input
+        <DecimalInput
           aria-label={cols.weightKg}
-          type="number"
-          step="0.001"
           disabled={item.unit !== 'kg'}
-          value={item.weight_kg ?? ''}
-          onChange={(e) =>
-            onChange({
-              weight_kg: e.target.value === '' ? null : Number(e.target.value),
-            })
-          }
+          value={item.weight_kg}
+          onValueChange={(weight_kg) => onChange({ weight_kg })}
         />
       </td>
       <td className="px-2 py-2">
-        <Input
+        <DecimalInput
           aria-label={cols.pricePerKg}
-          type="number"
-          step="0.01"
           disabled={item.unit !== 'kg'}
-          value={item.price_per_kg ?? ''}
-          onChange={(e) =>
-            onChange({
-              price_per_kg:
-                e.target.value === '' ? null : Number(e.target.value),
-            })
-          }
+          value={item.price_per_kg}
+          onValueChange={(price_per_kg) => onChange({ price_per_kg })}
         />
       </td>
       <td className="px-2 py-2">
-        <Input
+        <DecimalInput
+          aria-label={cols.finalPrice}
           data-testid={`item-final-price-${index}`}
-          type="number"
-          step="0.01"
           value={item.final_price}
-          onChange={(e) => onChange({ final_price: Number(e.target.value) })}
+          onValueChange={(final_price) => onChange({ final_price })}
+          missingMessage={t('review.missing.amount')}
         />
       </td>
       <td className="px-2 py-2 text-muted-foreground">

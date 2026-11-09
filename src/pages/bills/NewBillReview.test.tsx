@@ -294,6 +294,25 @@ describe('NewBillReview', () => {
       expect(mock.history.post[0]!.url).toBe('/households/hh-1/bills');
     });
 
+    it('disables Save until an emptied total is filled in again', async () => {
+      seedDraft();
+      renderReview();
+      const total = screen.getByLabelText('Total amount');
+      await userEvent.clear(total);
+      expect(saveButton()).toBeDisabled();
+      await userEvent.type(total, '12,5');
+      expect(saveButton()).toBeEnabled();
+    });
+
+    it('disables Save while a line price is empty', () => {
+      seedDraft({ items: [item(CAT)] });
+      renderReview();
+      act(() => {
+        useBillDraftStore.getState().updateItem(0, { final_price: null });
+      });
+      expect(saveButton()).toBeDisabled();
+    });
+
     it('create mode shows the shop-name hint', () => {
       seedDraft({ mode: 'create', items: [item(CAT)] });
       renderReview();
