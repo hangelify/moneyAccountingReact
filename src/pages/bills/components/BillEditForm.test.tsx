@@ -19,6 +19,7 @@ function makeItem(overrides: Partial<BillEditItem>): BillEditItem {
     price_per_kg: null,
     final_price: 1,
     sub_category: null,
+    category: null,
     category_confidence: 1,
     ...overrides,
   };

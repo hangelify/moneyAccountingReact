@@ -13,6 +13,7 @@ const NEW_ITEM: BillEditItem = {
   price_per_kg: null,
   final_price: null,
   sub_category: null,
+  category: null,
   category_confidence: 1,
 };
 

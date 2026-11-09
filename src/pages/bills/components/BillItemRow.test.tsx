@@ -20,6 +20,7 @@ function makeItem(overrides: Partial<BillEditItem> = {}): BillEditItem {
     price_per_kg: null,
     final_price: 1.2,
     sub_category: null,
+    category: null,
     category_confidence: 0.9,
     ...overrides,
   };
@@ -148,9 +149,30 @@ describe('BillItemRow — sub-category', () => {
 
     expect(onChange).toHaveBeenLastCalledWith({
       sub_category: { id: '1', name: 'milk', category_name: 'Dairy' },
+      category: { id: 'c1', name: 'Dairy' },
       category_confidence: 1,
       category_reasoning: undefined,
     });
+  });
+
+  it('shows a line with only a category, flagged when unsure', async () => {
+    mock.onGet('/households/hh-1/sub-categories').reply(200, []);
+    renderRow(
+      makeItem({
+        category: { id: 'c1', name: 'Dairy' },
+        category_confidence: 0.3,
+      })
+    );
+    const combobox = screen.getByRole('combobox', { name: /category/i });
+    await waitFor(() => {
+      expect(combobox).not.toBeDisabled();
+    });
+    expect(
+      (combobox as HTMLSelectElement).selectedOptions[0]?.textContent
+    ).toBe('Dairy');
+    expect(
+      screen.getByLabelText(/low category confidence/i)
+    ).toBeInTheDocument();
   });
 
   it('calls onDelete when the trash button is clicked', async () => {

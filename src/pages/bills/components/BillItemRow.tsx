@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
+import { formatLineCategory } from '../lineCategory';
 
 const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
 
@@ -93,26 +94,23 @@ export function BillItemRow({
       </td>
       <td className="px-2 py-2 text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          {item.category_confidence < 0.5 && item.sub_category && (
-            <AlertTriangle
-              className="h-4 w-4 text-yellow-600"
-              aria-label={t('review.items.lowConfidence')}
-            />
-          )}
-          <OverflowTooltip
-            text={
-              item.sub_category
-                ? `${item.sub_category.category_name} › ${item.sub_category.name}`
-                : ''
-            }
-          >
+          {item.category_confidence < 0.5 &&
+            (item.sub_category || item.category) && (
+              <AlertTriangle
+                className="h-4 w-4 text-yellow-600"
+                aria-label={t('review.items.lowConfidence')}
+              />
+            )}
+          <OverflowTooltip text={formatLineCategory(item) ?? ''}>
             <div className="min-w-0 flex-1">
               <SubCategorySelect
                 aria-label={cols.category}
                 value={item.sub_category}
-                onChange={(next) =>
+                category={item.category}
+                onChange={(next, category) =>
                   onChange({
                     sub_category: next,
+                    category,
                     category_confidence: 1,
                     category_reasoning: undefined,
                   })

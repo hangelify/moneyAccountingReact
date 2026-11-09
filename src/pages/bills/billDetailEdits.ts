@@ -42,6 +42,7 @@ export function billToEdits(bill: BillDetailResponseDto): BillEdits {
         price_per_kg: weight ? round2(item.amount / weight) : null,
         final_price: item.amount,
         sub_category: item.sub_category,
+        category: item.category ?? null,
         category_confidence: 1,
       };
     }),

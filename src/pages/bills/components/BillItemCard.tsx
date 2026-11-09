@@ -113,21 +113,24 @@ export function BillItemCard({
         </div>
       )}
       <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-        {item.category_confidence < 0.5 && item.sub_category && (
-          <AlertTriangle
-            className="mt-2 h-4 w-4 shrink-0 text-yellow-600"
-            aria-label={t('review.items.lowConfidence')}
-          />
-        )}
+        {item.category_confidence < 0.5 &&
+          (item.sub_category || item.category) && (
+            <AlertTriangle
+              className="mt-2 h-4 w-4 shrink-0 text-yellow-600"
+              aria-label={t('review.items.lowConfidence')}
+            />
+          )}
         <div className="flex-1">
           <Label htmlFor={`item-${index}-cat`}>{cols.category}</Label>
           <SubCategorySelect
             id={`item-${index}-cat`}
             aria-label={cols.category}
             value={item.sub_category}
-            onChange={(next) =>
+            category={item.category}
+            onChange={(next, category) =>
               onChange({
                 sub_category: next,
+                category,
                 category_confidence: 1,
                 category_reasoning: undefined,
               })

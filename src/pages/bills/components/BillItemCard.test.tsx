@@ -16,6 +16,7 @@ function makeItem(overrides: Partial<BillEditItem> = {}): BillEditItem {
     price_per_kg: null,
     final_price: 1.2,
     sub_category: null,
+    category: null,
     category_confidence: 0.9,
     ...overrides,
   };
@@ -35,6 +36,16 @@ function renderCard(item: BillEditItem): ReturnType<typeof render> {
     </QueryClientProvider>
   );
 }
+
+describe('BillItemCard — category', () => {
+  it('shows a line with only a category', () => {
+    renderCard(makeItem({ category: { id: 'c1', name: 'Dairy' } }));
+    const combobox = screen.getByRole('combobox', { name: /category/i });
+    expect(
+      (combobox as HTMLSelectElement).selectedOptions[0]?.textContent
+    ).toBe('Dairy');
+  });
+});
 
 describe('BillItemCard (refactor parity)', () => {
   it('renders name and price inputs in a card layout', () => {
