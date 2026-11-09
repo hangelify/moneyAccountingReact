@@ -27,4 +27,26 @@ describe('BillTotalsBanner', () => {
     expect(screen.getByText(/10.*EUR/)).toBeInTheDocument();
     expect(screen.getByText(/\+2/)).toBeInTheDocument();
   });
+
+  it('renders nothing while the total is empty', () => {
+    const { container } = render(
+      <BillTotalsBanner
+        items={[{ final_price: 5 }]}
+        totalAmount={null}
+        currency="EUR"
+      />
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('counts an empty line price as 0', () => {
+    render(
+      <BillTotalsBanner
+        items={[{ final_price: 5 }, { final_price: null }]}
+        totalAmount={10}
+        currency="EUR"
+      />
+    );
+    expect(screen.getByText(/-5/)).toBeInTheDocument();
+  });
 });

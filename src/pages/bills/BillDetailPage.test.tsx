@@ -682,7 +682,7 @@ describe('BillDetailPage save', () => {
     expect(
       await screen.findByText('SubCategory with ID s1 not found')
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Total amount')).toHaveValue(8);
+    expect(screen.getByLabelText('Total amount')).toHaveValue('8');
   });
 
   it('goes back to the list when the bill is gone (404)', async () => {

@@ -146,11 +146,12 @@ export interface CreateBillRequest {
 export interface BillEditItem {
   id?: string;
   name: string;
-  quantity: number;
+  // Null while the field is empty; the form won't save until it's filled.
+  quantity: number | null;
   unit: BillUnit | '';
   weight_kg: number | null;
   price_per_kg: number | null;
-  final_price: number;
+  final_price: number | null;
   sub_category: SubCategoryRef | null;
   category_confidence: number;
   category_reasoning?: string | undefined;
@@ -160,7 +161,7 @@ export interface BillEdits {
   market_name: string;
   bill_date: string;
   currency: string;
-  total_amount: number;
+  total_amount: number | null;
   items: BillEditItem[];
   // Receipt identity as typed; '' when empty.
   fiscal_register_id: string;

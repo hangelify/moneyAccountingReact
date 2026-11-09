@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CURRENCY } from '@/const/currency';
@@ -66,12 +67,11 @@ export function BillReviewFields({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="total_amount">{t('review.fields.totalAmount')}</Label>
-        <Input
+        <DecimalInput
           id="total_amount"
-          type="number"
-          step="0.01"
           value={edits.total_amount}
-          onChange={(e) => onChange({ total_amount: Number(e.target.value) })}
+          onValueChange={(total_amount) => onChange({ total_amount })}
+          missingMessage={t('review.missing.amount')}
         />
       </div>
       <div className="space-y-1.5">

@@ -18,8 +18,26 @@ export function todayIso(): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+// Callers check hasMissingAmounts first; an empty field is never sent as 0.
+export function requireAmount(value: number | null): number {
+  if (value === null) throw new Error('missing amount');
+  return value;
+}
+
+/** Whether the total, or any line's price or quantity, is left empty. */
+export function hasMissingAmounts(
+  edits: Pick<BillEdits, 'total_amount' | 'items'>
+): boolean {
+  return (
+    edits.total_amount === null ||
+    edits.items.some(
+      (item) => item.final_price === null || item.quantity === null
+    )
+  );
+}
+
 function productCount(item: BillEditItem): number {
-  return Math.max(1, Math.round(item.quantity || 0));
+  return Math.max(1, Math.round(requireAmount(item.quantity)));
 }
 
 function productWeight(item: BillEditItem): { product_weight?: number } {
@@ -32,7 +50,7 @@ export function toConfirmItem(item: BillEditItem): ConfirmBillItem {
     ...(item.sub_category ? { sub_category_id: item.sub_category.id } : {}),
     ...(item.name ? { raw_name: item.name } : {}),
     product_count: productCount(item),
-    amount: round2(item.final_price),
+    amount: round2(requireAmount(item.final_price)),
     ...productWeight(item),
   };
 }
@@ -42,7 +60,7 @@ function toCreateItem(item: BillEditItem): CreateBillItem {
   return {
     sub_category_id: item.sub_category.id,
     product_count: productCount(item),
-    amount: round2(item.final_price),
+    amount: round2(requireAmount(item.final_price)),
     ...productWeight(item),
   };
 }
@@ -101,7 +119,7 @@ export function buildConfirmPayload(
     ...(edits.market_name ? { new_market: { name: edits.market_name } } : {}),
     bill_date: edits.bill_date || today,
     ...(edits.currency ? { currency: edits.currency } : {}),
-    total_amount: round2(edits.total_amount),
+    total_amount: round2(requireAmount(edits.total_amount)),
     items: edits.items.map(toConfirmItem),
     ...receiptFields(edits),
     ...duplicateOf(duplicateOfId),
@@ -116,7 +134,7 @@ export function buildCreatePayload(
   return {
     bill_date: edits.bill_date || today,
     ...(edits.currency ? { currency: edits.currency } : {}),
-    total_amount: round2(edits.total_amount),
+    total_amount: round2(requireAmount(edits.total_amount)),
     items: edits.items.map(toCreateItem),
     ...receiptFields(edits),
     ...duplicateOf(duplicateOfId),

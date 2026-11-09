@@ -16,6 +16,7 @@ import { billsApi } from './api';
 import {
   buildConfirmPayload,
   buildCreatePayload,
+  hasMissingAmounts,
   receiptFieldErrors,
   todayIso,
 } from './buildConfirmPayload';
@@ -208,8 +209,12 @@ export function NewBillReview(): ReactElement | null {
   const createMode = mode === 'create';
   const uncategorised =
     createMode && edits.items.some((item) => item.sub_category === null);
+  // Empty amounts are flagged on their own fields.
   const saveDisabled =
-    saveMutation.isPending || otherHousehold || uncategorised;
+    saveMutation.isPending ||
+    otherHousehold ||
+    uncategorised ||
+    hasMissingAmounts(edits);
 
   return (
     <TooltipProvider delayDuration={150}>

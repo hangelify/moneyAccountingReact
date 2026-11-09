@@ -83,13 +83,13 @@ describe('BillEditForm', () => {
     await waitFor(() =>
       expect(screen.queryAllByTestId('item-final-price-1')).toHaveLength(0)
     );
-    expect(screen.getAllByTestId('item-final-price-0')[0]).toHaveValue(4.71);
+    expect(screen.getAllByTestId('item-final-price-0')[0]).toHaveValue('4.71');
   });
 
-  it('adds an empty item', async () => {
+  it('adds an item with an empty price', async () => {
     renderForm();
     await userEvent.click(screen.getByRole('button', { name: /add item/i }));
-    expect(screen.getAllByTestId('item-final-price-2')[0]).toHaveValue(0);
+    expect(screen.getAllByTestId('item-final-price-2')[0]).toHaveValue('');
   });
 
   it('clears the weight when the unit changes away from kg', async () => {
@@ -141,5 +141,56 @@ describe('BillEditForm', () => {
   it('shows no warning when the items add up', () => {
     renderForm();
     expect(screen.queryByText(/items don't match/i)).toBeNull();
+  });
+
+  describe('amount fields', () => {
+    const total = (): HTMLElement => screen.getByLabelText('Total amount');
+    const price = (): HTMLElement =>
+      screen.getAllByTestId('item-final-price-0')[0]!;
+
+    it('lets the total be cleared and retyped with a dot', async () => {
+      renderForm();
+      await userEvent.clear(total());
+      expect(total()).toHaveValue('');
+      await userEvent.type(total(), '12.');
+      expect(total()).toHaveValue('12.');
+      await userEvent.type(total(), '5');
+      expect(total()).toHaveValue('12.5');
+    });
+
+    it('accepts a comma in the total', async () => {
+      renderForm();
+      await userEvent.clear(total());
+      await userEvent.type(total(), '7,2');
+      expect(total()).toHaveValue('7,2');
+      // 7.2 matches the items, so the mismatch warning goes away.
+      expect(screen.queryByText(/items don't match/i)).toBeNull();
+    });
+
+    it('asks for the total once it is emptied', async () => {
+      renderForm();
+      expect(screen.queryByText('Enter an amount')).toBeNull();
+      await userEvent.clear(total());
+      expect(screen.getAllByText('Enter an amount').length).toBeGreaterThan(0);
+      expect(total()).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('lets a line price be cleared and retyped with a comma', async () => {
+      renderForm();
+      await userEvent.clear(price());
+      expect(price()).toHaveValue('');
+      expect(screen.getAllByText('Enter an amount').length).toBeGreaterThan(0);
+      await userEvent.type(price(), '2,5');
+      expect(price()).toHaveValue('2,5');
+    });
+
+    it('asks for a quantity once it is emptied', async () => {
+      renderForm();
+      const qty = screen.getAllByDisplayValue('1')[0]!;
+      await userEvent.clear(qty);
+      expect(qty).toHaveValue('');
+      expect(screen.getAllByText('Enter a quantity').length).toBeGreaterThan(0);
+      expect(qty).toHaveAttribute('aria-invalid', 'true');
+    });
   });
 });

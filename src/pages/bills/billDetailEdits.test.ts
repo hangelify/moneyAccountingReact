@@ -48,7 +48,7 @@ const edited = (patch: Partial<BillEdits>, bill = makeBill()): BillEdits => ({
   ...patch,
 });
 
-const withItemPrice = (index: number, finalPrice: number): BillEdits => {
+const withItemPrice = (index: number, finalPrice: number | null): BillEdits => {
   const edits = billToEdits(makeBill());
   edits.items = edits.items.map((item, i) =>
     i === index ? { ...item, final_price: finalPrice } : item
@@ -122,6 +122,7 @@ describe('isEditsValid', () => {
   it.each<[string, Partial<BillEdits>]>([
     ['no items', { items: [] }],
     ['a zero total', { total_amount: 0 }],
+    ['an empty total', { total_amount: null }],
     ['no date', { bill_date: '' }],
     ['a bad purchase time', { purchase_time: '25:00' }],
   ])('rejects %s', (_, patch) => {
@@ -150,6 +151,13 @@ describe('isEditsValid', () => {
 
   it('rejects a line with a non-positive price, like a fresh empty row', () => {
     expect(isEditsValid(withItemPrice(1, 0))).toBe(false);
+  });
+
+  it('rejects a line with an empty price or quantity', () => {
+    expect(isEditsValid(withItemPrice(1, null))).toBe(false);
+    const edits = billToEdits(makeBill());
+    edits.items[0] = { ...edits.items[0]!, quantity: null };
+    expect(isEditsValid(edits)).toBe(false);
   });
 });
 

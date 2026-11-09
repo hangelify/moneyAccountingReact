@@ -258,8 +258,11 @@ export function useBillDetailActions(
     },
   });
 
+  // Built only from valid edits: an emptied amount has nothing to send.
   const updateBody =
-    bill && edits ? buildDetailUpdatePayload(bill, edits) : null;
+    bill && edits && isEditsValid(edits)
+      ? buildDetailUpdatePayload(bill, edits)
+      : null;
 
   const setEdits = (next: BillEdits): void => {
     if (id) setEdit({ id, edits: next });

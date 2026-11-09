@@ -268,8 +268,8 @@ describe('BillDetailContent', () => {
     render(wrap(<Editing bill={editableBill} />));
     expect(await screen.findByLabelText('Market name')).toHaveValue('Lidl');
     expect(screen.getByLabelText('Date')).toHaveValue('2026-05-19');
-    expect(screen.getByLabelText('Total amount')).toHaveValue(52.3);
-    expect(screen.getAllByTestId('item-final-price-0')[0]).toHaveValue(14.5);
+    expect(screen.getByLabelText('Total amount')).toHaveValue('52.3');
+    expect(screen.getAllByTestId('item-final-price-0')[0]).toHaveValue('14.5');
     expect(
       screen.getAllByRole('button', { name: /delete item/i }).length
     ).toBeGreaterThan(0);

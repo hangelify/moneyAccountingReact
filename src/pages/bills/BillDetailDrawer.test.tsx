@@ -209,7 +209,7 @@ describe('BillDetailDrawer', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /edit/i }));
     expect(screen.getByLabelText('Market name')).toHaveValue('Lidl');
-    expect(screen.getByLabelText('Total amount')).toHaveValue(10);
+    expect(screen.getByLabelText('Total amount')).toHaveValue('10');
     expect(screen.getAllByLabelText('Category')[0]).toHaveValue('s1');
   });
 
@@ -428,7 +428,7 @@ describe('BillDetailDrawer', () => {
       expect(
         await screen.findByText('SubCategory with ID s1 not found')
       ).toBeInTheDocument();
-      expect(screen.getByLabelText('Total amount')).toHaveValue(8);
+      expect(screen.getByLabelText('Total amount')).toHaveValue('8');
     });
 
     it('closes the drawer when the draft is gone (404)', async () => {

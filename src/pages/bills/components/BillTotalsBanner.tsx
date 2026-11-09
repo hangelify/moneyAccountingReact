@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import type { BillDetailResponseDto } from '@/types/bills';
 
 interface BillTotalsBannerProps {
-  items: { final_price: number }[];
-  totalAmount: number;
+  items: { final_price: number | null }[];
+  // Null while the total field is empty; its own error covers that.
+  totalAmount: number | null;
   currency: string;
 }
 
@@ -25,7 +26,8 @@ export function BillTotalsBanner({
   currency,
 }: BillTotalsBannerProps): ReactElement | null {
   const { t } = useTranslation('bills');
-  const sum = items.reduce((a, i) => a + i.final_price, 0);
+  if (totalAmount === null) return null;
+  const sum = items.reduce((a, i) => a + (i.final_price ?? 0), 0);
   const diff = sum - totalAmount;
   if (Math.abs(diff) <= TOLERANCE) return null;
 
