@@ -1,5 +1,6 @@
 import { ApiError } from '../../auth/apiError';
 import type { AiErrorBody, ParsedBill } from '../../types/bills';
+import { isCancel, retryAfterSec } from './retryAfter';
 
 export type ParsePhotoFailure =
   | { kind: 'auth' }
@@ -16,24 +17,8 @@ export type ParsePhotoFailure =
     }
   | { kind: 'cancelled' };
 
-const DEFAULT_RETRY_AFTER_SEC = 30;
 const UNAVAILABLE_503_MESSAGE = 'Photo recognition is not available';
 const BUDGET_429_PREFIX = 'Daily AI budget exceeded';
-
-function isCancel(err: unknown): boolean {
-  if (err instanceof ApiError) return err.code === 'ERR_CANCELED';
-  return (
-    err instanceof Error &&
-    (err.name === 'CanceledError' || err.name === 'AbortError')
-  );
-}
-
-function retryAfterSec(err: ApiError, message: string): number {
-  const fromHeader = err.retryAfterSeconds();
-  if (fromHeader !== null) return fromHeader;
-  const match = /in (\d+) s/.exec(message);
-  return match?.[1] ? parseInt(match[1], 10) : DEFAULT_RETRY_AFTER_SEC;
-}
 
 export function toParsePhotoFailure(err: unknown): ParsePhotoFailure {
   if (isCancel(err)) return { kind: 'cancelled' };

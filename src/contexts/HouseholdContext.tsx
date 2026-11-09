@@ -38,7 +38,10 @@ export const HouseholdContext = createContext<HouseholdContextValue | null>(
 
 export const HOUSEHOLDS_KEY = ['households'] as const;
 
-/** Mutation meta: the mutation handles its own 403 (e.g. member, not owner). */
+/**
+ * Query or mutation meta: it handles its own 403 (e.g. member, not owner, or
+ * a bill batch that is simply dropped), so the access-lost flow is skipped.
+ */
 export const OWN_FORBIDDEN_META = { ownForbidden: true } as const;
 const NO_HOUSEHOLDS: Household[] = [];
 
@@ -140,6 +143,7 @@ export function HouseholdProvider({
     };
     const unsubQueries = queryClient.getQueryCache().subscribe((event) => {
       if (event.type !== 'updated' || event.action.type !== 'error') return;
+      if (event.query.meta?.ownForbidden === true) return;
       const key = event.query.queryKey as readonly unknown[];
       if (key[0] === 'households' && key.length > 1) {
         check(event.action.error);

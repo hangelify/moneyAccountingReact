@@ -12,6 +12,7 @@ import { BillEditForm } from './components/BillEditForm';
 import { SavedBillTotalsBanner } from './components/BillTotalsBanner';
 import { BillDetailViews } from './components/BillDetailViews';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
+import { FailedBillNotice } from './components/FailedBillNotice';
 import { DeleteBillButton } from './components/DeleteBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
@@ -26,6 +27,7 @@ export function BillDetailPage(): ReactElement | null {
     edits,
     setEdits,
     isEdited,
+    isFailed,
     toggleEdit,
     confirm,
     isConfirming,
@@ -80,7 +82,8 @@ export function BillDetailPage(): ReactElement | null {
     }
     return (
       <>
-        <BillDuplicateSection bill={q.data} actions={actions} />
+        {isFailed && <FailedBillNotice bill={q.data} />}
+        {!isFailed && <BillDuplicateSection bill={q.data} actions={actions} />}
         {edits === null && <SavedBillTotalsBanner bill={q.data} />}
         <BillDetailViews key={id} bill={q.data} editing={edits !== null}>
           {edits ? (
@@ -112,7 +115,7 @@ export function BillDetailPage(): ReactElement | null {
         </h1>
         {bill && (
           <div className="ml-auto flex gap-2">
-            {bill.status === 'draft' && (
+            {(bill.status === 'draft' || isFailed) && (
               <Button disabled={!canConfirm} onClick={confirm}>
                 {t('confirmed.detail.confirm')}
               </Button>
@@ -128,11 +131,11 @@ export function BillDetailPage(): ReactElement | null {
                 isConfirming ||
                 isSaving ||
                 isRemoving ||
-                (bill.status === 'draft' && !isEdited)
+                ((bill.status === 'draft' || isFailed) && !isEdited)
               }
               onClick={toggleEdit}
             >
-              {bill.status === 'draft'
+              {bill.status === 'draft' || isFailed
                 ? t('confirmed.detail.reset')
                 : edits
                   ? t('confirmed.detail.cancel')

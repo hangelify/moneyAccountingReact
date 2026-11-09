@@ -82,6 +82,15 @@ describe('DraftBills (integration)', () => {
   beforeEach(() => {
     mock = new MockAdapter(apiClient);
     mock.onGet('/households/hh-1/markets').reply(200, []);
+    // No failed receipts unless a test says otherwise.
+    mock
+      .onGet('/households/hh-1/bills/drafts', {
+        params: { page: 1, limit: 20, status: 'failed' },
+      })
+      .reply(() => [
+        200,
+        { data: [], meta: { total: 0, page: 1, limit: 20, total_pages: 0 } },
+      ]);
   });
   afterEach(() => mock.restore());
 

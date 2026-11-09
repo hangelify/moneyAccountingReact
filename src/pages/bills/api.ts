@@ -2,6 +2,7 @@ import { apiClient } from '@/auth/apiClient';
 import { BILLS_ENDPOINTS } from '@/const/bills';
 import { householdPath } from '@/const/households';
 import type {
+  BillBatch,
   BillDetailResponseDto,
   BillResponseDto,
   ConfirmBillRequest,
@@ -57,6 +58,48 @@ export const billsApi = {
     return data;
   },
 
+  parsePhotos: async (
+    hid: string,
+    files: Blob[],
+    opts?: { signal?: AbortSignal }
+  ): Promise<BillBatch> => {
+    const formData = new FormData();
+    for (const file of files) formData.append('images', file);
+    const config = {
+      headers: { 'Content-Type': undefined },
+      timeout: 120_000,
+      ...(opts?.signal ? { signal: opts.signal } : {}),
+    } as unknown as AxiosRequestConfig;
+    const { data } = await apiClient.post<BillBatch>(
+      householdPath(hid, BILLS_ENDPOINTS.PARSE_PHOTOS),
+      formData,
+      config
+    );
+    return data;
+  },
+
+  batch: async (hid: string, id: string): Promise<BillBatch> => {
+    const { data } = await apiClient.get<BillBatch>(
+      householdPath(hid, BILLS_ENDPOINTS.BATCH(id))
+    );
+    return data;
+  },
+
+  retry: async (hid: string, id: string): Promise<BillBatch> => {
+    const { data } = await apiClient.post<BillBatch>(
+      householdPath(hid, BILLS_ENDPOINTS.RETRY(id))
+    );
+    return data;
+  },
+
+  draftImage: async (hid: string, id: string): Promise<Blob> => {
+    const { data } = await apiClient.get<Blob>(
+      householdPath(hid, BILLS_ENDPOINTS.DRAFT_IMAGE(id)),
+      { responseType: 'blob' }
+    );
+    return data;
+  },
+
   list: async (
     hid: string,
     filters: ConfirmedBillsFilters,
@@ -73,15 +116,18 @@ export const billsApi = {
     return data;
   },
 
-  // Drafts accept only page and limit; any other param is a 400.
+  // Drafts accept page, limit and status; status is sent only for 'failed'.
   listDrafts: async (
     hid: string,
     page: number,
-    limit: number
+    limit: number,
+    status: 'draft' | 'failed' = 'draft'
   ): Promise<Paginated<DraftBillDto>> => {
     const { data } = await apiClient.get<Paginated<DraftBillDto>>(
       householdPath(hid, BILLS_ENDPOINTS.DRAFTS),
-      { params: { page, limit } }
+      {
+        params: status === 'failed' ? { page, limit, status } : { page, limit },
+      }
     );
     return data;
   },

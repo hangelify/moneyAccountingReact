@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -17,6 +24,15 @@ import {
   TEST_HOUSEHOLDS,
 } from '@/test/household';
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
+import { BillEventsContext } from '@/hooks/useBillBatch';
+import type { BillBatch } from '@/types/bills';
+import { prepareBillImage } from '@/lib/resizeImage';
+
+vi.mock('@/lib/resizeImage', () => ({
+  prepareBillImage: vi.fn((f: File) => Promise.resolve(f)),
+}));
+
+const trackBatch = vi.fn();
 
 const auth: { user: { id: string } | null } = { user: { id: 'u1' } };
 vi.mock('@/contexts/AuthContext', () => ({
@@ -40,18 +56,22 @@ function tree(
     <MemoryRouter initialEntries={['/']}>
       <QueryClientProvider client={queryClient}>
         <HouseholdTestProvider value={value}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <NewBillModal open onOpenChange={onOpenChange} />
-                  <LocationProbe />
-                </>
-              }
-            />
-            <Route path="/bills/review" element={<LocationProbe />} />
-          </Routes>
+          <BillEventsContext.Provider
+            value={{ waitForOpen: () => Promise.resolve(), trackBatch }}
+          >
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <NewBillModal open onOpenChange={onOpenChange} />
+                    <LocationProbe />
+                  </>
+                }
+              />
+              <Route path="/bills/review" element={<LocationProbe />} />
+            </Routes>
+          </BillEventsContext.Provider>
           <Toaster />
         </HouseholdTestProvider>
       </QueryClientProvider>
@@ -89,23 +109,30 @@ function makeFile(
 
 describe('NewBillModal', () => {
   let mock: MockAdapter;
+  let revokeObjectURL: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     mock = new MockAdapter(apiClient);
+    let urlCount = 0;
     Object.defineProperty(URL, 'createObjectURL', {
-      value: vi.fn(() => 'blob:fake'),
+      value: vi.fn(() => `blob:${++urlCount}`),
       configurable: true,
     });
+    revokeObjectURL = vi.fn();
     Object.defineProperty(URL, 'revokeObjectURL', {
-      value: vi.fn(),
+      value: revokeObjectURL,
       configurable: true,
     });
     useBillDraftStore.getState().clear();
     __resetNewBillModalState();
     auth.user = { id: 'u1' };
+    trackBatch.mockReset();
   });
 
   afterEach(() => {
+    vi.mocked(prepareBillImage).mockImplementation((f: File) =>
+      Promise.resolve(f)
+    );
     vi.useRealTimers();
     tokenStorage.clear({ broadcast: false });
     mock.restore();
@@ -132,8 +159,11 @@ describe('NewBillModal', () => {
       input,
       makeFile('big.jpg', 'image/jpeg', 11 * 1024 * 1024)
     );
+    // Size is checked after resizing, on Send.
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
 
-    expect(screen.getByText(/file too large/i)).toBeInTheDocument();
+    expect(await screen.findByText(/file too large/i)).toBeInTheDocument();
+    expect(mock.history.post).toHaveLength(0);
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
   });
 
@@ -523,5 +553,251 @@ describe('NewBillModal', () => {
       expect(value.handleForbidden).toHaveBeenCalledWith(expect.any(Error));
     });
     expect(screen.getByRole('button', { name: /send/i })).toBeEnabled();
+  });
+
+  describe('several photos', () => {
+    const BATCH_URL = '/households/hh-1/bills/parse-photos';
+    const batch = (total: number): BillBatch => ({
+      batch_id: 'b1',
+      created_at: '2026-11-03T10:00:00Z',
+      total,
+      completed: false,
+      items: [],
+    });
+    const files = (n: number): File[] =>
+      Array.from({ length: n }, (_, i) => makeFile(`p${i + 1}.jpg`));
+    const fileInput = (): HTMLInputElement => {
+      const input =
+        document.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!input) throw new Error('file input not rendered');
+      return input;
+    };
+    const sentNames = (i: number): string[] =>
+      (mock.history.post[i]?.data as FormData)
+        .getAll('images')
+        .map((f) => (f as File).name);
+    const tile = (i: number): HTMLElement => {
+      const el = screen.getAllByRole('listitem')[i];
+      if (!el) throw new Error(`no tile ${i}`);
+      return el;
+    };
+    const send = (): HTMLElement =>
+      screen.getByRole('button', { name: /send|try again in/i });
+    async function advanceUntil(cond: () => boolean): Promise<void> {
+      for (let i = 0; i < 40 && !cond(); i++) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(1000);
+        });
+      }
+    }
+
+    it('three photos post to parse-photos in order, track the batch, close the modal and toast', async () => {
+      mock.onPost(BATCH_URL).reply(202, batch(3));
+      const { onOpenChange } = renderModal();
+      await userEvent.upload(fileInput(), files(3));
+      expect(screen.getAllByRole('listitem')).toHaveLength(4); // + add tile
+      await userEvent.click(send());
+
+      await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+      expect(mock.history.post).toHaveLength(1);
+      expect(sentNames(0)).toEqual(['p1.jpg', 'p2.jpg', 'p3.jpg']);
+      expect(trackBatch).toHaveBeenCalledWith(batch(3), 'hh-1', {
+        0: 'blob:1',
+        1: 'blob:2',
+        2: 'blob:3',
+      });
+      expect(revokeObjectURL).not.toHaveBeenCalled();
+      expect(
+        await screen.findByText(
+          'Reading 3 receipts. Follow progress from the bell.'
+        )
+      ).toBeInTheDocument();
+      expect(document.body.dataset.pathname).not.toBe('/bills/review');
+    });
+
+    it('prepares photos one at a time, in selection order', async () => {
+      mock.onPost(BATCH_URL).reply(202, batch(3));
+      const pending: { file: File; resolve: (f: File) => void }[] = [];
+      vi.mocked(prepareBillImage).mockImplementation(
+        (file: File) =>
+          new Promise<File>((resolve) => pending.push({ file, resolve }))
+      );
+      const { onOpenChange } = renderModal();
+      await userEvent.upload(fileInput(), files(3));
+      await userEvent.click(send());
+
+      expect(await screen.findByText('Uploading photos…')).toBeInTheDocument();
+      for (let i = 0; i < 3; i++) {
+        await waitFor(() => expect(pending).toHaveLength(i + 1));
+        // The next photo has not started while this one is in progress.
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 20));
+        });
+        expect(pending).toHaveLength(i + 1);
+        const current = pending[i];
+        if (!current) throw new Error('no pending prepare');
+        expect(current.file.name).toBe(`p${i + 1}.jpg`);
+        current.resolve(current.file);
+      }
+
+      await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+      expect(sentNames(0)).toEqual(['p1.jpg', 'p2.jpg', 'p3.jpg']);
+    });
+
+    it('selecting more than 20 keeps 20 and shows tooManyFiles', async () => {
+      renderModal();
+      await userEvent.upload(fileInput(), files(21));
+      expect(
+        screen.getAllByRole('button', { name: 'Remove photo' })
+      ).toHaveLength(20);
+      expect(screen.getByText('Up to 20 photos at a time')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Add more' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('a HEIC file marks its thumbnail and disables Send until removed', async () => {
+      const user = userEvent.setup({ applyAccept: false });
+      renderModal();
+      await user.upload(fileInput(), [
+        makeFile('a.jpg'),
+        makeFile('b.heic', 'image/heic'),
+        makeFile('c.jpg'),
+      ]);
+      expect(
+        within(tile(1)).getByText(/unsupported format/i)
+      ).toBeInTheDocument();
+      expect(send()).toBeDisabled();
+
+      await user.click(
+        within(tile(1)).getByRole('button', { name: 'Remove photo' })
+      );
+      expect(screen.queryByText(/unsupported format/i)).not.toBeInTheDocument();
+      expect(send()).toBeEnabled();
+    });
+
+    it('400 "File 1: …" (0-based) marks the second photo and keeps all photos', async () => {
+      mock
+        .onPost(BATCH_URL)
+        .reply(400, { message: 'File 1: image is unreadable' });
+      renderModal();
+      await userEvent.upload(fileInput(), files(3));
+      await userEvent.click(send());
+
+      expect(
+        await within(tile(1)).findByText('File 1: image is unreadable')
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('button', { name: 'Remove photo' })
+      ).toHaveLength(3);
+      expect(send()).toBeDisabled();
+    });
+
+    it('503 busy retries the same files after Retry-After and succeeds on the second try', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mock
+        .onPost(BATCH_URL)
+        .replyOnce(503, { message: 'Busy' }, { 'retry-after': '5' })
+        .onPost(BATCH_URL)
+        .replyOnce(202, batch(2));
+      const { onOpenChange } = renderModal();
+      await userEvent.upload(fileInput(), files(2));
+      await userEvent.click(send());
+
+      expect(
+        await screen.findByText('Server busy, retrying…')
+      ).toBeInTheDocument();
+      expect(mock.history.post).toHaveLength(1);
+      await advanceUntil(() => mock.history.post.length >= 2);
+
+      await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+      expect(mock.history.post).toHaveLength(2);
+      expect(sentNames(1)).toEqual(sentNames(0));
+      expect(sentNames(1)).toEqual(['p1.jpg', 'p2.jpg']);
+      expect(trackBatch).toHaveBeenCalledTimes(1);
+    });
+
+    it('503 busy three times ends in a countdown on Send', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      mock
+        .onPost(BATCH_URL)
+        .reply(503, { message: 'Busy' }, { 'retry-after': '5' });
+      renderModal();
+      await userEvent.upload(fileInput(), files(2));
+      await userEvent.click(send());
+
+      await advanceUntil(() => mock.history.post.length >= 3);
+      expect(
+        await screen.findByRole('button', { name: /try again in/i })
+      ).toBeDisabled();
+      expect(mock.history.post).toHaveLength(3);
+      expect(
+        screen.getByText('Try again later, or send fewer photos.')
+      ).toBeInTheDocument();
+      expect(trackBatch).not.toHaveBeenCalled();
+    });
+
+    it('503 disabled switches to single-photo mode keeping the first photo', async () => {
+      mock
+        .onPost(BATCH_URL)
+        .reply(503, { message: 'Batch photo parsing is disabled' });
+      renderModal();
+      expect(fileInput()).toHaveAttribute('multiple');
+      await userEvent.upload(fileInput(), files(3));
+      await userEvent.click(send());
+
+      expect(
+        await screen.findByText(
+          'Several photos at once is not available right now. Send one photo at a time.'
+        )
+      ).toBeInTheDocument();
+      expect(fileInput()).not.toHaveAttribute('multiple');
+      expect(
+        screen.getAllByRole('button', { name: 'Remove photo' })
+      ).toHaveLength(1);
+      expect(screen.getByText('p1.jpg')).toBeInTheDocument();
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:2');
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:3');
+      expect(revokeObjectURL).not.toHaveBeenCalledWith('blob:1');
+      expect(send()).toBeEnabled();
+    });
+
+    it('429 budget disables photo upload for the session', async () => {
+      mock.onPost(BATCH_URL).reply(429, {
+        message: 'Daily AI budget exceeded. Add the bill manually.',
+      });
+      renderModal();
+      await userEvent.upload(fileInput(), files(2));
+      await userEvent.click(send());
+
+      expect(
+        await screen.findByText(
+          'Daily AI budget exceeded. Add the bill manually.'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('You can still enter receipts manually.')
+      ).toBeInTheDocument();
+      expect(send()).toBeDisabled();
+
+      cleanup();
+      renderModal();
+      await userEvent.upload(fileInput(), files(1));
+      expect(send()).toBeDisabled();
+    });
+
+    it('photo 11 over 10 MB after resize is marked and nothing is sent', async () => {
+      renderModal();
+      const picked = files(12);
+      picked[10] = makeFile('p11.jpg', 'image/jpeg', 11 * 1024 * 1024);
+      await userEvent.upload(fileInput(), picked);
+      await userEvent.click(send());
+
+      expect(
+        await within(tile(10)).findByText(/file too large/i)
+      ).toBeInTheDocument();
+      expect(mock.history.post).toHaveLength(0);
+      expect(send()).toBeDisabled();
+    });
   });
 });

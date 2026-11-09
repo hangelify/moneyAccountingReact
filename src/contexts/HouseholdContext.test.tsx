@@ -18,6 +18,12 @@ import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { TEST_HOUSEHOLDS } from '@/test/household';
+import { useTrackedBatches } from '@/hooks/useBillBatch';
+import { billsApi } from '@/pages/bills/api';
+import {
+  useBillBatchStore,
+  __resetBillBatchStore,
+} from '@/stores/billBatchStore';
 import '@/i18n';
 
 const auth = { isAuthenticated: true };
@@ -86,6 +92,25 @@ function Forbidden({ name }: { name: string }): null {
     retry: false,
   });
   return null;
+}
+
+function OwnForbiddenQuery(): null {
+  useQuery({
+    queryKey: ['households', 'hh-1', 'own'],
+    queryFn: () => Promise.reject(forbidden()),
+    retry: false,
+    meta: OWN_FORBIDDEN_META,
+  });
+  return null;
+}
+
+function TrackedBatches(): React.JSX.Element {
+  const tracked = useTrackedBatches('hh-1');
+  return (
+    <span data-testid="batch-error">
+      {String(tracked[0]?.query.isError ?? false)}
+    </span>
+  );
 }
 
 // Renders once the list query's refetch error reaches its observers.
@@ -239,6 +264,44 @@ describe('HouseholdProvider', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(toastSpy).not.toHaveBeenCalled();
     expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a 403 from a query that handles it itself', async () => {
+    render(tree(makeClient(), <OwnForbiddenQuery />));
+    await waitFor(() => expect(status()).toBe('ready'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(toastSpy).not.toHaveBeenCalled();
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('a 403 on a tracked batch GET does not start the access-lost flow', async () => {
+    __resetBillBatchStore();
+    useBillBatchStore.setState({
+      batches: [
+        {
+          batchId: 'b1',
+          hid: 'hh-1',
+          createdAt: '2026-11-03T10:00:00Z',
+          thumbnails: {},
+          waiting: [],
+          unseen: false,
+        },
+      ],
+    });
+    const api = vi.spyOn(billsApi, 'batch').mockRejectedValue(forbidden());
+    try {
+      render(tree(makeClient(), <TrackedBatches />));
+      await waitFor(() =>
+        expect(screen.getByTestId('batch-error').textContent).toBe('true')
+      );
+      await new Promise((r) => setTimeout(r, 50));
+      expect(api).toHaveBeenCalledWith('hh-1', 'b1');
+      expect(toastSpy).not.toHaveBeenCalled();
+      expect(list).toHaveBeenCalledTimes(1);
+    } finally {
+      api.mockRestore();
+      __resetBillBatchStore();
+    }
   });
 
   it('dedupes an explicit onError call and the central hook', async () => {

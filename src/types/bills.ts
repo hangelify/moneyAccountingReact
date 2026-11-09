@@ -196,7 +196,7 @@ export interface BillResponseDto {
   household_currency?: Currency;
   household_amount?: number | null;
   // Confirmed-list rows only; drafts have their own status.
-  status?: 'draft' | 'confirmed' | 'duplicate';
+  status?: 'draft' | 'confirmed' | 'duplicate' | 'failed';
   duplicate_of_id?: string | null;
 }
 
@@ -215,7 +215,9 @@ export interface DraftBillItem {
 
 // A row of GET /bills/drafts: the summary plus receipt fields and items.
 export interface DraftBillDto extends Omit<BillResponseDto, 'status'> {
-  status: 'draft' | 'confirmed';
+  status: 'draft' | 'confirmed' | 'failed';
+  parse_error_code?: ParseErrorCode | null;
+  parse_error_message?: string | null;
   market_name_raw?: string;
   // true = no date on the receipt; bill_date is the upload day.
   bill_date_inferred: boolean;
@@ -234,6 +236,8 @@ export interface BillDetailItem {
 export interface BillDetailResponseDto
   extends BillResponseDto, Partial<ReceiptIdentity> {
   market_name_raw?: string;
+  parse_error_code?: ParseErrorCode | null;
+  parse_error_message?: string | null;
   items: BillDetailItem[];
   // null when already in the household currency or not convertible.
   exchange_rate?: ExchangeRate | null;
@@ -242,3 +246,50 @@ export interface BillDetailResponseDto
   // The original when status is 'duplicate'.
   duplicate_of?: PossibleDuplicate | null;
 }
+
+export type BatchItemStatus = 'queued' | 'processing' | 'done' | 'failed';
+export type ParseErrorCode = 'not_a_receipt' | 'ai_failed' | 'save_failed';
+
+export interface BillBatchItem {
+  id: string;
+  position: number;
+  status: BatchItemStatus;
+  bill_id: string | null;
+  parse_error_code: ParseErrorCode | null;
+  parse_error_message: string | null;
+}
+
+export interface BillBatch {
+  batch_id: string;
+  created_at: string;
+  total: number;
+  completed: boolean;
+  items: BillBatchItem[];
+}
+
+export type BillEventType =
+  | 'item.processing'
+  | 'item.done'
+  | 'item.failed'
+  | 'batch.completed';
+
+export interface ItemEventData {
+  batch_id: string;
+  item_id: string;
+  position: number;
+  status: BatchItemStatus;
+  created_by_user_id: string | null;
+  bill_id?: string;
+  parse_error_code?: ParseErrorCode;
+  parse_error_message?: string;
+}
+
+export interface BatchCompletedData {
+  batch_id: string;
+  total: number;
+  done: number;
+  failed: number;
+  created_by_user_id: string | null;
+}
+
+export type BillEventData = ItemEventData | BatchCompletedData;

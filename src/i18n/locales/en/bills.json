@@ -4,8 +4,10 @@
     "description": "Take a photo of your receipt — we'll parse the items, total, and date for you.",
     "dropzone": {
       "empty": "Drop an image here or click to browse",
-      "constraints": "JPEG / PNG / WEBP · up to 10 MB",
-      "remove": "Remove photo"
+      "constraints": "Up to 20 photos · JPEG, PNG or WebP",
+      "constraintsSingle": "JPEG, PNG or WebP, up to 10 MB",
+      "remove": "Remove photo",
+      "addMore": "Add more"
     },
     "pending": "Parsing receipt… this can take up to 10 seconds.",
     "discardTitle": "Discard this photo?",
@@ -19,7 +21,8 @@
   },
   "validation": {
     "unsupportedFormat": "Unsupported format. Use JPEG, PNG, or WEBP.",
-    "fileTooLarge": "File too large. Maximum size is 10 MB."
+    "fileTooLarge": "File too large. Maximum size is 10 MB.",
+    "tooManyFiles": "Up to 20 photos at a time"
   },
   "review": {
     "title": "Review bill",
@@ -244,5 +247,33 @@
       }
     },
     "openDuplicate": "View bill (duplicate)"
+  },
+  "batch": {
+    "completedToast": "{{done}} of {{total}} receipts read",
+    "reviewFailed": "Review failed",
+    "started": "Reading {{count}} receipts. Follow progress from the bell.",
+    "uploading": "Uploading photos…",
+    "busyRetrying": "Server busy, retrying…",
+    "fewerPhotos": "Try again later, or send fewer photos.",
+    "budgetManual": "You can still enter receipts manually.",
+    "disabled": "Several photos at once is not available right now. Send one photo at a time."
+  },
+  "failed": {
+    "title": "Couldn't read these receipts ({{count}})",
+    "retry": "Retry",
+    "retryTomorrow": "Retry tomorrow",
+    "enterManually": "Enter manually",
+    "delete": "Delete",
+    "retryStarted": "Reading the receipt again. Follow progress from the bell.",
+    "gone": "This receipt was already handled. The list is refreshed.",
+    "retryIn": "Try again in {{seconds}} s",
+    "deleteTitle": "Delete this receipt?",
+    "deleteDescription": "The photo and the failed bill will be removed.",
+    "photoAlt": "Receipt photo",
+    "detailBanner": "This receipt couldn't be read. Enter it manually.",
+    "showPhoto": "Show photo",
+    "hidePhoto": "Hide photo",
+    "retryFailed": "Could not retry this receipt",
+    "deleteFailed": "Could not delete this receipt"
   }
 }

@@ -1,5 +1,5 @@
 import '@/i18n';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -834,5 +834,115 @@ describe('BillDetailPage delete', () => {
     expect(
       screen.getByRole('button', { name: /^edit$/i, hidden: true })
     ).toBeDisabled();
+  });
+
+  describe('a failed bill', () => {
+    const failedBill = {
+      id: 'd1',
+      bill_date: '2026-10-28',
+      total_amount: 0,
+      amount_mismatch: false,
+      currency: 'EUR',
+      created_at: '2026-10-28T10:00:00Z',
+      status: 'failed',
+      parse_error_code: 'not_a_receipt',
+      parse_error_message: 'No receipt found in the photo',
+      market: null,
+      items: [],
+      possible_duplicates: [
+        {
+          id: 'x1',
+          bill_date: '2026-10-28',
+          total_amount: 7.5,
+          market_name: null,
+        },
+      ],
+    };
+    const IMAGE = '/households/hh-1/bills/drafts/d1/image';
+
+    beforeEach(() => {
+      vi.stubGlobal('URL', {
+        ...URL,
+        createObjectURL: () => 'blob:failed-photo',
+        revokeObjectURL: () => undefined,
+      });
+      mock.onGet(IMAGE).reply(200, new Blob(['x'], { type: 'image/jpeg' }));
+    });
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    async function addBread(): Promise<void> {
+      await userEvent.click(screen.getByRole('button', { name: /add item/i }));
+      const name = document.querySelector<HTMLElement>('[data-row-name="0"]');
+      if (!name) throw new Error('no name input for row 0');
+      await userEvent.type(name, 'Bread');
+      const price = priceInput(0);
+      await userEvent.clear(price);
+      await userEvent.type(price, '7.5');
+      // The total of a failed bill starts at 0 and is not derived from lines.
+      const total = screen.getByLabelText('Total amount');
+      await userEvent.clear(total);
+      await userEvent.type(total, '7.5');
+    }
+
+    it('a failed bill opens in the form with the error banner and its photo', async () => {
+      mock.onGet(DETAIL).reply(200, failedBill);
+      renderAt('/bills/drafts/d1');
+      expect(await screen.findByLabelText('Market name')).toBeInTheDocument();
+      expect(screen.getByText('No receipt found in the photo')).toHaveAttribute(
+        'role',
+        'status'
+      );
+      const img = await screen.findByAltText('Receipt photo');
+      expect(img).toHaveAttribute('src', 'blob:failed-photo');
+      expect(screen.getByRole('button', { name: /^reset$/i })).toBeDisabled();
+    });
+
+    it('falls back to the generic banner without an error message', async () => {
+      mock
+        .onGet(DETAIL)
+        .reply(200, { ...failedBill, parse_error_message: null });
+      renderAt('/bills/drafts/d1');
+      expect(
+        await screen.findByText(
+          "This receipt couldn't be read. Enter it manually."
+        )
+      ).toHaveAttribute('role', 'status');
+    });
+
+    it('Confirm is disabled until a line with a name and price is added', async () => {
+      mock.onGet(DETAIL).reply(200, failedBill);
+      renderAt('/bills/drafts/d1');
+      await screen.findByLabelText('Market name');
+      expect(confirmButton()).toBeDisabled();
+      await addBread();
+      await waitFor(() => expect(confirmButton()).toBeEnabled());
+    });
+
+    it('adding a line and confirming posts raw_name, product_count and amount', async () => {
+      mock.onGet(DETAIL).reply(200, failedBill);
+      mock.onPost(CONFIRM).reply(200, { ...failedBill, status: 'confirmed' });
+      renderAt('/bills/drafts/d1');
+      await screen.findByLabelText('Market name');
+      await addBread();
+      await userEvent.click(confirmButton());
+      await waitFor(() => expect(mock.history.post).toHaveLength(1));
+      const post = mock.history.post[0];
+      const body = JSON.parse(String(post?.data)) as { items: object[] };
+      expect(body.items[0]).toMatchObject({
+        raw_name: 'Bread',
+        product_count: 1,
+        amount: 7.5,
+      });
+    });
+
+    it('no duplicate section for a failed bill', async () => {
+      mock.onGet(DETAIL).reply(200, failedBill);
+      renderAt('/bills/drafts/d1');
+      await screen.findByLabelText('Market name');
+      expect(screen.queryByText(/look-alike|duplicate/i)).toBeNull();
+      expect(screen.queryByRole('button', { name: /mark/i })).toBeNull();
+    });
   });
 });

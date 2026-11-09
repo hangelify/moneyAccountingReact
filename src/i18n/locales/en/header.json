@@ -16,5 +16,23 @@
   "auth": {
     "login": "Login",
     "register": "Register"
+  },
+  "batches": {
+    "open": "Upload progress",
+    "summary": "{{total}} photos · {{done}} read · {{failed}} failed · {{pending}} in progress",
+    "photo": "Photo {{n}}",
+    "chips": {
+      "queued": "Queued",
+      "waiting": "Waiting (AI limit)",
+      "processing": "Reading…",
+      "done": "Draft ready",
+      "failed": "Failed"
+    },
+    "review": "Review",
+    "openFailed": "Open",
+    "loadFailed": "Couldn't load",
+    "dismiss": "Dismiss",
+    "viewDrafts": "View drafts",
+    "clearFinished": "Clear finished"
   }
 }

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DesktopNav } from '@/components/header/DesktopNav';
 import { MobileNav } from '@/components/header/MobileNav';
 import { UserMenu } from '@/components/header/UserMenu';
+import { BatchBell } from '@/components/header/BatchBell';
 import { NewBillModal } from '@/components/bills/NewBillModal';
 
 export function Header(): ReactElement {
@@ -29,6 +30,7 @@ export function Header(): ReactElement {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
+              <BatchBell />
               <div className="hidden md:block">
                 <UserMenu />
               </div>

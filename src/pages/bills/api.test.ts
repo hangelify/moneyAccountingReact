@@ -395,3 +395,89 @@ describe('billsApi duplicate calls', () => {
     expect(result).toEqual({ pairs: [] });
   });
 });
+
+describe('billsApi batch calls', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(apiClient);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
+  const batchBody = {
+    batch_id: 'b1',
+    created_at: '2026-11-03T10:00:00Z',
+    total: 3,
+    completed: false,
+    items: [],
+  };
+
+  it('parsePhotos appends every file as images in order', async () => {
+    mock.onPost('/households/hh-1/bills/parse-photos').reply((config) => {
+      const body = config.data as FormData;
+      expect(body).toBeInstanceOf(FormData);
+      const files = body.getAll('images') as File[];
+      expect(files).toHaveLength(3);
+      expect(files.map((f) => f.name)).toEqual(['a.jpg', 'b.jpg', 'c.jpg']);
+      expect([...body.keys()]).toEqual(['images', 'images', 'images']);
+      expect(config.timeout).toBe(120_000);
+      return [202, batchBody];
+    });
+    const files = ['a.jpg', 'b.jpg', 'c.jpg'].map(
+      (n) => new File(['x'], n, { type: 'image/jpeg' })
+    );
+
+    const result = await billsApi.parsePhotos('hh-1', files);
+
+    expect(result.batch_id).toBe('b1');
+  });
+
+  it('batch gets /bill-batches/{id}', async () => {
+    mock.onGet('/households/hh-1/bill-batches/b1').reply(200, batchBody);
+
+    const result = await billsApi.batch('hh-1', 'b1');
+
+    expect(result.batch_id).toBe('b1');
+  });
+
+  it('retry posts with no body to /bills/{id}/retry', async () => {
+    mock.onPost('/households/hh-1/bills/d1/retry').reply((config) => {
+      expect(config.data).toBeUndefined();
+      return [202, batchBody];
+    });
+
+    const result = await billsApi.retry('hh-1', 'd1');
+
+    expect(result.total).toBe(3);
+  });
+
+  it('draftImage requests a blob', async () => {
+    mock.onGet('/households/hh-1/bills/drafts/d1/image').reply((config) => {
+      expect(config.responseType).toBe('blob');
+      return [200, new Blob(['img'], { type: 'image/jpeg' })];
+    });
+
+    const result = await billsApi.draftImage('hh-1', 'd1');
+
+    expect(result).toBeInstanceOf(Blob);
+  });
+
+  it('listDrafts sends status only for failed', async () => {
+    const seen: unknown[] = [];
+    mock.onGet('/households/hh-1/bills/drafts').reply((config) => {
+      seen.push(config.params);
+      return [200, { items: [], total: 0, page: 1, limit: 12 }];
+    });
+
+    await billsApi.listDrafts('hh-1', 1, 12);
+    await billsApi.listDrafts('hh-1', 1, 12, 'failed');
+
+    expect(seen).toEqual([
+      { page: 1, limit: 12 },
+      { page: 1, limit: 12, status: 'failed' },
+    ]);
+  });
+});
