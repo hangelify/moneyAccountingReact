@@ -3,7 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
-import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
+import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
   Tooltip,
@@ -11,7 +11,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
-import { formatLineCategory } from '../lineCategory';
 
 const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
 
@@ -101,23 +100,23 @@ export function BillItemRow({
                 aria-label={t('review.items.lowConfidence')}
               />
             )}
-          <OverflowTooltip text={formatLineCategory(item) ?? ''}>
-            <div className="min-w-0 flex-1">
-              <SubCategorySelect
-                aria-label={cols.category}
-                value={item.sub_category}
-                category={item.category}
-                onChange={(next, category) =>
-                  onChange({
-                    sub_category: next,
-                    category,
-                    category_confidence: 1,
-                    category_reasoning: undefined,
-                  })
-                }
-              />
-            </div>
-          </OverflowTooltip>
+          <div className="min-w-0 flex-1">
+            <CategoryPicker
+              overflowTooltip
+              aria-label={cols.category}
+              value={{
+                category: item.category,
+                sub_category: item.sub_category,
+              }}
+              onChange={(next) =>
+                onChange({
+                  ...next,
+                  category_confidence: 1,
+                  category_reasoning: undefined,
+                })
+              }
+            />
+          </div>
           {item.category_reasoning && (
             <Tooltip>
               <TooltipTrigger asChild>

@@ -40,10 +40,9 @@ function renderCard(item: BillEditItem): ReturnType<typeof render> {
 describe('BillItemCard — category', () => {
   it('shows a line with only a category', () => {
     renderCard(makeItem({ category: { id: 'c1', name: 'Dairy' } }));
-    const combobox = screen.getByRole('combobox', { name: /category/i });
     expect(
-      (combobox as HTMLSelectElement).selectedOptions[0]?.textContent
-    ).toBe('Dairy');
+      screen.getByRole('combobox', { name: /category/i })
+    ).toHaveTextContent('Dairy');
   });
 });
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SubCategorySelect } from '@/components/categories/SubCategorySelect';
+import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import {
   Tooltip,
   TooltipContent,
@@ -122,15 +122,16 @@ export function BillItemCard({
           )}
         <div className="flex-1">
           <Label htmlFor={`item-${index}-cat`}>{cols.category}</Label>
-          <SubCategorySelect
+          <CategoryPicker
             id={`item-${index}-cat`}
             aria-label={cols.category}
-            value={item.sub_category}
-            category={item.category}
-            onChange={(next, category) =>
+            value={{
+              category: item.category,
+              sub_category: item.sub_category,
+            }}
+            onChange={(next) =>
               onChange({
-                sub_category: next,
-                category,
+                ...next,
                 category_confidence: 1,
                 category_reasoning: undefined,
               })

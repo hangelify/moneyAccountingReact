@@ -123,7 +123,37 @@ describe('BillItemRow — sub-category', () => {
     mock.restore();
   });
 
+  it('emits a whole category, confidence=1 and clears reasoning', async () => {
+    mock
+      .onGet('/households/hh-1/categories')
+      .reply(200, [
+        { id: 'c1', name: 'Dairy', created_at: '', updated_at: '' },
+      ]);
+    mock.onGet('/households/hh-1/sub-categories').reply(200, []);
+    const onChange = vi.fn();
+    renderRow(
+      makeItem({ category_confidence: 0.3, category_reasoning: 'guess' }),
+      onChange
+    );
+    const combobox = screen.getByRole('combobox', { name: /category/i });
+    await waitFor(() => expect(combobox).toBeEnabled());
+    await userEvent.click(combobox);
+    await userEvent.click(await screen.findByRole('option', { name: 'Dairy' }));
+
+    expect(onChange).toHaveBeenLastCalledWith({
+      sub_category: null,
+      category: { id: 'c1', name: 'Dairy' },
+      category_confidence: 1,
+      category_reasoning: undefined,
+    });
+  });
+
   it('emits sub_category, confidence=1 and clears reasoning when picked', async () => {
+    mock
+      .onGet('/households/hh-1/categories')
+      .reply(200, [
+        { id: 'c1', name: 'Dairy', created_at: '', updated_at: '' },
+      ]);
     mock.onGet('/households/hh-1/sub-categories').reply(200, [
       {
         id: '1',
@@ -139,13 +169,10 @@ describe('BillItemRow — sub-category', () => {
       makeItem({ category_confidence: 0.3, category_reasoning: 'guess' }),
       onChange
     );
-    await waitFor(() => {
-      expect(screen.getByRole('option', { name: 'milk' })).toBeInTheDocument();
-    });
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: /category/i }),
-      '1'
-    );
+    const combobox = screen.getByRole('combobox', { name: /category/i });
+    await waitFor(() => expect(combobox).toBeEnabled());
+    await userEvent.click(combobox);
+    await userEvent.click(await screen.findByRole('option', { name: 'milk' }));
 
     expect(onChange).toHaveBeenLastCalledWith({
       sub_category: { id: '1', name: 'milk', category_name: 'Dairy' },
@@ -156,6 +183,7 @@ describe('BillItemRow — sub-category', () => {
   });
 
   it('shows a line with only a category, flagged when unsure', async () => {
+    mock.onGet('/households/hh-1/categories').reply(200, []);
     mock.onGet('/households/hh-1/sub-categories').reply(200, []);
     renderRow(
       makeItem({
@@ -167,9 +195,7 @@ describe('BillItemRow — sub-category', () => {
     await waitFor(() => {
       expect(combobox).not.toBeDisabled();
     });
-    expect(
-      (combobox as HTMLSelectElement).selectedOptions[0]?.textContent
-    ).toBe('Dairy');
+    expect(combobox).toHaveTextContent('Dairy');
     expect(
       screen.getByLabelText(/low category confidence/i)
     ).toBeInTheDocument();

@@ -160,6 +160,25 @@ describe('isEditsValid', () => {
     expect(isEditsValid(edits)).toBe(true);
   });
 
+  it('accepts a new line with only a category', () => {
+    const edits = billToEdits(makeBill());
+    edits.items = [
+      ...edits.items,
+      {
+        name: '',
+        quantity: 1,
+        unit: 'piece',
+        weight_kg: null,
+        price_per_kg: null,
+        final_price: 1.5,
+        sub_category: null,
+        category: { id: 'c1', name: 'Dairy' },
+        category_confidence: 1,
+      },
+    ];
+    expect(isEditsValid(edits)).toBe(true);
+  });
+
   it('rejects a line with a non-positive price, like a fresh empty row', () => {
     expect(isEditsValid(withItemPrice(1, 0))).toBe(false);
   });
@@ -265,6 +284,19 @@ describe('buildDetailUpdatePayload', () => {
     const body = buildDetailUpdatePayload(makeBill(), edits);
     expect(body.items).toEqual(edits.items.map(toConfirmItem));
     expect(body.items?.[0]?.id).toBe('l2');
+  });
+
+  it('sends category_id alone when a sub-category becomes its category', () => {
+    const bill = makeBill();
+    bill.items[0] = {
+      ...bill.items[0]!,
+      category: { id: 'c1', name: 'Dairy' },
+    };
+    const edits = billToEdits(bill);
+    edits.items[0] = { ...edits.items[0]!, sub_category: null };
+    const body = buildDetailUpdatePayload(bill, edits);
+    expect(body.items?.[0]).toMatchObject({ id: 'l1', category_id: 'c1' });
+    expect(body.items?.[0]).not.toHaveProperty('sub_category_id');
   });
 
   it('sends an added line without an id', () => {

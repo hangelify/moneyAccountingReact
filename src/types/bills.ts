@@ -92,6 +92,7 @@ export interface AiErrorBody {
 export interface ConfirmBillItem {
   id?: string;
   sub_category_id?: string;
+  category_id?: string;
   raw_name?: string;
   product_count: number;
   amount: number;
@@ -132,7 +133,8 @@ export interface UpdateBillRequest {
 }
 
 export interface CreateBillItem {
-  sub_category_id: string;
+  sub_category_id?: string;
+  category_id?: string;
   product_count: number;
   amount: number;
   product_weight?: number;

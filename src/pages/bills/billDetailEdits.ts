@@ -62,7 +62,8 @@ export function isEditsValid(edits: BillEdits): boolean {
     edits.items.every((item) => (item.final_price ?? 0) > 0) &&
     // The server needs a name or a category to create a line.
     edits.items.every(
-      (item) => item.id || item.name.trim() || item.sub_category
+      (item) =>
+        item.id || item.name.trim() || item.sub_category || item.category
     ) &&
     receiptFieldErrors(edits).length === 0
   );

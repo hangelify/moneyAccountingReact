@@ -294,6 +294,32 @@ describe('NewBillReview', () => {
       expect(mock.history.post[0]!.url).toBe('/households/hh-1/bills');
     });
 
+    it('create mode saves a line with only a category', async () => {
+      seedDraft({ mode: 'create', items: [item(null)] });
+      mock.onPost('/households/hh-1/bills').reply(201, {});
+      renderReview();
+      act(() => {
+        useBillDraftStore
+          .getState()
+          .updateItem(0, { category: { id: 'c1', name: 'Food' } });
+      });
+      await waitFor(() => {
+        expect(saveButton()).toBeEnabled();
+      });
+      expect(
+        screen.queryByText('Pick a category for every line before saving.')
+      ).toBeNull();
+      await userEvent.click(saveButton());
+      await waitFor(() => {
+        expect(mock.history.post).toHaveLength(1);
+      });
+      const body = JSON.parse(mock.history.post[0]!.data as string) as {
+        items: Record<string, unknown>[];
+      };
+      expect(body.items[0]).toMatchObject({ category_id: 'c1' });
+      expect(body.items[0]).not.toHaveProperty('sub_category_id');
+    });
+
     it('disables Save until an emptied total is filled in again', async () => {
       seedDraft();
       renderReview();
