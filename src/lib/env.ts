@@ -22,4 +22,3 @@ export const env = {
 } as const;
 
 // Type-safe environment variable access
-export type Env = typeof env;

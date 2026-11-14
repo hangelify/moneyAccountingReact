@@ -46,7 +46,7 @@ function productWeight(item: BillEditItem): { product_weight?: number } {
 
 // The server derives the category from a sub-category, so it is sent only
 // for a line without one; sending both risks a 400 if they disagree.
-export function categoryFields(
+function categoryFields(
   item: Pick<BillEditItem, 'sub_category' | 'category'>
 ): { sub_category_id?: string; category_id?: string } {
   if (item.sub_category) return { sub_category_id: item.sub_category.id };

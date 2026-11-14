@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { formatAmount } from '@/lib/format';
 import { swatchStyle, type SegmentLook } from './segmentStyle';
 
-export interface ChartBreadcrumbZoom {
+interface ChartBreadcrumbZoom {
   name: string;
   look: SegmentLook;
   total: number;

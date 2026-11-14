@@ -4,7 +4,7 @@ import {
   type BillImageMime,
 } from '@/const/bills';
 
-export type ValidationReason = 'unsupported_format' | 'file_too_large';
+type ValidationReason = 'unsupported_format' | 'file_too_large';
 
 export type ValidationResult =
   | { ok: true }
