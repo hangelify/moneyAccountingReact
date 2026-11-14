@@ -204,11 +204,6 @@
       "count": 1
     }
   },
-  "src/lib/env.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    }
-  },
   "src/lib/textOverflow.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
@@ -315,9 +310,6 @@
     }
   },
   "src/pages/bills/billDetailEdits.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/prefer-nullish-coalescing": {
       "count": 2
     }

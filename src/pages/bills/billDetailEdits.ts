@@ -1,4 +1,3 @@
-import type { Currency } from '@/const/currency';
 import type {
   BillDetailResponseDto,
   BillEditItem,
@@ -119,7 +118,7 @@ export function buildDetailUpdatePayload(
   const total = round2(requireAmount(edits.total_amount));
   if (total !== round2(bill.total_amount)) body.total_amount = total;
   if (edits.currency && edits.currency !== initial.currency) {
-    body.currency = edits.currency as Currency;
+    body.currency = edits.currency;
   }
   for (const field of RECEIPT_FIELDS) {
     const value = edits[field].trim();
