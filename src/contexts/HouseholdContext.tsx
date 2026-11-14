@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-refresh/only-export-components -- context, keys and hooks live next to the provider */
 import {
   createContext,
   useCallback,
@@ -111,7 +111,7 @@ export function HouseholdProvider({
 
   // Parallel 403s share one refetch and one toast.
   const inFlight = useRef<Promise<void> | null>(null);
-  const handled = useRef(new WeakSet<object>());
+  const handled = useRef(new WeakSet());
   const handleForbidden = useCallback(
     (err?: unknown): Promise<void> => {
       if (typeof err === 'object' && err !== null) handled.current.add(err);

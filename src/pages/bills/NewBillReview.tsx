@@ -147,7 +147,7 @@ export function NewBillReview(): ReactElement | null {
       });
     };
     // clear is stable by reference; intentional empty deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup must run only on unmount; clear is stable
   }, []);
 
   if (file === null || previewUrl === null) {

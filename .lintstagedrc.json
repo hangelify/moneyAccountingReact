@@ -1,6 +1,6 @@
 {
   "*.{ts,tsx}": [
-    "eslint --fix",
+    "bash -c 'eslint --fix --prune-suppressions \"$@\" && git add eslint-suppressions.json' --",
     "prettier --write",
     "bash -c 'tsc --noEmit --pretty'"
   ],

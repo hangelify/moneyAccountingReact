@@ -60,7 +60,7 @@ function Mutator({
   });
   useEffect(() => {
     m.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire the mutation once on mount
   }, []);
   return null;
 }
