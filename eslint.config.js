@@ -7,6 +7,25 @@ import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
+// Editor-time mirrors of the dependency-cruiser rules (.dependency-cruiser.cjs, HAN-126).
+// `no-restricted-imports` is replaced, not merged, between blocks, so each block lists everything.
+const TESTS = ['**/*.test.{ts,tsx}', 'src/test/**'];
+const NO_AXIOS = {
+  name: 'axios',
+  message:
+    'axios is used only in src/api/ and src/auth/apiClient.ts. Call an api/ client instead.',
+};
+const NO_PAGES = {
+  group: ['@/pages/*'],
+  message:
+    'Shared code cannot import a page. Move the shared part into components/, hooks/ or lib/.',
+};
+const UI_ONLY_LIB = {
+  regex: '^@/(?!lib/|components/ui/)',
+  message:
+    'components/ui imports only lib/ and packages. Pass app data in through props.',
+};
+
 export default defineConfig([
   globalIgnores(['dist', 'node_modules', 'build', 'coverage', '*.config.js']),
   {
@@ -91,6 +110,38 @@ export default defineConfig([
       'prefer-arrow-callback': 'error',
       'prefer-template': 'error',
       'no-warning-comments': ['error', { terms: ['todo', 'fixme'] }],
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/api/**', 'src/auth/apiClient.ts', ...TESTS],
+    rules: {
+      'no-restricted-imports': ['error', { paths: [NO_AXIOS] }],
+    },
+  },
+  {
+    files: [
+      'src/components/**/*.{ts,tsx}',
+      'src/hooks/**/*.{ts,tsx}',
+      'src/stores/**/*.{ts,tsx}',
+      'src/contexts/**/*.{ts,tsx}',
+    ],
+    ignores: ['src/components/ui/**', ...TESTS],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: [NO_AXIOS], patterns: [NO_PAGES] },
+      ],
+    },
+  },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    ignores: TESTS,
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: [NO_AXIOS], patterns: [UI_ONLY_LIB] },
+      ],
     },
   },
 ]);

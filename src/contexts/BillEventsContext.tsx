@@ -18,7 +18,7 @@ import {
   useActiveHouseholdId,
   useHouseholds,
 } from '@/contexts/HouseholdContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import {
   BillEventsContext,
   batchKey,

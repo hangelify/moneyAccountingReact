@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type * as UseToastModule from '@/hooks/use-toast';
+import type * as UseToastModule from '@/components/ui/use-toast';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import {
@@ -15,7 +15,7 @@ import {
 } from './HouseholdContext';
 import { householdsApi } from '@/api/households';
 import { ApiError } from '@/auth/apiError';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { TEST_HOUSEHOLDS } from '@/test/household';
 import { useTrackedBatches } from '@/hooks/useBillBatch';
@@ -35,7 +35,7 @@ vi.mock('@/api/households', () => ({
   householdsApi: { list: vi.fn() },
 }));
 
-vi.mock('@/hooks/use-toast', async (importOriginal) => {
+vi.mock('@/components/ui/use-toast', async (importOriginal) => {
   const actual = await importOriginal<typeof UseToastModule>();
   return { ...actual, toast: vi.fn(actual.toast) };
 });

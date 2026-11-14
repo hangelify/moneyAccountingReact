@@ -13,7 +13,7 @@ import {
 } from '@/auth/apiClient';
 import type * as ApiClientModule from '@/auth/apiClient';
 import { authApi } from '@/api/auth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import type { UserProfileDto } from '@/types/auth';
 import '@/i18n';
 
@@ -34,7 +34,10 @@ vi.mock('@/auth/apiClient', async (importOriginal) => {
   return { ...actual, refreshAccessToken: vi.fn() };
 });
 
-vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn(), useToast: vi.fn() }));
+vi.mock('@/components/ui/use-toast', () => ({
+  toast: vi.fn(),
+  useToast: vi.fn(),
+}));
 
 const refreshMock = vi.mocked(refreshAccessToken);
 const api = vi.mocked(authApi);

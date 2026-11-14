@@ -24,7 +24,7 @@ import {
 import { FailedBillsGroup } from './FailedBillsGroup';
 
 const toastMock = vi.fn<(arg: Record<string, unknown>) => void>();
-vi.mock('@/hooks/use-toast', () => ({
+vi.mock('@/components/ui/use-toast', () => ({
   toast: (arg: Record<string, unknown>) => {
     toastMock(arg);
   },

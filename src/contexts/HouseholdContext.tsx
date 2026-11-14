@@ -12,7 +12,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import i18n from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
 import { householdsApi } from '@/api/households';
 import {

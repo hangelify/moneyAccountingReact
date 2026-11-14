@@ -19,7 +19,7 @@ import { billsApi } from '@/api/bills';
 import { validateBillImage } from '@/lib/imageValidation';
 import { BATCH_MAX_FILES } from '@/const/bills';
 import { useBillDraftStore } from '@/stores/billDraftStore';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { tokenStorage } from '@/auth/tokenStorage';
 import { useAuth } from '@/contexts/AuthContext';

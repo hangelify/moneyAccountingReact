@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { useDuplicateMutations } from '@/hooks/useDuplicateMutations';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
 import type {

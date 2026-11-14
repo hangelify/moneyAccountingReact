@@ -13,7 +13,7 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ login: loginMock, user: currentUser }),
 }));
 const toastMock = vi.fn();
-vi.mock('@/hooks/use-toast', () => ({
+vi.mock('@/components/ui/use-toast', () => ({
   toast: (...args: unknown[]): unknown => toastMock(...args),
 }));
 
