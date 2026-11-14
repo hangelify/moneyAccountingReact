@@ -4,6 +4,14 @@
 /eslint-suppressions.json    @hangelify
 /.dependency-cruiser.cjs     @hangelify
 /.jscpd.json                 @hangelify
+/.jscpd-baseline.json        @hangelify
+/scripts/check-dup.mjs       @hangelify
+/package.json                @hangelify
+/vite.config.ts              @hangelify
+/vitest.config.ts            @hangelify
+/.nvmrc                      @hangelify
+/.prettierrc                 @hangelify
+/.prettierignore             @hangelify
 /knip.json                   @hangelify
 /tsconfig*.json              @hangelify
 /.lintstagedrc.json          @hangelify

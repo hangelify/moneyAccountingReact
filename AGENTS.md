@@ -30,11 +30,14 @@ shadcn/ui (Radix), i18next, Vitest + Testing Library.
 ## Never
 
 - Weaken a check: edit `eslint.config.js`, `eslint-suppressions.json`, `.dependency-cruiser.cjs`,
-  `.jscpd.json`, `knip.json`, `tsconfig*.json`, `vite.config.ts`, `vitest.config.ts` or `.claude/`
-  — ask the owner instead.
-- Add `eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `as any`, `as unknown as`.
+  `.jscpd.json`, `.jscpd-baseline.json`, `knip.json`, `tsconfig*.json`, `vite.config.ts`,
+  `vitest.config.ts`, `package.json` scripts, `.lintstagedrc.json`, `.husky/`, `.github/`,
+  `.prettierrc`, `.prettierignore`, `.nvmrc` or `.claude/` — ask the owner instead.
+- Add `eslint-disable`, `/* eslint rule: … */`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`,
+  `as any`, `as unknown as`.
 - `git push --force`, `--no-verify`.
 - Grow the baseline (`--suppress-all`) — fix the code.
 
 The Claude Code hooks in `.claude/settings.json` enforce these: ESLint runs on every edited file,
-`npm run verify` runs before the agent finishes.
+`npm run verify` runs before the agent finishes and blocks while it is red (if the agent stops again
+without changing anything, the user is warned that verify is red).
