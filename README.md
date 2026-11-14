@@ -168,7 +168,7 @@ One command runs every check — for people, for the AI agent and (as parallel j
 npm run verify
 ```
 
-It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `arch` → `knip` → `test:run`.
+It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `arch` → `dup` → `knip` → `test:run`.
 "Done" means `npm run verify` is green. CI (`.github/workflows/ci.yml`) runs the same scripts as
 separate jobs plus `build`; keep both in sync when a step is added.
 
@@ -186,6 +186,24 @@ pages (+ App, main)  →  components / hooks / stores / contexts  →  api / aut
 - no circular imports, no orphan files. Tests and `src/test/` are exempt from layering.
 
 The most common rules are mirrored in ESLint (`no-restricted-imports`) so the editor shows them.
+
+### Code smells
+
+ESLint (`error`, old violations in the baseline):
+
+- `sonarjs` recommended rules; `sonarjs/cognitive-complexity` ≤ 15;
+- size: `max-lines` 250 per `.tsx`, 300 per `.ts`; `max-lines-per-function` 80; `max-params` 4;
+  `max-depth` 3; `no-nested-ternary`. Tests have no size limits.
+
+Too big? Split the component or extract a hook — do not raise the limit.
+
+### Copy-paste (`npm run dup`)
+
+[jscpd](.jscpd.json) over `src/` without tests (blocks ≥ 6 lines and ≥ 60 tokens; `.tsx` is tokenized as
+TypeScript — the TSX tokenizer misses copied JSX). The build fails when duplication exceeds `threshold`.
+
+- 2026-11-14: 1.96% of lines (20 clones) → `threshold` 1.97.
+- Lower `threshold` when a refactor removes clones (HAN-104); never raise it — extract the shared part.
 
 ### Unused code (`npm run knip`)
 

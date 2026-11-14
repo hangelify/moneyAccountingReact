@@ -22,10 +22,22 @@
   "src/api/billEvents.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/api/bills.test.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
+    },
+    "sonarjs/different-types-comparison": {
+      "count": 1
+    },
+    "sonarjs/prefer-specific-assertions": {
       "count": 1
     }
   },
@@ -54,8 +66,21 @@
       "count": 1
     }
   },
+  "src/auth/apiError.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
   "src/auth/isHouseholdForbidden.test.ts": {
     "@typescript-eslint/explicit-function-return-type": {
+      "count": 1
+    }
+  },
+  "src/components/bills/BillPhotoDropzone.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
       "count": 1
     }
   },
@@ -68,13 +93,43 @@
     }
   },
   "src/components/bills/NewBillModal.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 2
+    },
     "react-refresh/only-export-components": {
+      "count": 1
+    }
+  },
+  "src/components/bills/useBatchUpload.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/components/categories/CategoryPicker.tsx": {
+    "max-lines-per-function": {
       "count": 1
     }
   },
   "src/components/charts/SpendingLegend.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 7
+    }
+  },
+  "src/components/charts/SpendingLegend.tsx": {
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/components/charts/SpendingSunburst.test.tsx": {
@@ -88,6 +143,12 @@
   "src/components/charts/SpendingSunburst.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
     }
   },
   "src/components/charts/segmentStyle.ts": {
@@ -127,10 +188,24 @@
   "src/components/header/BatchBell.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/components/markets/MarketMultiSelect.test.tsx": {
+    "sonarjs/assertions-in-tests": {
+      "count": 1
     }
   },
   "src/components/markets/MarketMultiSelect.tsx": {
     "@typescript-eslint/prefer-optional-chain": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
       "count": 1
     }
   },
@@ -211,6 +286,9 @@
     }
   },
   "src/contexts/AuthContext.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
     "react-refresh/only-export-components": {
       "count": 1
     }
@@ -218,6 +296,20 @@
   "src/contexts/BillEventsContext.test.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
+    },
+    "sonarjs/no-extra-arguments": {
+      "count": 1
+    }
+  },
+  "src/contexts/BillEventsContext.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
     }
   },
   "src/contexts/HouseholdContext.test.tsx": {
@@ -226,6 +318,9 @@
     }
   },
   "src/contexts/HouseholdContext.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
     "react-hooks/refs": {
       "count": 1
     }
@@ -243,6 +338,9 @@
   "src/hooks/useCategoryTree.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 2
+    },
+    "no-nested-ternary": {
+      "count": 1
     }
   },
   "src/hooks/useConfirmedBills.ts": {
@@ -295,6 +393,11 @@
       "count": 2
     }
   },
+  "src/lib/decimal.ts": {
+    "sonarjs/super-linear-regex": {
+      "count": 1
+    }
+  },
   "src/lib/period.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 3
@@ -323,12 +426,33 @@
       "count": 1
     }
   },
+  "src/pages/auth/Login.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/pages/auth/Register.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
   "src/pages/bills/BillDetailDrawer.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 4
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
+    },
+    "sonarjs/assertions-in-tests": {
+      "count": 1
+    }
+  },
+  "src/pages/bills/BillDetailDrawer.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
     }
   },
   "src/pages/bills/BillDetailPage.test.tsx": {
@@ -342,6 +466,14 @@
       "count": 1
     }
   },
+  "src/pages/bills/BillDetailPage.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
+    }
+  },
   "src/pages/bills/BillDetailRoute.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 2
@@ -350,10 +482,21 @@
   "src/pages/bills/BillsCards.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
+    },
+    "sonarjs/assertions-in-tests": {
+      "count": 2
+    }
+  },
+  "src/pages/bills/BillsListPage.tsx": {
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/pages/bills/ConfirmedBills.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "sonarjs/no-identical-functions": {
       "count": 1
     }
   },
@@ -363,10 +506,18 @@
     },
     "@typescript-eslint/no-unnecessary-type-parameters": {
       "count": 1
+    },
+    "sonarjs/assertions-in-tests": {
+      "count": 1
     }
   },
   "src/pages/bills/DuplicateSuggestions.test.tsx": {
     "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    }
+  },
+  "src/pages/bills/DuplicateSuggestions.tsx": {
+    "max-lines-per-function": {
       "count": 1
     }
   },
@@ -376,10 +527,19 @@
     }
   },
   "src/pages/bills/NewBillReview.tsx": {
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
     "react-hooks/refs": {
       "count": 1
     },
     "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "sonarjs/different-types-comparison": {
       "count": 1
     }
   },
@@ -396,11 +556,22 @@
   "src/pages/bills/billToSpending.test.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
+    },
+    "sonarjs/no-floating-point-equality": {
+      "count": 2
+    }
+  },
+  "src/pages/bills/billToSpending.ts": {
+    "no-nested-ternary": {
+      "count": 1
     }
   },
   "src/pages/bills/buildConfirmPayload.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 2
+    },
+    "sonarjs/no-floating-point-equality": {
+      "count": 3
     }
   },
   "src/pages/bills/buildConfirmPayload.ts": {
@@ -408,8 +579,16 @@
       "count": 1
     }
   },
+  "src/pages/bills/components/BillDetailContent.test.tsx": {
+    "sonarjs/assertions-in-tests": {
+      "count": 3
+    }
+  },
   "src/pages/bills/components/BillDetailContent.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
       "count": 1
     }
   },
@@ -420,6 +599,9 @@
   },
   "src/pages/bills/components/BillDetailTable.tsx": {
     "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "max-lines-per-function": {
       "count": 1
     }
   },
@@ -434,6 +616,9 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 15
+    },
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/pages/bills/components/BillItemRow.tsx": {
@@ -442,10 +627,21 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/pages/bills/components/BillItemsTable.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/pages/bills/components/BillReviewFields.tsx": {
+    "max-lines-per-function": {
       "count": 1
     }
   },
@@ -462,6 +658,16 @@
       "count": 2
     }
   },
+  "src/pages/bills/components/DuplicateBanner.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/pages/bills/components/FailedBillCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
   "src/pages/bills/components/FailedBillsGroup.test.tsx": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
@@ -470,6 +676,15 @@
   "src/pages/bills/useBillDetailActions.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 8
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "no-nested-ternary": {
+      "count": 1
     }
   },
   "src/pages/dashboard/components/SpendingBreakdownCard.test.tsx": {
@@ -480,12 +695,23 @@
       "count": 2
     }
   },
+  "src/pages/dashboard/components/SpendingBreakdownCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
   "src/pages/dashboard/parseSpendingSearchParams.ts": {
     "@typescript-eslint/prefer-nullish-coalescing": {
       "count": 1
     }
   },
   "src/pages/households/HouseholdSettings.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    },
     "react-hooks/incompatible-library": {
       "count": 1
     }
@@ -498,6 +724,11 @@
   "src/stores/billDraftStore.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 10
+    }
+  },
+  "src/stores/billDraftStore.ts": {
+    "max-lines-per-function": {
+      "count": 1
     }
   },
   "src/test/setup.ts": {

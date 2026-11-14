@@ -69,6 +69,9 @@ jobs:
       - name: Check architecture (dependency-cruiser)
         run: npm run arch
 
+      - name: Copy-paste (jscpd)
+        run: npm run dup
+
       - name: Unused files, exports and dependencies (knip)
         run: npm run knip
 

@@ -43,7 +43,22 @@ const REQUIRED_ERRORS = [
   'prefer-arrow-callback',
   'prefer-template',
   'no-warning-comments',
+  'sonarjs/cognitive-complexity',
+  'max-lines',
+  'max-lines-per-function',
+  'max-params',
+  'max-depth',
+  'no-nested-ternary',
 ];
+
+// a component file of `n` short lines (HAN-127 size limit is 250 for .tsx)
+function bigComponent(n: number): string {
+  const consts = Array.from(
+    { length: n },
+    (_, i) => `const C${String(i)} = ${String(i)};`
+  ).join('\n');
+  return `import type { ReactElement } from 'react';\n${consts}\nexport function Big(): ReactElement {\n  return <p>{C0}</p>;\n}\n`;
+}
 
 const PROBE = `import { useEffect, useState, type ReactElement } from 'react';
 
@@ -139,5 +154,18 @@ describe('eslint config', () => {
       "import axios from 'axios';\nexport const x = axios;\n"
     );
     expect(messages.join('\n')).not.toContain('no-restricted-imports');
+  }, 60_000);
+
+  it('a 300-line component fails max-lines; a test file has no size limit', async () => {
+    const component = await lintProbe(
+      'src/components/__lint_probe__.tsx',
+      bigComponent(300)
+    );
+    expect(component.join('\n')).toContain('max-lines');
+    const testFile = await lintProbe(
+      'src/components/__lint_probe__.test.tsx',
+      bigComponent(300)
+    );
+    expect(testFile.join('\n')).not.toContain('max-lines');
   }, 60_000);
 });

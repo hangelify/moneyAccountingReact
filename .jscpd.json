@@ -1,0 +1,12 @@
+{
+  "path": ["src"],
+  "ignore": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
+  "format": ["typescript"],
+  "formatsExts": { "typescript": ["ts", "tsx"] },
+  "minLines": 6,
+  "minTokens": 60,
+  "threshold": 1.97,
+  "reporters": ["console", "ai"],
+  "absolute": false,
+  "gitignore": true
+}

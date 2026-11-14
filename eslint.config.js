@@ -5,6 +5,7 @@ import { reactRefresh } from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import sonarjs from 'eslint-plugin-sonarjs';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 // Editor-time mirrors of the dependency-cruiser rules (.dependency-cruiser.cjs, HAN-126).
@@ -36,6 +37,7 @@ export default defineConfig([
       ...tseslint.configs.stylisticTypeChecked,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite(),
+      sonarjs.configs.recommended,
       prettierConfig,
     ],
     languageOptions: {
@@ -110,6 +112,48 @@ export default defineConfig([
       'prefer-arrow-callback': 'error',
       'prefer-template': 'error',
       'no-warning-comments': ['error', { terms: ['todo', 'fixme'] }],
+
+      // Code smells (HAN-127)
+      'sonarjs/cognitive-complexity': ['error', 15],
+      // duplicates of rules already on:
+      'sonarjs/no-hook-setter-in-body': 'off', // react-hooks/set-state-in-render
+      'sonarjs/deprecation': 'off', // @typescript-eslint/no-deprecated
+      'sonarjs/no-nested-conditional': 'off', // no-nested-ternary
+      'sonarjs/no-unused-vars': 'off', // @typescript-eslint/no-unused-vars
+      // noise: Readonly<Props> on every component; prop mutation is caught by
+      // react-hooks/immutability
+      'sonarjs/prefer-read-only-props': 'off',
+      'max-lines': [
+        'error',
+        { max: 300, skipBlankLines: true, skipComments: true },
+      ],
+      'max-lines-per-function': [
+        'error',
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
+      'max-params': ['error', 4],
+      'max-depth': ['error', 3],
+      'no-nested-ternary': 'error',
+    },
+  },
+  {
+    // a component file holds one component (HAN-127)
+    files: ['**/*.tsx'],
+    rules: {
+      'max-lines': [
+        'error',
+        { max: 250, skipBlankLines: true, skipComments: true },
+      ],
+    },
+  },
+  {
+    // tests are long by nature: no size limits
+    files: TESTS,
+    rules: {
+      'max-lines': 'off',
+      'max-lines-per-function': 'off',
+      // fixtures, not secrets
+      'sonarjs/no-hardcoded-passwords': 'off',
     },
   },
   {
