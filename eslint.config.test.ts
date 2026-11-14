@@ -1,7 +1,11 @@
 import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ESLint, type Linter } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// The first call loads the whole typed ESLint config; under a loaded parallel suite that can take
+// longer than the default 5s.
+vi.setConfig({ testTimeout: 60_000 });
 
 const repoRoot = import.meta.dirname;
 const eslint = new ESLint({ cwd: repoRoot });
