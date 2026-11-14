@@ -1,0 +1,13 @@
+# Changes to the checks themselves need the owner's review (HAN-130).
+/eslint.config.js            @hangelify
+/eslint.config.test.ts       @hangelify
+/eslint-suppressions.json    @hangelify
+/.dependency-cruiser.cjs     @hangelify
+/.jscpd.json                 @hangelify
+/knip.json                   @hangelify
+/tsconfig*.json              @hangelify
+/.lintstagedrc.json          @hangelify
+/.husky/                     @hangelify
+/.github/                    @hangelify
+/.claude/                    @hangelify
+/AGENTS.md                   @hangelify

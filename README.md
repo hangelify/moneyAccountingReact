@@ -214,6 +214,20 @@ when the number of clones or duplicated lines exceeds [`.jscpd-baseline.json`](.
 used only in its own file, drop the `export`. shadcn components in `components/ui` are exempt from the
 unused-export check (they ship more parts than the app uses).
 
+## AI agent hooks (Claude Code)
+
+`.claude/settings.json` (committed; scripts in `.claude/hooks/`) adds a layer on top of CI for agents.
+Rules for agents are in [AGENTS.md](AGENTS.md).
+
+- **before an edit**: refuses edits to check configs (ESLint, dependency-cruiser, jscpd, knip, tsconfig,
+  Vite/Vitest, the baseline, `.claude/`) and new `eslint-disable`, `@ts-ignore`, `@ts-nocheck`,
+  `as any`, `as unknown as` in code;
+- **after an edit**: ESLint with `--max-warnings 0` on the edited `.ts`/`.tsx`, errors go back to the agent;
+- **before a shell command**: refuses force-push and skipping git hooks;
+- **before the agent finishes**: `npm run verify` (skipped when nothing changed since the last green run).
+
+Personal files (`.claude/settings.local.json`, `.claude/launch.json`) stay git-ignored.
+
 ## Git Hooks
 
 The project uses Husky for git hooks:

@@ -45,8 +45,10 @@ coverage
 *.tmp
 *.temp
 
-# Claude Code
-.claude
+# Claude Code: shared hooks are committed, personal files are not
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 CLAUDE.md
 
 /docs
