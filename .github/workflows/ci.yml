@@ -1,5 +1,7 @@
 name: CI
 
+# Jobs mirror the steps of `npm run verify` (package.json); keep them in sync.
+
 on:
   push:
     branches: [main, master, dev]
