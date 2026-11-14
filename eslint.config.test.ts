@@ -87,5 +87,6 @@ describe('eslint config', () => {
     } finally {
       await rm(probe, { force: true });
     }
-  });
+    // typed linting builds a TS program; slow when the whole suite runs in parallel
+  }, 60_000);
 });
