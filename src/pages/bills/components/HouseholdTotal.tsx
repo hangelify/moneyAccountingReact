@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { localIsoDate } from '@/pages/dashboard/period';
+import { localIsoDate } from '@/lib/period';
 import type { BillDetailResponseDto } from '@/types/bills';
 
 /** The total in the household currency, or why it is missing. */

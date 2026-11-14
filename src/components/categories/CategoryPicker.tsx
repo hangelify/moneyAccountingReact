@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { useCategoryTree } from '@/hooks/useCategoryTree';
 import { filterTree } from '@/hooks/categoryTree';
-import { formatLineCategory } from '@/pages/bills/lineCategory';
+import { formatLineCategory } from '@/lib/lineCategory';
 import { cn } from '@/lib/utils';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {

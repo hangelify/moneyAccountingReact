@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { marketsApi } from '@/pages/markets/api';
+import { marketsApi } from '@/api/markets';
 import type { MarketResponseDto } from '@/types/markets';
 
 export function useMarkets(): UseQueryResult<MarketResponseDto[]> {

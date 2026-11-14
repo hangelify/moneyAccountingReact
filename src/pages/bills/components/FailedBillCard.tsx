@@ -19,8 +19,8 @@ import {
 import { useBillImage } from '@/hooks/useBillImage';
 import { useTrackBatch } from '@/hooks/useBillBatch';
 import type { DraftBillDto } from '@/types/bills';
-import { billsApi } from '../api';
-import { toBatchUploadFailure } from '../batchUploadError';
+import { billsApi } from '@/api/bills';
+import { toBatchUploadFailure } from '@/api/batchUploadError';
 
 const BUDGET_PREFIX = 'Daily AI budget';
 

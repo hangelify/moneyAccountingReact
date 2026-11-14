@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError } from '../../auth/apiError';
-import type { ParsedBill } from '../../types/bills';
+import { ApiError } from '@/auth/apiError';
+import type { ParsedBill } from '@/types/bills';
 import { toParsePhotoFailure } from './parsePhotoError';
 
 const body = (message: string, extra: Record<string, unknown> = {}) => ({

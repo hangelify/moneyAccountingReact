@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { ApiError } from '@/auth/apiError';
-import { billsApi } from './api';
+import { billsApi } from './bills';
 import type { ConfirmedBillsFilters } from './buildBillsQueryParams';
 
 describe('billsApi.parsePhoto', () => {

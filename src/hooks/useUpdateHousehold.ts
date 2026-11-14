@@ -7,7 +7,7 @@ import {
   HOUSEHOLDS_KEY,
   OWN_FORBIDDEN_META,
 } from '@/contexts/HouseholdContext';
-import { householdsApi } from '@/pages/households/api';
+import { householdsApi } from '@/api/households';
 import type { Household, UpdateHouseholdRequest } from '@/types/households';
 
 /**

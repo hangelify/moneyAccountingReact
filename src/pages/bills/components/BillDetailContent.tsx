@@ -9,7 +9,7 @@ import { BillEditForm } from './BillEditForm';
 import { BillDescription } from './BillDescription';
 import { SavedBillTotalsBanner } from './BillTotalsBanner';
 import { HouseholdTotal } from './HouseholdTotal';
-import { formatLineCategory } from '../lineCategory';
+import { formatLineCategory } from '@/lib/lineCategory';
 
 export interface BillDetailContentProps {
   id: string;

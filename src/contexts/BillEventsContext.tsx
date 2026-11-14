@@ -25,8 +25,8 @@ import {
   useTrackedBatches,
   type TrackBatchFn,
 } from '@/hooks/useBillBatch';
-import { applyBatchEvent } from '@/pages/bills/applyBatchEvent';
-import { listenBillEvents } from '@/pages/bills/billEvents';
+import { applyBatchEvent } from '@/lib/applyBatchEvent';
+import { listenBillEvents } from '@/api/billEvents';
 import { useBillBatchStore } from '@/stores/billBatchStore';
 import type {
   BatchCompletedData,

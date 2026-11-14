@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SpendingCategory, SpendingCurrency } from '@/types/dashboard';
-import { formatAmount } from '../format';
-import { PALETTE_SIZE, categoryKey, subKey } from '../sunburstGeometry';
+import { formatAmount } from '@/lib/format';
+import { PALETTE_SIZE, categoryKey, subKey } from './sunburstGeometry';
 import { swatchStyle, type SegmentLook } from './segmentStyle';
 
 export interface SpendingLegendProps {

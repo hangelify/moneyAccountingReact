@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { ApiError } from '@/auth/apiError';
-import { categoriesApi, subCategoriesApi } from './api';
+import { categoriesApi, subCategoriesApi } from './categories';
 
 describe('subCategoriesApi.list', () => {
   let mock: MockAdapter;

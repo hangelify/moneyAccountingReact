@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react';
-import { formatAmount } from '../format';
+import { formatAmount } from '@/lib/format';
 import { swatchStyle, type SegmentLook } from './segmentStyle';
 
 export interface ChartBreadcrumbZoom {

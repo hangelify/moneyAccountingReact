@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
-import { billsApi } from './api';
+import { billsApi } from '@/api/bills';
 import {
   buildConfirmPayload,
   buildCreatePayload,

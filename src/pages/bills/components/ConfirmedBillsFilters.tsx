@@ -7,7 +7,7 @@ import { DateRangePicker } from '@/components/common/DateRangePicker';
 import { AmountRangeInput } from '@/components/common/AmountRangeInput';
 import { CurrencySelect } from '@/components/currency/CurrencySelect';
 import { MarketMultiSelect } from '@/components/markets/MarketMultiSelect';
-import type { ConfirmedBillsFilters as Filters } from '@/pages/bills/buildBillsQueryParams';
+import type { ConfirmedBillsFilters as Filters } from '@/api/buildBillsQueryParams';
 
 export interface ConfirmedBillsFiltersProps {
   value: Filters;

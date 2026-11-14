@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { formatAmount } from '../format';
+import { formatAmount } from '@/lib/format';
 import { UnconvertedNote } from './UnconvertedNote';
 import '@/i18n';
 

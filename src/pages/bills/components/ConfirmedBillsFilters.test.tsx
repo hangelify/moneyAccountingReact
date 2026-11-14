@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { ConfirmedBillsFilters } from './ConfirmedBillsFilters';
-import type { ConfirmedBillsFilters as Filters } from '@/pages/bills/buildBillsQueryParams';
+import type { ConfirmedBillsFilters as Filters } from '@/api/buildBillsQueryParams';
 import type { ReactElement, ReactNode } from 'react';
 import { HouseholdTestProvider } from '@/test/household';
 

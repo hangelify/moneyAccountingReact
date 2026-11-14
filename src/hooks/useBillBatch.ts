@@ -5,7 +5,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 import { OWN_FORBIDDEN_META } from '@/contexts/HouseholdContext';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import { useBillBatchStore, type TrackedBatch } from '@/stores/billBatchStore';
 import type { BillBatch } from '@/types/bills';
 

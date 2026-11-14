@@ -18,14 +18,17 @@ import {
   parseZoomCategory,
   toSpendingSearchParams,
 } from '../parseSpendingSearchParams';
-import { formatRangeLabel, rangeForParams } from '../period';
-import { PALETTE_SIZE, categoryKey } from '../sunburstGeometry';
+import { formatRangeLabel, rangeForParams } from '@/lib/period';
+import {
+  PALETTE_SIZE,
+  categoryKey,
+} from '@/components/charts/sunburstGeometry';
 import { defaultTab, spendingTabs } from '../spendingTabs';
 import { CurrencyTabs } from './CurrencyTabs';
 import { PeriodPicker } from './PeriodPicker';
-import { SpendingLegend } from './SpendingLegend';
-import { SpendingSunburst } from './SpendingSunburst';
-import { ChartBreadcrumb } from './ChartBreadcrumb';
+import { SpendingLegend } from '@/components/charts/SpendingLegend';
+import { SpendingSunburst } from '@/components/charts/SpendingSunburst';
+import { ChartBreadcrumb } from '@/components/charts/ChartBreadcrumb';
 import { UnconvertedNote } from './UnconvertedNote';
 
 export function SpendingBreakdownCard(): ReactElement {

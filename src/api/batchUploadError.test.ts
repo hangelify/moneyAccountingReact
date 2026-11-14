@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError } from '../../auth/apiError';
+import { ApiError } from '@/auth/apiError';
 import { fileIndexFromMessage, toBatchUploadFailure } from './batchUploadError';
 
 const body = (

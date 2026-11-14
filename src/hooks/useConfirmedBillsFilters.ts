@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import {
   buildBillsQueryParams,
   type ConfirmedBillsFilters,
-} from '@/pages/bills/buildBillsQueryParams';
-import { parseBillsSearchParams } from '@/pages/bills/parseBillsSearchParams';
+} from '@/api/buildBillsQueryParams';
+import { parseBillsSearchParams } from '@/api/parseBillsSearchParams';
 import { DEFAULT_LIMIT, DEFAULT_PAGE } from '@/types/pagination';
 
 export interface UseConfirmedBillsFiltersResult {

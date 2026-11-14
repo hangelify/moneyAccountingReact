@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { HouseholdTotal } from './HouseholdTotal';
-import { formatLineCategory } from '../lineCategory';
+import { formatLineCategory } from '@/lib/lineCategory';
 
 export interface BillDetailTableProps {
   bill: BillDetailResponseDto;

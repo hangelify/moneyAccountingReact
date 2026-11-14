@@ -263,7 +263,7 @@ describe('BatchBell', () => {
         TEST_HID,
         {}
       );
-    const { billsApi } = await import('@/pages/bills/api');
+    const { billsApi } = await import('@/api/bills');
     const { vi } = await import('vitest');
     const spy = vi
       .spyOn(billsApi, 'batch')
@@ -306,7 +306,7 @@ describe('BatchBell', () => {
         TEST_HID,
         {}
       );
-    const { billsApi } = await import('@/pages/bills/api');
+    const { billsApi } = await import('@/api/bills');
     const { vi } = await import('vitest');
     const spy = vi.spyOn(billsApi, 'batch').mockRejectedValue(new Error('x'));
     renderBell();

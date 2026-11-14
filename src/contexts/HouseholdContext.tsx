@@ -14,12 +14,12 @@ import i18n from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
-import { householdsApi } from '@/pages/households/api';
+import { householdsApi } from '@/api/households';
 import {
   pickActiveHousehold,
   readRememberedHouseholdId,
   writeRememberedHouseholdId,
-} from '@/pages/households/pickActiveHousehold';
+} from '@/lib/pickActiveHousehold';
 import type { Household } from '@/types/households';
 
 export interface HouseholdContextValue {

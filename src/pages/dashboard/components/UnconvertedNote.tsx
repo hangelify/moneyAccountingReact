@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { UnconvertedBucket } from '@/types/dashboard';
-import { formatAmount } from '../format';
+import { formatAmount } from '@/lib/format';
 
 /** Bills left out of the converted total, one line per original currency. */
 export function UnconvertedNote({

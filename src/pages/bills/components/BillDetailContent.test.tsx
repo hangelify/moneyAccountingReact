@@ -11,7 +11,7 @@ import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { billToEdits } from '../billDetailEdits';
 import { addDays } from '@/lib/isoDate';
-import { localIsoDate } from '@/pages/dashboard/period';
+import { localIsoDate } from '@/lib/period';
 
 function wrap(ui: ReactNode): ReactElement {
   const qc = new QueryClient({

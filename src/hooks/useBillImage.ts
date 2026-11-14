@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 
 export interface BillImage {
   url: string | null;

@@ -1,7 +1,7 @@
 import { CURRENCY, type Currency } from '@/const/currency';
 import { DEFAULT_LIMIT, DEFAULT_PAGE, MAX_LIMIT } from '@/types/pagination';
 import { parseIsoDate } from '@/lib/isoDate';
-import type { ConfirmedBillsFilters } from './buildBillsQueryParams';
+import type { ConfirmedBillsFilters } from '@/api/buildBillsQueryParams';
 
 function parseAmountRange(v: string | null): {
   amount_min: number | null;
@@ -21,7 +21,7 @@ function parseAmountRange(v: string | null): {
 
 function parseCurrency(v: string | null): Currency | null {
   if (!v) return null;
-  return v in CURRENCY ? (v as Currency) : null;
+  return v in CURRENCY ? v : null;
 }
 
 function parsePositiveInt(v: string | null, fallback: number): number {

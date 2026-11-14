@@ -1,4 +1,4 @@
-import { ApiError } from '../../auth/apiError';
+import { ApiError } from '@/auth/apiError';
 
 const DEFAULT_RETRY_AFTER_SEC = 30;
 

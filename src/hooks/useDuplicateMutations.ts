@@ -4,7 +4,7 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';

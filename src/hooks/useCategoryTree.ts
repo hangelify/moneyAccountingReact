@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { categoriesApi, subCategoriesApi } from '@/pages/categories/api';
+import { categoriesApi, subCategoriesApi } from '@/api/categories';
 import { buildCategoryTree } from './categoryTree';
 import type { CategoryNode } from './categoryTree';
 

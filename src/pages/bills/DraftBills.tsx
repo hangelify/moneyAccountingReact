@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useDraftBills } from '@/hooks/useDraftBills';
 import { DEFAULT_LIMIT } from '@/types/pagination';
-import { parseBillsSearchParams } from './parseBillsSearchParams';
+import { parseBillsSearchParams } from '@/api/parseBillsSearchParams';
 import { BillCardGrid } from './components/BillCardGrid';
 import { BillsTabs } from './components/BillsTabs';
 import { FailedBillsGroup } from './components/FailedBillsGroup';

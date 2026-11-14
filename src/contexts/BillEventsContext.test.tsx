@@ -15,11 +15,11 @@ import {
   __resetBillBatchStore,
   type TrackedBatch,
 } from '@/stores/billBatchStore';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
 import type * as ToastModule from '@/hooks/use-toast';
-import type { BillEventHandlers } from '@/pages/bills/billEvents';
+import type { BillEventHandlers } from '@/api/billEvents';
 import type { BillBatch, BillEventData, BillEventType } from '@/types/bills';
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
 import {
@@ -31,7 +31,7 @@ import {
 const streams = vi.hoisted(
   () => [] as { hid: string; h: BillEventHandlers; stop: () => void }[]
 );
-vi.mock('@/pages/bills/billEvents', () => ({
+vi.mock('@/api/billEvents', () => ({
   listenBillEvents: vi.fn((hid: string, h: BillEventHandlers) => {
     const stop = vi.fn();
     streams.push({ hid, h, stop });
@@ -82,7 +82,7 @@ function itemEvent(
     status,
     created_by_user_id: 'u1',
     ...extra,
-  } as BillEventData;
+  };
 }
 
 let hooks: {

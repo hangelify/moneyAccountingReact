@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type ReactElement } from 'react';
 import type { SpendingBreakdownParams } from '@/types/dashboard';
-import { rangeForParams } from '../period';
+import { rangeForParams } from '@/lib/period';
 import { PeriodPicker } from './PeriodPicker';
 
 // A parent that keeps params in state, like the card does with the URL.
