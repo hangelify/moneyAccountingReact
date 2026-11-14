@@ -200,10 +200,13 @@ Too big? Split the component or extract a hook — do not raise the limit.
 ### Copy-paste (`npm run dup`)
 
 [jscpd](.jscpd.json) over `src/` without tests (blocks ≥ 6 lines and ≥ 60 tokens; `.tsx` is tokenized as
-TypeScript — the TSX tokenizer misses copied JSX). The build fails when duplication exceeds `threshold`.
+TypeScript — the TSX tokenizer misses copied JSX). [`scripts/check-dup.mjs`](scripts/check-dup.mjs) fails
+when the number of clones or duplicated lines exceeds [`.jscpd-baseline.json`](.jscpd-baseline.json)
+(absolute numbers: a percentage would loosen as the code grows).
 
-- 2026-11-14: 1.96% of lines (20 clones) → `threshold` 1.97.
-- Lower `threshold` when a refactor removes clones (HAN-104); never raise it — extract the shared part.
+- 2026-11-14: 20 clones, 274 duplicated lines (1.96%).
+- When a refactor removes clones (HAN-104), `npm run dup` prints the new numbers — lower the baseline.
+  Never raise it; extract the shared part.
 
 ### Unused code (`npm run knip`)
 
