@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
+import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { BillChart } from './BillChart';
 
@@ -32,30 +32,18 @@ export function BillDetailViews({
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        role="tablist"
+      <SegmentedTabs<View>
+        variant="pill"
         aria-label={t('confirmed.detail.views.label')}
-        className="inline-flex w-fit gap-1 rounded-lg bg-muted p-1"
-      >
-        {VIEWS.map((v) => (
-          <button
-            key={v}
-            id={`${ids}-tab-${v}`}
-            type="button"
-            role="tab"
-            aria-selected={v === shown}
-            aria-controls={`${ids}-panel`}
-            disabled={v === 'chart' && editing}
-            className={cn(
-              'rounded-md px-3 py-1 text-sm font-medium text-muted-foreground transition-colors disabled:opacity-50',
-              v === shown && 'bg-background text-foreground shadow-sm'
-            )}
-            onClick={() => setView(v)}
-          >
-            {t(`confirmed.detail.views.${v}`)}
-          </button>
-        ))}
-      </div>
+        idPrefix={ids}
+        value={shown}
+        onValueChange={setView}
+        items={VIEWS.map((v) => ({
+          value: v,
+          label: t(`confirmed.detail.views.${v}`),
+          disabled: v === 'chart' && editing,
+        }))}
+      />
       <div
         id={`${ids}-panel`}
         role="tabpanel"
