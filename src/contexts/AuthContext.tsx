@@ -19,7 +19,7 @@ import {
   signOut,
 } from '@/auth/apiClient';
 import type { SignOutReason } from '@/auth/authChannel';
-import { authApi } from '@/pages/auth/api';
+import { authApi } from '@/api/auth';
 import { toast } from '@/hooks/use-toast';
 import type {
   UserProfileDto,

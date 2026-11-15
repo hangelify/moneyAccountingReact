@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import type {
   DuplicateRange,
   DuplicateSuggestionsResponse,

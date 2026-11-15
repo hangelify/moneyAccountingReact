@@ -4,6 +4,56 @@
       "count": 1
     }
   },
+  "src/api/auth.ts": {
+    "@typescript-eslint/no-invalid-void-type": {
+      "count": 2
+    }
+  },
+  "src/api/batchUploadError.ts": {
+    "@typescript-eslint/switch-exhaustiveness-check": {
+      "count": 1
+    }
+  },
+  "src/api/billEvents.test.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/api/billEvents.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/api/bills.test.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/api/buildBillsQueryParams.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/api/categories.test.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 3
+    }
+  },
+  "src/api/dashboard.test.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    }
+  },
+  "src/api/parsePhotoError.test.ts": {
+    "@typescript-eslint/explicit-function-return-type": {
+      "count": 1
+    }
+  },
+  "src/api/parsePhotoError.ts": {
+    "@typescript-eslint/switch-exhaustiveness-check": {
+      "count": 1
+    }
+  },
   "src/auth/isHouseholdForbidden.test.ts": {
     "@typescript-eslint/explicit-function-return-type": {
       "count": 1
@@ -20,6 +70,45 @@
   "src/components/bills/NewBillModal.tsx": {
     "react-refresh/only-export-components": {
       "count": 1
+    }
+  },
+  "src/components/charts/SpendingLegend.test.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 7
+    }
+  },
+  "src/components/charts/SpendingSunburst.test.tsx": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 5
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/components/charts/SpendingSunburst.tsx": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 4
+    }
+  },
+  "src/components/charts/segmentStyle.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/components/charts/sunburstGeometry.test.ts": {
+    "@typescript-eslint/explicit-function-return-type": {
+      "count": 1
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 20
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/components/charts/sunburstGeometry.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
     }
   },
   "src/components/currency/CurrencySelect.tsx": {
@@ -122,9 +211,6 @@
     }
   },
   "src/contexts/BillEventsContext.test.tsx": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
@@ -204,6 +290,19 @@
       "count": 1
     }
   },
+  "src/lib/applyBatchEvent.test.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/lib/period.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    },
+    "@typescript-eslint/switch-exhaustiveness-check": {
+      "count": 1
+    }
+  },
   "src/lib/textOverflow.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
@@ -222,11 +321,6 @@
   "src/lib/validation-schemas.ts": {
     "@typescript-eslint/no-deprecated": {
       "count": 1
-    }
-  },
-  "src/pages/auth/api.ts": {
-    "@typescript-eslint/no-invalid-void-type": {
-      "count": 2
     }
   },
   "src/pages/bills/BillDetailDrawer.test.tsx": {
@@ -289,21 +383,6 @@
       "count": 1
     }
   },
-  "src/pages/bills/api.test.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/pages/bills/applyBatchEvent.test.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/pages/bills/batchUploadError.ts": {
-    "@typescript-eslint/switch-exhaustiveness-check": {
-      "count": 1
-    }
-  },
   "src/pages/bills/billDetailEdits.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 4
@@ -314,22 +393,7 @@
       "count": 2
     }
   },
-  "src/pages/bills/billEvents.test.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/pages/bills/billEvents.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
   "src/pages/bills/billToSpending.test.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/pages/bills/buildBillsQueryParams.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
@@ -403,34 +467,9 @@
       "count": 1
     }
   },
-  "src/pages/bills/parseBillsSearchParams.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    }
-  },
-  "src/pages/bills/parsePhotoError.test.ts": {
-    "@typescript-eslint/explicit-function-return-type": {
-      "count": 1
-    }
-  },
-  "src/pages/bills/parsePhotoError.ts": {
-    "@typescript-eslint/switch-exhaustiveness-check": {
-      "count": 1
-    }
-  },
   "src/pages/bills/useBillDetailActions.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 8
-    }
-  },
-  "src/pages/categories/api.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    }
-  },
-  "src/pages/dashboard/api.test.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
     }
   },
   "src/pages/dashboard/components/SpendingBreakdownCard.test.tsx": {
@@ -441,59 +480,9 @@
       "count": 2
     }
   },
-  "src/pages/dashboard/components/SpendingLegend.test.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 7
-    }
-  },
-  "src/pages/dashboard/components/SpendingSunburst.test.tsx": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 5
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/pages/dashboard/components/SpendingSunburst.tsx": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 4
-    }
-  },
-  "src/pages/dashboard/components/segmentStyle.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
   "src/pages/dashboard/parseSpendingSearchParams.ts": {
     "@typescript-eslint/prefer-nullish-coalescing": {
       "count": 1
-    }
-  },
-  "src/pages/dashboard/period.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    },
-    "@typescript-eslint/switch-exhaustiveness-check": {
-      "count": 1
-    }
-  },
-  "src/pages/dashboard/sunburstGeometry.test.ts": {
-    "@typescript-eslint/explicit-function-return-type": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 20
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/pages/dashboard/sunburstGeometry.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
     }
   },
   "src/pages/households/HouseholdSettings.tsx": {

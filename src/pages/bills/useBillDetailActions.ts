@@ -15,7 +15,7 @@ import type {
   PossibleDuplicate,
   UpdateBillRequest,
 } from '@/types/bills';
-import { billsApi } from './api';
+import { billsApi } from '@/api/bills';
 import {
   billToEdits,
   buildDetailConfirmPayload,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildBillsQueryParams } from './buildBillsQueryParams';
+import { buildBillsQueryParams } from '@/api/buildBillsQueryParams';
 import { parseBillsSearchParams } from './parseBillsSearchParams';
 
 function p(qs: string): URLSearchParams {

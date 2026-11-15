@@ -4,7 +4,7 @@ import type {
   BatchItemStatus,
   BillBatch,
   ItemEventData,
-} from '../../types/bills';
+} from '@/types/bills';
 import { applyBatchEvent } from './applyBatchEvent';
 
 const makeBatch = (): BillBatch => ({

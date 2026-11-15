@@ -13,13 +13,13 @@ import {
   OWN_FORBIDDEN_META,
   useHouseholds,
 } from './HouseholdContext';
-import { householdsApi } from '@/pages/households/api';
+import { householdsApi } from '@/api/households';
 import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { TEST_HOUSEHOLDS } from '@/test/household';
 import { useTrackedBatches } from '@/hooks/useBillBatch';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import {
   useBillBatchStore,
   __resetBillBatchStore,
@@ -31,7 +31,7 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ isAuthenticated: auth.isAuthenticated }),
 }));
 
-vi.mock('@/pages/households/api', () => ({
+vi.mock('@/api/households', () => ({
   householdsApi: { list: vi.fn() },
 }));
 

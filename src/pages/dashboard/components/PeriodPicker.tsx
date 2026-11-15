@@ -17,7 +17,7 @@ import {
   shiftParams,
   validateCustomRange,
   type DateRange,
-} from '../period';
+} from '@/lib/period';
 
 const CUSTOM_DEBOUNCE_MS = 400;
 

@@ -2,7 +2,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { formatAmount } from '@/pages/dashboard/format';
+import { formatAmount } from '@/lib/format';
 import type { BillResponseDto } from '@/types/bills';
 
 export type HouseholdAmountBill = Pick<

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { BillPhotoDropzone, type SelectedPhoto } from './BillPhotoDropzone';
 import { preparePhotos, useBatchUpload } from './useBatchUpload';
-import { billsApi } from '@/pages/bills/api';
+import { billsApi } from '@/api/bills';
 import { validateBillImage } from '@/lib/imageValidation';
 import { BATCH_MAX_FILES } from '@/const/bills';
 import { useBillDraftStore } from '@/stores/billDraftStore';
@@ -24,7 +24,7 @@ import { ApiError } from '@/auth/apiError';
 import { tokenStorage } from '@/auth/tokenStorage';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouseholds } from '@/contexts/HouseholdContext';
-import { toParsePhotoFailure } from '@/pages/bills/parsePhotoError';
+import { toParsePhotoFailure } from '@/api/parsePhotoError';
 import { HouseholdSelect } from './HouseholdSelect';
 
 // Module-level so they survive closing and reopening the modal. A rate limit

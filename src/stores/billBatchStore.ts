@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { BillBatch } from '@/types/bills';
-import type { WaitingChange } from '@/pages/bills/applyBatchEvent';
+import type { WaitingChange } from '@/lib/applyBatchEvent';
 
 const STORAGE_KEY = 'billBatches';
 

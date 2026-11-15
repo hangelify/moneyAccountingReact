@@ -3,7 +3,7 @@ import type {
   BillEventData,
   BillEventType,
   ItemEventData,
-} from '../../types/bills';
+} from '@/types/bills';
 
 export interface WaitingChange {
   set?: number;

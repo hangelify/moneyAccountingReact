@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { billsApi } from '@/pages/bills/api';
-import type { ConfirmedBillsFilters } from '@/pages/bills/buildBillsQueryParams';
+import { billsApi } from '@/api/bills';
+import type { ConfirmedBillsFilters } from '@/api/buildBillsQueryParams';
 import type { Paginated } from '@/types/pagination';
 import type { BillResponseDto } from '@/types/bills';
 

@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
-import { dashboardApi } from '@/pages/dashboard/api';
+import { dashboardApi } from '@/api/dashboard';
 import type {
   SpendingBreakdown,
   SpendingBreakdownParams,

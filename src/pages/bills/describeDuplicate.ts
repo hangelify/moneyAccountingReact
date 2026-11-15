@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { formatAmount } from '@/pages/dashboard/format';
+import { formatAmount } from '@/lib/format';
 import type { PossibleDuplicate } from '@/types/bills';
 
 /** "Oct 3" for a YYYY-MM-DD bill date, read as a calendar day. */

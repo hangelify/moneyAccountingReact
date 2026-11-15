@@ -4,7 +4,7 @@ import type {
   SpendingBreakdownParams,
   SpendingPeriod,
 } from '@/types/dashboard';
-import { localIsoDate, validateCustomRange } from './period';
+import { localIsoDate, validateCustomRange } from '@/lib/period';
 
 export interface ParsedSpendingSearch {
   params: SpendingBreakdownParams;

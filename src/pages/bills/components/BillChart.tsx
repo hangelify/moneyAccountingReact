@@ -2,10 +2,13 @@ import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BillDetailResponseDto } from '@/types/bills';
-import { ChartBreadcrumb } from '@/pages/dashboard/components/ChartBreadcrumb';
-import { SpendingLegend } from '@/pages/dashboard/components/SpendingLegend';
-import { SpendingSunburst } from '@/pages/dashboard/components/SpendingSunburst';
-import { PALETTE_SIZE, categoryKey } from '@/pages/dashboard/sunburstGeometry';
+import { ChartBreadcrumb } from '@/components/charts/ChartBreadcrumb';
+import { SpendingLegend } from '@/components/charts/SpendingLegend';
+import { SpendingSunburst } from '@/components/charts/SpendingSunburst';
+import {
+  PALETTE_SIZE,
+  categoryKey,
+} from '@/components/charts/sunburstGeometry';
 import { billToSpending } from '../billToSpending';
 
 export interface BillChartProps {

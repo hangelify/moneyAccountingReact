@@ -3,7 +3,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { ApiError } from '@/auth/apiError';
 import type { SpendingBreakdown } from '@/types/dashboard';
-import { dashboardApi } from './api';
+import { dashboardApi } from './dashboard';
 
 const URL = '/households/hh-1/bills/dashboard/spending-breakdown';
 

@@ -48,8 +48,8 @@ export function swatchStyle(look: SegmentLook): CSSProperties {
   }
   const s = segmentStyle(look);
   return {
-    backgroundColor: s.fill as string,
+    backgroundColor: s.fill,
     opacity: s.fillOpacity,
-    border: s.stroke ? `1px solid ${s.stroke as string}` : undefined,
+    border: s.stroke ? `1px solid ${s.stroke}` : undefined,
   };
 }

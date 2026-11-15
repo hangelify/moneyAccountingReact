@@ -12,12 +12,12 @@ import {
   refreshAccessToken,
 } from '@/auth/apiClient';
 import type * as ApiClientModule from '@/auth/apiClient';
-import { authApi } from '@/pages/auth/api';
+import { authApi } from '@/api/auth';
 import { toast } from '@/hooks/use-toast';
 import type { UserProfileDto } from '@/types/auth';
 import '@/i18n';
 
-vi.mock('@/pages/auth/api', () => ({
+vi.mock('@/api/auth', () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),

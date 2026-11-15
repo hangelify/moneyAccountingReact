@@ -3,7 +3,7 @@ import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { formatAmount } from '@/pages/dashboard/format';
+import { formatAmount } from '@/lib/format';
 import type { DuplicateSuggestionPair, PossibleDuplicate } from '@/types/bills';
 import { addedBy } from '../describeDuplicate';
 

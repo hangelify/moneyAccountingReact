@@ -1,5 +1,5 @@
-import { ApiError } from '../../auth/apiError';
-import type { AiErrorBody } from '../../types/bills';
+import { ApiError } from '@/auth/apiError';
+import type { AiErrorBody } from '@/types/bills';
 import { isCancel, retryAfterSec } from './retryAfter';
 
 export type BatchUploadFailure =

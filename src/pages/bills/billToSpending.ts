@@ -4,7 +4,7 @@ import type {
   SpendingCurrency,
   SpendingSubCategory,
 } from '@/types/dashboard';
-import { lineCategory } from './lineCategory';
+import { lineCategory } from '@/lib/lineCategory';
 
 const cents = (n: number): number => Math.round(n * 100) / 100;
 const percent = (part: number, whole: number): number =>

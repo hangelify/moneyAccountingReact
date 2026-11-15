@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { ApiError } from '@/auth/apiError';
 import { toast } from '@/hooks/use-toast';
-import { householdsApi } from '@/pages/households/api';
+import { householdsApi } from '@/api/households';
 import {
   HouseholdTestProvider,
   TEST_HOUSEHOLDS,
@@ -16,7 +16,7 @@ import {
 import type { Household } from '@/types/households';
 import { HouseholdSettings } from './HouseholdSettings';
 
-vi.mock('@/pages/households/api', () => ({
+vi.mock('@/api/households', () => ({
   householdsApi: { update: vi.fn() },
 }));
 vi.mock('@/hooks/use-toast', async (importOriginal) => {

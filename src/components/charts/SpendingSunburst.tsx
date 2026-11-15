@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/lib/useMediaQuery';
 import { cn } from '@/lib/utils';
 import type { SpendingCurrency } from '@/types/dashboard';
-import { formatAmount } from '../format';
+import { formatAmount } from '@/lib/format';
 import {
   PALETTE_SIZE,
   RADII,
@@ -13,7 +13,7 @@ import {
   buildSunburst,
   categoryKey,
   type SunburstArc,
-} from '../sunburstGeometry';
+} from './sunburstGeometry';
 import { hatchId, segmentStyle } from './segmentStyle';
 
 export interface SpendingSunburstProps {
