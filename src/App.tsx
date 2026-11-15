@@ -54,6 +54,16 @@ const BillDetailRoute = lazy(() =>
   }))
 );
 
+// Component showcase (HAN-107): dev builds only. In production the condition
+// is a constant false and Vite drops the import with the page.
+const DevUi = import.meta.env.DEV
+  ? lazy(() =>
+      import('@/pages/dev/ui/DevUiPage').then((m) => ({
+        default: m.DevUiPage,
+      }))
+    )
+  : null;
+
 function App(): ReactElement {
   return (
     <div className="min-h-screen flex flex-col">
@@ -126,6 +136,7 @@ function App(): ReactElement {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            {DevUi && <Route path="/dev/ui" element={<DevUi />} />}
           </Routes>
         </Suspense>
       </main>

@@ -1,8 +1,16 @@
 import type { ComponentType } from 'react';
 
-// One showcase section (HAN-107). Each file in ./sections exports
-// `section`; the page picks them up on its own, so adding a component to the
-// showcase never touches a shared file.
+// Showcase sections (HAN-107). Each file in ./sections exports `id`, `title`,
+// `order` (literal constants) and a `Section` component; the page picks them
+// up on its own, so adding a component to the showcase touches no shared file.
+// Literal constants keep react-refresh/only-export-components happy.
+export interface SectionModule {
+  id?: string;
+  title?: string;
+  order?: number;
+  Section?: ComponentType;
+}
+
 export interface ShowcaseSection {
   id: string;
   title: string;
@@ -10,20 +18,27 @@ export interface ShowcaseSection {
   Component: ComponentType;
 }
 
-type SectionModules = Record<string, { section?: ShowcaseSection }>;
-
-export function collectSections(modules: SectionModules): ShowcaseSection[] {
+export function collectSections(
+  modules: Record<string, SectionModule>
+): ShowcaseSection[] {
   const seen = new Set<string>();
-  const sections = Object.entries(modules).map(([path, module]) => {
-    const { section } = module;
-    if (!section) {
-      throw new Error(`${path} must export \`section\``);
+  const sections = Object.entries(modules).map(([path, m]) => {
+    const { id, title, order, Section } = m;
+    if (
+      id === undefined ||
+      title === undefined ||
+      order === undefined ||
+      !Section
+    ) {
+      throw new Error(
+        `${path} must export id, title, order and a Section component`
+      );
     }
-    if (seen.has(section.id)) {
-      throw new Error(`Duplicate showcase section id "${section.id}"`);
+    if (seen.has(id)) {
+      throw new Error(`Duplicate showcase section id "${id}"`);
     }
-    seen.add(section.id);
-    return section;
+    seen.add(id);
+    return { id, title, order, Component: Section };
   });
   return sections.sort(
     (a, b) => a.order - b.order || a.title.localeCompare(b.title)
@@ -31,7 +46,5 @@ export function collectSections(modules: SectionModules): ShowcaseSection[] {
 }
 
 export const sections: ShowcaseSection[] = collectSections(
-  import.meta.glob<{ section?: ShowcaseSection }>('./sections/*.tsx', {
-    eager: true,
-  })
+  import.meta.glob<SectionModule>('./sections/*.tsx', { eager: true })
 );
