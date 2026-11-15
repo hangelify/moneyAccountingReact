@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -144,5 +144,30 @@ describe('App', () => {
         )
       ).toBeInTheDocument();
     });
+  });
+});
+
+describe('App /dev/ui', () => {
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it('serves the UI showcase in dev builds', async () => {
+    window.history.pushState({}, '', '/dev/ui');
+    render(
+      <ThemeProvider>
+        <QueryClientProvider client={createTestQueryClient()}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'UI showcase' })
+    ).toBeInTheDocument();
   });
 });

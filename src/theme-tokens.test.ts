@@ -25,7 +25,7 @@ function readBlock(selector: string): Record<string, string> {
 }
 
 const tokens: Record<Theme, Record<string, string | undefined>> = {
-  root: readBlock(':root'),
+  root: readBlock(':root,\n  .light'),
   dark: readBlock('.dark'),
 };
 
@@ -95,4 +95,9 @@ describe.each(['root', 'dark'] as const)('%s theme tokens', (theme) => {
       contrast(token(theme, `${s}-foreground`), token(theme, s))
     ).toBeGreaterThanOrEqual(AA);
   });
+});
+
+// The /dev/ui showcase renders a light column inside a dark page.
+it('lets a .light wrapper force the light tokens inside a dark page', () => {
+  expect(css).toContain(':root,\n  .light {');
 });
