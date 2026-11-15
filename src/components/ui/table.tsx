@@ -14,7 +14,7 @@ const densityClass: Record<TableDensity, string> = {
 const numericClass = 'text-right tabular-nums';
 
 export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
-  density?: TableDensity;
+  density?: TableDensity | undefined;
   // Classes for the scroll container around the table.
   containerClassName?: string;
 }

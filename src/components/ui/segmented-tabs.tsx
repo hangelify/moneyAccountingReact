@@ -55,11 +55,11 @@ export interface SegmentedTabsProps<V extends string> {
   items: SegmentedTabItem<V>[];
   value: V;
   onValueChange: (value: V) => void;
-  variant?: SegmentedVariant;
+  variant?: SegmentedVariant | undefined;
   'aria-label'?: string;
   // With it, tab ids are `${idPrefix}-tab-${value}` and every tab controls
   // `${idPrefix}-panel`, which the caller renders.
-  idPrefix?: string;
+  idPrefix?: string | undefined;
   className?: string;
 }
 
@@ -139,7 +139,7 @@ export interface SegmentedNavItem {
 
 export interface SegmentedNavProps {
   items: SegmentedNavItem[];
-  variant?: SegmentedVariant;
+  variant?: SegmentedVariant | undefined;
   'aria-label'?: string;
   className?: string;
 }
@@ -161,7 +161,7 @@ export function SegmentedNav({
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.end}
+          end={item.end ?? false}
           className={({ isActive }) =>
             cn(itemVariants({ variant, active: isActive }))
           }
