@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select } from '@/components/ui/select';
 import type { Household } from '@/types/households';
 
 export interface HouseholdSelectProps {
@@ -22,9 +23,8 @@ export function HouseholdSelect({
       <label htmlFor="household" className="text-sm font-medium">
         {t('newBillModal.household')}
       </label>
-      <select
+      <Select
         id="household"
-        className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-60"
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
@@ -34,7 +34,7 @@ export function HouseholdSelect({
             {h.name}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }

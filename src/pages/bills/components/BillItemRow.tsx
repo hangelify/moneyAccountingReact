@@ -11,8 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
-
-const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
+import { UnitSelect } from './UnitSelect';
 
 interface BillItemRowProps {
   item: BillEditItem;
@@ -52,19 +51,11 @@ export function BillItemRow({
         />
       </td>
       <td className="px-2 py-2">
-        <select
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+        <UnitSelect
+          className="px-2"
           value={item.unit}
-          onChange={(e) =>
-            onChange({ unit: e.target.value as BillEditItem['unit'] })
-          }
-        >
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {u || '—'}
-            </option>
-          ))}
-        </select>
+          onChange={(unit) => onChange({ unit })}
+        />
       </td>
       <td className="px-2 py-2">
         <DecimalInput

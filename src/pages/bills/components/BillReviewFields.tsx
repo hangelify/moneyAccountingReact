@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CurrencySelect } from '@/components/currency/CurrencySelect';
 import { CURRENCY } from '@/const/currency';
 import type { BillEdits } from '@/types/bills';
 
@@ -51,19 +52,12 @@ export function BillReviewFields({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="currency">{t('review.fields.currency')}</Label>
-        <select
+        <CurrencySelect
           id="currency"
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          value={edits.currency}
-          onChange={(e) => onChange({ currency: e.target.value })}
-        >
-          <option value="">—</option>
-          {Object.values(CURRENCY).map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+          emptyLabel="—"
+          value={edits.currency in CURRENCY ? edits.currency : null}
+          onChange={(c) => onChange({ currency: c ?? '' })}
+        />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="total_amount">{t('review.fields.totalAmount')}</Label>

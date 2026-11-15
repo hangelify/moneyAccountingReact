@@ -11,8 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
-
-const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
+import { UnitSelect } from './UnitSelect';
 
 interface BillItemCardProps {
   item: BillEditItem;
@@ -66,20 +65,11 @@ export function BillItemCard({
         </div>
         <div className="space-y-1">
           <Label htmlFor={`item-${index}-unit`}>{cols.unit}</Label>
-          <select
+          <UnitSelect
             id={`item-${index}-unit`}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
             value={item.unit}
-            onChange={(e) =>
-              onChange({ unit: e.target.value as BillEditItem['unit'] })
-            }
-          >
-            {UNITS.map((u) => (
-              <option key={u} value={u}>
-                {u || '—'}
-              </option>
-            ))}
-          </select>
+            onChange={(unit) => onChange({ unit })}
+          />
         </div>
       </div>
       <div className="space-y-1">

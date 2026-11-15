@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Select } from '@/components/ui/select';
 import {
   CURRENCY,
   CURRENCY_REGION_ORDER,
@@ -12,6 +13,8 @@ export interface CurrencySelectProps {
   disabled?: boolean;
   // A value must be picked: no "All currencies" option.
   required?: boolean;
+  // Text of the empty option; "All currencies" by default.
+  emptyLabel?: string;
   id?: string;
   'aria-label'?: string | undefined;
 }
@@ -21,27 +24,32 @@ export function CurrencySelect({
   onChange,
   disabled,
   required = false,
+  emptyLabel,
   id,
   'aria-label': ariaLabel,
 }: CurrencySelectProps): ReactElement {
   const { t } = useTranslation('bills');
 
   const handleChange = (v: string): void => {
-    if (v === '') return onChange(null);
-    if (v in CURRENCY) onChange(v as Currency);
+    if (v === '') {
+      onChange(null);
+      return;
+    }
+    if (v in CURRENCY) onChange(v);
   };
 
   return (
-    <select
+    <Select
       id={id}
       aria-label={ariaLabel}
-      className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-60"
       value={value ?? ''}
       disabled={disabled}
       onChange={(e) => handleChange(e.target.value)}
     >
       {!required && (
-        <option value="">{t('confirmed.filters.currencyAll')}</option>
+        <option value="">
+          {emptyLabel ?? t('confirmed.filters.currencyAll')}
+        </option>
       )}
       {CURRENCY_REGION_ORDER.map((group) => (
         <optgroup key={group.label} label={group.label}>
@@ -52,6 +60,6 @@ export function CurrencySelect({
           ))}
         </optgroup>
       ))}
-    </select>
+    </Select>
   );
 }

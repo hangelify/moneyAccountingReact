@@ -28,6 +28,11 @@ describe('CurrencySelect', () => {
     expect(container.querySelector('option[value=""]')).toBeNull();
   });
 
+  it('uses emptyLabel for the empty option', () => {
+    render(<CurrencySelect value={null} onChange={vi.fn()} emptyLabel="—" />);
+    expect(screen.getByRole('option', { name: '—' })).toHaveValue('');
+  });
+
   it('reflects the controlled value', () => {
     render(<CurrencySelect value="USD" onChange={vi.fn()} />);
     expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe('USD');
