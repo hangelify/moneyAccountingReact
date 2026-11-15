@@ -83,6 +83,13 @@ describe.each(['root', 'dark'] as const)('%s theme tokens', (theme) => {
     expect(contrast(token(theme, s), surface)).toBeGreaterThanOrEqual(AA);
   });
 
+  // ToastDescription renders the state text at `opacity-90` on the tint
+  it.each(STATES)('%s text at 0.9 opacity is AA on its /10 surface', (s) => {
+    const surface = blend(token(theme, s), token(theme, 'background'), 0.1);
+    const text = blend(token(theme, s), surface, 0.9);
+    expect(contrast(text, surface)).toBeGreaterThanOrEqual(AA);
+  });
+
   it.each(STATES)('%s foreground is AA on the solid color', (s) => {
     expect(
       contrast(token(theme, `${s}-foreground`), token(theme, s))
