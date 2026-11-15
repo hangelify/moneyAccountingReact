@@ -1,4 +1,3 @@
-import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ESLint, type Linter } from 'eslint';
 import { describe, expect, it, vi } from 'vitest';
@@ -75,17 +74,16 @@ export function LintProbe({ id }: { id: string }): ReactElement {
 }
 `;
 
-async function lintProbe(rel: string, code: string): Promise<string[]> {
-  const probe = path.join(repoRoot, rel);
-  await writeFile(probe, code);
-  try {
-    const results = await eslint.lintFiles([probe]);
-    return results.flatMap((r) =>
-      r.messages.map((m) => `${m.ruleId ?? ''}: ${m.message}`)
-    );
-  } finally {
-    await rm(probe, { force: true });
-  }
+// Lint `code` as if it were the existing project file `rel`. Nothing is written to disk: the
+// TypeScript project service does not reliably pick up files created during a run (CI failed with
+// "was not found by the project service").
+async function lintAs(rel: string, code: string): Promise<string[]> {
+  const results = await eslint.lintText(code, {
+    filePath: path.join(repoRoot, rel),
+  });
+  return results.flatMap((r) =>
+    r.messages.map((m) => `${m.ruleId ?? ''}: ${m.message}`)
+  );
 }
 
 describe('eslint config', () => {
@@ -106,66 +104,58 @@ describe('eslint config', () => {
   });
 
   it('flags a new useEffect with missing deps, allows arrow-shorthand void', async () => {
-    const probe = path.join(repoRoot, 'src', '__lint_probe__.tsx');
-    await writeFile(probe, PROBE);
-    try {
-      const results = await eslint.lintFiles([probe]);
-      expect(results).toHaveLength(1);
-      const ruleIds = results.flatMap((r) => r.messages.map((m) => m.ruleId));
-      expect(ruleIds).toContain('react-hooks/exhaustive-deps');
-      expect(ruleIds).not.toContain(
-        '@typescript-eslint/no-confusing-void-expression'
-      );
-    } finally {
-      await rm(probe, { force: true });
-    }
-    // typed linting builds a TS program; slow when the whole suite runs in parallel
-  }, 60_000);
+    const messages = (await lintAs('src/App.tsx', PROBE)).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).toContain('react-hooks/exhaustive-deps');
+    expect(messages).not.toContain(
+      '@typescript-eslint/no-confusing-void-expression'
+    );
+  });
 
   // Mirrors of the dependency-cruiser rules (HAN-126), so the editor shows them.
   it.each([
     [
-      'src/hooks/__lint_probe__.ts',
+      'src/hooks/useMarkets.ts',
       "import { Home } from '@/pages/home/Home';\nexport const x = Home;\n",
       'cannot import a page',
     ],
     [
-      'src/components/ui/__lint_probe__.ts',
+      'src/components/ui/button.tsx',
       "import { useHouseholds } from '@/contexts/HouseholdContext';\nexport const x = useHouseholds;\n",
       'components/ui imports only',
     ],
     [
-      'src/components/__lint_probe__.ts',
+      'src/components/bills/useBatchUpload.ts',
       "import axios from 'axios';\nexport const x = axios;\n",
       'axios is used only in src/api/',
     ],
-  ])(
-    'no-restricted-imports in %s',
-    async (rel, code, message) => {
-      const messages = await lintProbe(rel, code);
-      expect(messages.join('\n')).toContain(message);
-    },
-    60_000
-  );
+  ])('no-restricted-imports in %s', async (rel, code, message) => {
+    const messages = (await lintAs(rel, code)).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).toContain(message);
+  });
 
   it('allows axios in src/api', async () => {
-    const messages = await lintProbe(
-      'src/api/__lint_probe__.ts',
-      "import axios from 'axios';\nexport const x = axios;\n"
-    );
-    expect(messages.join('\n')).not.toContain('no-restricted-imports');
-  }, 60_000);
+    const messages = (
+      await lintAs(
+        'src/api/bills.ts',
+        "import axios from 'axios';\nexport const x = axios;\n"
+      )
+    ).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).not.toContain('no-restricted-imports');
+  });
 
   it('a 300-line component fails max-lines; a test file has no size limit', async () => {
-    const component = await lintProbe(
-      'src/components/__lint_probe__.tsx',
-      bigComponent(300)
+    const component = (
+      await lintAs('src/components/bills/NewBillModal.tsx', bigComponent(300))
+    ).join('\n');
+    expect(component).not.toContain('Parsing error');
+    expect(component).toContain('max-lines');
+    const testFile = (await lintAs('src/App.test.tsx', bigComponent(300))).join(
+      '\n'
     );
-    expect(component.join('\n')).toContain('max-lines');
-    const testFile = await lintProbe(
-      'src/components/__lint_probe__.test.tsx',
-      bigComponent(300)
-    );
-    expect(testFile.join('\n')).not.toContain('max-lines');
-  }, 60_000);
+    expect(testFile).not.toContain('Parsing error');
+    expect(testFile).not.toContain('max-lines');
+  });
 });
