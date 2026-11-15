@@ -1,4 +1,3 @@
-import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ESLint, type Linter } from 'eslint';
 import { describe, expect, it, vi } from 'vitest';
@@ -60,6 +59,18 @@ export function LintProbe({ id }: { id: string }): ReactElement {
 }
 `;
 
+// Lint `code` as if it were the existing project file `rel`. Nothing is written to disk: the
+// TypeScript project service does not reliably pick up files created during a run (CI failed with
+// "was not found by the project service").
+async function lintAs(rel: string, code: string): Promise<string[]> {
+  const results = await eslint.lintText(code, {
+    filePath: path.join(repoRoot, rel),
+  });
+  return results.flatMap((r) =>
+    r.messages.map((m) => `${m.ruleId ?? ''}: ${m.message}`)
+  );
+}
+
 describe('eslint config', () => {
   it.each(['src/App.tsx', 'src/contexts/HouseholdContext.test.tsx'])(
     'has no rule at warn severity for %s',
@@ -78,19 +89,11 @@ describe('eslint config', () => {
   });
 
   it('flags a new useEffect with missing deps, allows arrow-shorthand void', async () => {
-    const probe = path.join(repoRoot, 'src', '__lint_probe__.tsx');
-    await writeFile(probe, PROBE);
-    try {
-      const results = await eslint.lintFiles([probe]);
-      expect(results).toHaveLength(1);
-      const ruleIds = results.flatMap((r) => r.messages.map((m) => m.ruleId));
-      expect(ruleIds).toContain('react-hooks/exhaustive-deps');
-      expect(ruleIds).not.toContain(
-        '@typescript-eslint/no-confusing-void-expression'
-      );
-    } finally {
-      await rm(probe, { force: true });
-    }
-    // typed linting builds a TS program; slow when the whole suite runs in parallel
-  }, 60_000);
+    const messages = (await lintAs('src/App.tsx', PROBE)).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).toContain('react-hooks/exhaustive-deps');
+    expect(messages).not.toContain(
+      '@typescript-eslint/no-confusing-void-expression'
+    );
+  });
 });
