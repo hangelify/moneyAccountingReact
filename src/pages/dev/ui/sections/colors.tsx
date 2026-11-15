@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { cn } from '@/lib/utils';
 
 export const id = 'colors';
 export const title = 'Colors';
@@ -66,7 +67,10 @@ function Swatch({
   return (
     <div className="space-y-1">
       <div
-        className={`flex h-12 items-center justify-center rounded-md border text-sm font-medium ${className}`}
+        className={cn(
+          'flex h-12 items-center justify-center rounded-md border text-sm font-medium',
+          className
+        )}
       >
         Aa
       </div>
@@ -87,7 +91,7 @@ export function Section(): ReactElement {
         {STATES.map((s) => (
           <div key={s.name} className="space-y-1">
             <Swatch name={s.name} className={s.solid} />
-            <div className={`rounded-md border px-2 py-1 text-xs ${s.soft}`}>
+            <div className={cn('rounded-md border px-2 py-1 text-xs', s.soft)}>
               soft {s.name}
             </div>
           </div>
