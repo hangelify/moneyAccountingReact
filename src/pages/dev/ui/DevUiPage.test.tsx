@@ -23,6 +23,7 @@ describe('DevUiPage', () => {
         'colors',
         'button',
         'input',
+        'select',
         'decimal-input',
         'date-range-picker',
         'dialog',
