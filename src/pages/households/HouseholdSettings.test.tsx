@@ -1,12 +1,12 @@
 import '@/i18n';
-import type * as UseToastModule from '@/hooks/use-toast';
+import type * as UseToastModule from '@/components/ui/use-toast';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { ApiError } from '@/auth/apiError';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { householdsApi } from '@/api/households';
 import {
   HouseholdTestProvider,
@@ -19,7 +19,7 @@ import { HouseholdSettings } from './HouseholdSettings';
 vi.mock('@/api/households', () => ({
   householdsApi: { update: vi.fn() },
 }));
-vi.mock('@/hooks/use-toast', async (importOriginal) => {
+vi.mock('@/components/ui/use-toast', async (importOriginal) => {
   const actual = await importOriginal<typeof UseToastModule>();
   return { ...actual, toast: vi.fn() };
 });

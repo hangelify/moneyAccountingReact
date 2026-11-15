@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/auth/apiError';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import {
   registerSchema,
   type RegisterFormData,

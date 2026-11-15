@@ -5,7 +5,7 @@ import type { TFunction } from 'i18next';
 import { billsApi } from '@/api/bills';
 import { toBatchUploadFailure } from '@/api/batchUploadError';
 import { useBillEventsReady, useTrackBatch } from '@/hooks/useBillBatch';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { tokenStorage } from '@/auth/tokenStorage';
 import { prepareBillImage } from '@/lib/resizeImage';

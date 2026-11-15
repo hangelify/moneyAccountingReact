@@ -205,6 +205,11 @@
       "count": 1
     }
   },
+  "src/components/ui/use-toast.ts": {
+    "@typescript-eslint/explicit-function-return-type": {
+      "count": 4
+    }
+  },
   "src/contexts/AuthContext.tsx": {
     "react-refresh/only-export-components": {
       "count": 1
@@ -228,11 +233,6 @@
   "src/hooks/categoryTree.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
-    }
-  },
-  "src/hooks/use-toast.ts": {
-    "@typescript-eslint/explicit-function-return-type": {
-      "count": 4
     }
   },
   "src/hooks/useBillDetail.ts": {

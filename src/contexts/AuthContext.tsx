@@ -20,7 +20,7 @@ import {
 } from '@/auth/apiClient';
 import type { SignOutReason } from '@/auth/authChannel';
 import { authApi } from '@/api/auth';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import type {
   UserProfileDto,
   LoginRequest,

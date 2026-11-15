@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ApiError } from '@/auth/apiError';
 import { useCountdown } from './useCountdown';
 import { fieldErrorsFor } from './formErrors';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { loginSchema, type LoginFormData } from '@/lib/validation-schemas';
 import { Loader2 } from 'lucide-react';
 

@@ -168,9 +168,24 @@ One command runs every check — for people, for the AI agent and (as parallel j
 npm run verify
 ```
 
-It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `test:run`.
+It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `arch` → `test:run`.
 "Done" means `npm run verify` is green. CI (`.github/workflows/ci.yml`) runs the same scripts as
 separate jobs plus `build`; keep both in sync when a step is added.
+
+### Architecture (`npm run arch`)
+
+[dependency-cruiser](.dependency-cruiser.cjs) enforces the layers, top to bottom:
+
+```
+pages (+ App, main)  →  components / hooks / stores / contexts  →  api / auth  →  lib / types / const / i18n
+```
+
+- a layer imports its own layer and lower ones, never higher; a page never imports another page;
+- `components/ui` imports only `lib/` and packages;
+- `axios` only in `src/api/` and `src/auth/apiClient.ts`;
+- no circular imports, no orphan files. Tests and `src/test/` are exempt from layering.
+
+The most common rules are mirrored in ESLint (`no-restricted-imports`) so the editor shows them.
 
 ## Git Hooks
 

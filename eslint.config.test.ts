@@ -60,6 +60,19 @@ export function LintProbe({ id }: { id: string }): ReactElement {
 }
 `;
 
+async function lintProbe(rel: string, code: string): Promise<string[]> {
+  const probe = path.join(repoRoot, rel);
+  await writeFile(probe, code);
+  try {
+    const results = await eslint.lintFiles([probe]);
+    return results.flatMap((r) =>
+      r.messages.map((m) => `${m.ruleId ?? ''}: ${m.message}`)
+    );
+  } finally {
+    await rm(probe, { force: true });
+  }
+}
+
 describe('eslint config', () => {
   it.each(['src/App.tsx', 'src/contexts/HouseholdContext.test.tsx'])(
     'has no rule at warn severity for %s',
@@ -92,5 +105,39 @@ describe('eslint config', () => {
       await rm(probe, { force: true });
     }
     // typed linting builds a TS program; slow when the whole suite runs in parallel
+  }, 60_000);
+
+  // Mirrors of the dependency-cruiser rules (HAN-126), so the editor shows them.
+  it.each([
+    [
+      'src/hooks/__lint_probe__.ts',
+      "import { Home } from '@/pages/home/Home';\nexport const x = Home;\n",
+      'cannot import a page',
+    ],
+    [
+      'src/components/ui/__lint_probe__.ts',
+      "import { useHouseholds } from '@/contexts/HouseholdContext';\nexport const x = useHouseholds;\n",
+      'components/ui imports only',
+    ],
+    [
+      'src/components/__lint_probe__.ts',
+      "import axios from 'axios';\nexport const x = axios;\n",
+      'axios is used only in src/api/',
+    ],
+  ])(
+    'no-restricted-imports in %s',
+    async (rel, code, message) => {
+      const messages = await lintProbe(rel, code);
+      expect(messages.join('\n')).toContain(message);
+    },
+    60_000
+  );
+
+  it('allows axios in src/api', async () => {
+    const messages = await lintProbe(
+      'src/api/__lint_probe__.ts',
+      "import axios from 'axios';\nexport const x = axios;\n"
+    );
+    expect(messages.join('\n')).not.toContain('no-restricted-imports');
   }, 60_000);
 });

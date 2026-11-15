@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { Header } from '@/components/Header';
-import { RequireAuth } from '@/auth/RequireAuth';
+import { RequireAuth } from '@/components/auth/RequireAuth';
 import { LoadingFallback } from '@/components/common/LoadingFallback';
 
 // Lazy load pages

@@ -5,11 +5,11 @@ import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
-import { toast } from '@/hooks/use-toast';
-import type * as UseToastModule from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
+import type * as UseToastModule from '@/components/ui/use-toast';
 import { useDuplicateMutations } from './useDuplicateMutations';
 
-vi.mock('@/hooks/use-toast', async (importOriginal) => {
+vi.mock('@/components/ui/use-toast', async (importOriginal) => {
   const actual = await importOriginal<typeof UseToastModule>();
   return { ...actual, toast: vi.fn() };
 });

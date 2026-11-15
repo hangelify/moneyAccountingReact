@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useHouseholds } from '@/contexts/HouseholdContext';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useUpdateHousehold } from '@/hooks/useUpdateHousehold';
 import {
   householdSettingsSchema,

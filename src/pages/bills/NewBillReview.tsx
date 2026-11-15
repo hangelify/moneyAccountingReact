@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { BillEditForm } from './components/BillEditForm';
 import { DuplicateBanner } from './components/DuplicateBanner';
 import { useBillDraftStore } from '@/stores/billDraftStore';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';

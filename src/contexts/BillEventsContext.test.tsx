@@ -17,8 +17,8 @@ import {
 } from '@/stores/billBatchStore';
 import { billsApi } from '@/api/bills';
 import { ApiError } from '@/auth/apiError';
-import { toast } from '@/hooks/use-toast';
-import type * as ToastModule from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
+import type * as ToastModule from '@/components/ui/use-toast';
 import type { BillEventHandlers } from '@/api/billEvents';
 import type { BillBatch, BillEventData, BillEventType } from '@/types/bills';
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
@@ -39,7 +39,7 @@ vi.mock('@/api/billEvents', () => ({
   }),
 }));
 
-vi.mock('@/hooks/use-toast', async (importOriginal) => {
+vi.mock('@/components/ui/use-toast', async (importOriginal) => {
   const actual = await importOriginal<typeof ToastModule>();
   return { ...actual, toast: vi.fn(actual.toast) };
 });
