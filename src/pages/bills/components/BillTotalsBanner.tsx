@@ -32,7 +32,7 @@ export function BillTotalsBanner({
   if (Math.abs(diff) <= TOLERANCE) return null;
 
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 sm:flex-row sm:items-center sm:gap-3">
+    <div className="flex flex-col gap-1 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning sm:flex-row sm:items-center sm:gap-3">
       <span className="flex items-center gap-2 font-medium">
         <AlertTriangle className="h-4 w-4" aria-hidden />
         {t('review.items.totalsMismatch.heading')}

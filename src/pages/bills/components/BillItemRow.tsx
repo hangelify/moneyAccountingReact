@@ -96,7 +96,7 @@ export function BillItemRow({
           {item.category_confidence < 0.5 &&
             (item.sub_category || item.category) && (
               <AlertTriangle
-                className="h-4 w-4 text-yellow-600"
+                className="h-4 w-4 text-warning"
                 aria-label={t('review.items.lowConfidence')}
               />
             )}
