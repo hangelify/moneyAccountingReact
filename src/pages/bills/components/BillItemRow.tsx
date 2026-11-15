@@ -3,7 +3,6 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
@@ -12,8 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BillEditItem } from '@/types/bills';
-
-const UNITS: BillEditItem['unit'][] = ['', 'kg', 'g', 'l', 'ml', 'piece'];
+import { UnitSelect } from './UnitSelect';
 
 interface BillItemRowProps {
   item: BillEditItem;
@@ -53,18 +51,11 @@ export function BillItemRow({
         />
       </td>
       <td className="px-2 py-2">
-        <Select
+        <UnitSelect
+          className="px-2"
           value={item.unit}
-          onChange={(e) =>
-            onChange({ unit: e.target.value as BillEditItem['unit'] })
-          }
-        >
-          {UNITS.map((u) => (
-            <option key={u} value={u}>
-              {u || '—'}
-            </option>
-          ))}
-        </Select>
+          onChange={(unit) => onChange({ unit })}
+        />
       </td>
       <td className="px-2 py-2">
         <DecimalInput
