@@ -1,0 +1,21 @@
+# Changes to the checks themselves need the owner's review (HAN-130).
+/eslint.config.js            @hangelify
+/eslint.config.test.ts       @hangelify
+/eslint-suppressions.json    @hangelify
+/.dependency-cruiser.cjs     @hangelify
+/.jscpd.json                 @hangelify
+/.jscpd-baseline.json        @hangelify
+/scripts/check-dup.mjs       @hangelify
+/package.json                @hangelify
+/vite.config.ts              @hangelify
+/vitest.config.ts            @hangelify
+/.nvmrc                      @hangelify
+/.prettierrc                 @hangelify
+/.prettierignore             @hangelify
+/knip.json                   @hangelify
+/tsconfig*.json              @hangelify
+/.lintstagedrc.json          @hangelify
+/.husky/                     @hangelify
+/.github/                    @hangelify
+/.claude/                    @hangelify
+/AGENTS.md                   @hangelify
