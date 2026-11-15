@@ -56,7 +56,8 @@ export function BillItemsTable({
         containerClassName="hidden md:block"
         className="min-w-[1024px] table-fixed"
       >
-        <TableHeader>
+        {/* No rows: the container's own bottom edge closes the header. */}
+        <TableHeader className={items.length === 0 ? 'border-b-0' : undefined}>
           <TableRow>
             <TableHead className="w-[24%] font-bold">{cols.name}</TableHead>
             <TableHead className="w-[8%] font-bold">{cols.quantity}</TableHead>
