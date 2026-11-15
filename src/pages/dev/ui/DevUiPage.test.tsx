@@ -32,6 +32,8 @@ describe('DevUiPage', () => {
         'tooltip',
         'toast',
         'confirm-dialog',
+        'table',
+        'segmented-tabs',
       ])
     );
   });

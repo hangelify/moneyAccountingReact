@@ -3,6 +3,15 @@ import { useTranslation } from 'react-i18next';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { HouseholdTotal } from './HouseholdTotal';
 import { formatLineCategory } from '@/lib/lineCategory';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export interface BillDetailTableProps {
   bill: BillDetailResponseDto;
@@ -62,60 +71,60 @@ export function BillDetailTable({ bill }: BillDetailTableProps): ReactElement {
             {t('confirmed.detail.noItems')}
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full min-w-[44rem] table-fixed text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="w-10 px-2 py-2">#</th>
-                  <th className="w-[28%] px-2 py-2">
-                    {t('confirmed.detail.nameColumn')}
-                  </th>
-                  <th className="w-[30%] px-2 py-2">
-                    {t('confirmed.detail.categoryColumn')}
-                  </th>
-                  <th className="w-[10%] px-2 py-2">
-                    {t('confirmed.detail.countColumn')}
-                  </th>
-                  <th className="w-[12%] px-2 py-2">
-                    {t('confirmed.detail.weightColumn')}
-                  </th>
-                  <th className="w-[14%] px-2 py-2 text-right">
-                    {t('confirmed.detail.amountColumn')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {bill.items.map((item, i) => (
-                  <tr key={item.id ?? i} className="border-t align-middle">
-                    <td className="px-2 py-2 text-muted-foreground">{i + 1}</td>
-                    <td className="truncate px-2 py-2" title={item.raw_name}>
-                      {item.raw_name}
-                    </td>
-                    <td className="px-2 py-2">
-                      {formatLineCategory(item) ??
-                        t('confirmed.detail.uncategorized')}
-                    </td>
-                    <td className="px-2 py-2">{item.product_count}</td>
-                    <td className="px-2 py-2">{item.product_weight ?? '—'}</td>
-                    <td className="px-2 py-2 text-right font-mono">
-                      {money(item.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="border-t bg-muted/30 font-medium">
-                <tr>
-                  <td className="px-2 py-2" />
-                  <td colSpan={4} className="px-2 py-2">
-                    {t('confirmed.detail.itemsTotal')}
-                  </td>
-                  <td className="px-2 py-2 text-right font-mono">
-                    {money(itemsTotal)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <Table density="compact" className="min-w-[44rem] table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 font-bold">#</TableHead>
+                <TableHead className="w-[28%] font-bold">
+                  {t('confirmed.detail.nameColumn')}
+                </TableHead>
+                <TableHead className="w-[30%] font-bold">
+                  {t('confirmed.detail.categoryColumn')}
+                </TableHead>
+                <TableHead className="w-[10%] font-bold">
+                  {t('confirmed.detail.countColumn')}
+                </TableHead>
+                <TableHead className="w-[12%] font-bold">
+                  {t('confirmed.detail.weightColumn')}
+                </TableHead>
+                <TableHead numeric className="w-[14%] font-bold">
+                  {t('confirmed.detail.amountColumn')}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bill.items.map((item, i) => (
+                <TableRow key={item.id ?? i} className="align-middle">
+                  <TableCell className="text-muted-foreground">
+                    {i + 1}
+                  </TableCell>
+                  <TableCell className="truncate" title={item.raw_name}>
+                    {item.raw_name}
+                  </TableCell>
+                  <TableCell>
+                    {formatLineCategory(item) ??
+                      t('confirmed.detail.uncategorized')}
+                  </TableCell>
+                  <TableCell>{item.product_count}</TableCell>
+                  <TableCell>{item.product_weight ?? '—'}</TableCell>
+                  <TableCell numeric className="font-mono">
+                    {money(item.amount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell />
+                <TableCell colSpan={4}>
+                  {t('confirmed.detail.itemsTotal')}
+                </TableCell>
+                <TableCell numeric className="font-mono">
+                  {money(itemsTotal)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         )}
       </section>
     </div>

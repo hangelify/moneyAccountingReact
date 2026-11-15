@@ -1,6 +1,6 @@
 import '@/i18n';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { BillDetailResponseDto } from '@/types/bills';
 import { BillDetailViews } from './BillDetailViews';
@@ -87,6 +87,27 @@ describe('BillDetailViews', () => {
     expect(
       screen.getByText('This bill has no line items.')
     ).toBeInTheDocument();
+  });
+
+  it('arrow keys switch views and skip Chart while editing', async () => {
+    renderViews();
+    screen.getByRole('tab', { name: 'Items' }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Chart' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByRole('tab', { name: 'Chart' })).toHaveFocus();
+    cleanup();
+
+    renderViews({ editing: true });
+    screen.getByRole('tab', { name: 'Items' }).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Items' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByText('items table')).toBeInTheDocument();
   });
 
   it('stays on Items and disables Chart while editing', () => {

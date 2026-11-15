@@ -2,6 +2,13 @@ import { useState, type ReactElement } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import type { BillEditItem } from '@/types/bills';
 import { BillItemRow } from './BillItemRow';
@@ -42,35 +49,42 @@ export function BillItemsTable({
       <h2 className="text-lg font-semibold">{t('review.items.heading')}</h2>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-md border md:block">
-        {/* Fixed layout so the weights below hold: Name and Category get the
-            most room, and the table scrolls instead of squeezing them. */}
-        <table className="w-full min-w-[1024px] table-fixed text-sm">
-          <thead className="bg-muted/50 text-left">
-            <tr>
-              <th className="w-[24%] px-2 py-2">{cols.name}</th>
-              <th className="w-[8%] px-2 py-2">{cols.quantity}</th>
-              <th className="w-[9%] px-2 py-2">{cols.unit}</th>
-              <th className="w-[10%] px-2 py-2">{cols.weightKg}</th>
-              <th className="w-[10%] px-2 py-2">{cols.pricePerKg}</th>
-              <th className="w-[10%] px-2 py-2">{cols.finalPrice}</th>
-              <th className="w-[25%] px-2 py-2">{cols.category}</th>
-              <th className="w-12 px-2 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, i) => (
-              <BillItemRow
-                key={i}
-                item={item}
-                index={i}
-                onChange={(patch) => onUpdateItem(i, patch)}
-                onDelete={() => requestDelete(i, item)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Fixed layout so the weights below hold: Name and Category get the
+          most room, and the table scrolls instead of squeezing them. */}
+      <Table
+        density="compact"
+        containerClassName="hidden md:block"
+        className="min-w-[1024px] table-fixed"
+      >
+        {/* No rows: the container's own bottom edge closes the header. */}
+        <TableHeader className={items.length === 0 ? 'border-b-0' : undefined}>
+          <TableRow>
+            <TableHead className="w-[24%] font-bold">{cols.name}</TableHead>
+            <TableHead className="w-[8%] font-bold">{cols.quantity}</TableHead>
+            <TableHead className="w-[9%] font-bold">{cols.unit}</TableHead>
+            <TableHead className="w-[10%] font-bold">{cols.weightKg}</TableHead>
+            <TableHead className="w-[10%] font-bold">
+              {cols.pricePerKg}
+            </TableHead>
+            <TableHead className="w-[10%] font-bold">
+              {cols.finalPrice}
+            </TableHead>
+            <TableHead className="w-[25%] font-bold">{cols.category}</TableHead>
+            <TableHead className="w-12 font-bold" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.map((item, i) => (
+            <BillItemRow
+              key={i}
+              item={item}
+              index={i}
+              onChange={(patch) => onUpdateItem(i, patch)}
+              onDelete={() => requestDelete(i, item)}
+            />
+          ))}
+        </TableBody>
+      </Table>
 
       {/* Mobile cards */}
       <div className="space-y-3 md:hidden">
