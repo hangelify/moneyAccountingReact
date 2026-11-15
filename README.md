@@ -94,11 +94,23 @@ Run ESLint:
 npm run lint
 ```
 
-Fix linting issues automatically:
+Fix linting issues automatically (also drops baseline entries the fixes resolved):
 
 ```bash
 npm run lint:fix
 ```
+
+#### Baseline (`eslint-suppressions.json`)
+
+Every rule is `error`; nothing is `warn`. Violations that existed when the strict config landed
+(HAN-124) are frozen in `eslint-suppressions.json` as counts per file and rule. New code must be clean:
+one violation over the frozen count fails `npm run lint`.
+
+- Fixed a frozen violation? Run `npm run lint:prune` (pre-commit does it for staged files) and commit
+  the smaller `eslint-suppressions.json`.
+- Never grow the file by hand or with `--suppress-all` / `--suppress-rule` — fix the code instead.
+- Counts are per file and rule: fixing one violation and adding another of the same rule in the same
+  file goes unnoticed, so do not trade them.
 
 ### Formatting
 

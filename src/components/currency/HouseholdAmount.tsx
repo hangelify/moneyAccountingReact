@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-refresh/only-export-components -- text helper shares the component file */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';

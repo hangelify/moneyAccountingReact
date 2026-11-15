@@ -14,8 +14,7 @@ export const env = {
   ),
   nodeEnv:
     (import.meta.env.VITE_NODE_ENV as string | undefined) ??
-    (import.meta.env.MODE as string | undefined) ??
-    'development',
+    import.meta.env.MODE,
   appName:
     (import.meta.env.VITE_APP_NAME as string | undefined) ?? 'Accounting App',
   appVersion:
