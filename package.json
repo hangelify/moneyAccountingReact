@@ -13,6 +13,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "type-check": "tsc -b --noEmit",
+    "verify": "npm run type-check && npm run lint && npm run format:check && npm run test:run",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
@@ -20,7 +21,7 @@
     "preview": "vite preview",
     "prepare": "husky",
     "pre-commit": "lint-staged",
-    "pre-push": "npm run type-check && npm run lint && npm run format:check && npm run test:run"
+    "pre-push": "npm run verify"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

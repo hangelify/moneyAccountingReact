@@ -160,14 +160,27 @@ Run tests with coverage:
 npm run test:coverage
 ```
 
+## Checks
+
+One command runs every check — for people, for the AI agent and (as parallel jobs) in CI:
+
+```bash
+npm run verify
+```
+
+It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `test:run`.
+"Done" means `npm run verify` is green. CI (`.github/workflows/ci.yml`) runs the same scripts as
+separate jobs plus `build`; keep both in sync when a step is added.
+
 ## Git Hooks
 
 The project uses Husky for git hooks:
 
-- **pre-commit**: Runs lint-staged to check and fix staged files (ESLint, Prettier, TypeScript)
-- **pre-push**: Runs full checks (TypeScript, ESLint, Prettier, Tests) before pushing
+- **pre-commit** (fast, staged files only): ESLint with `--max-warnings 0 --fix` (pruning the baseline it
+  resolved) and Prettier. No full type-check here.
+- **pre-push**: `npm run verify`.
 
-These hooks ensure code quality before commits and pushes.
+Do not skip them with `--no-verify`: CI runs the same checks and blocks the merge.
 
 ## CI/CD
 
