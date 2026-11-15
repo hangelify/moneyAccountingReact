@@ -1,4 +1,4 @@
-import { LogOut, Settings, User } from 'lucide-react';
+import { LogOut, Moon, Settings, Sun, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,10 +7,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/useTheme';
+import { ThemeRadioItems } from './ThemeRadioItems';
 import type { ReactElement } from 'react';
 
 interface UserMenuProps {
@@ -35,10 +40,12 @@ export function UserMenu({
 }: UserMenuProps): ReactElement | null {
   const { t } = useTranslation('header');
   const { user, logout } = useAuth();
+  const { resolvedTheme } = useTheme();
 
   if (!user) return null;
 
   const name = displayName(user);
+  const ThemeIcon = resolvedTheme === 'dark' ? Moon : Sun;
 
   const handleLogout = (): void => {
     void logout();
@@ -76,6 +83,15 @@ export function UserMenu({
             {t('menu.householdSettings')}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <ThemeIcon className="mr-2 h-4 w-4" />
+            {t('theme.label')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <ThemeRadioItems />
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}

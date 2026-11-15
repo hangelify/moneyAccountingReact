@@ -34,5 +34,12 @@
     "dismiss": "Dismiss",
     "viewDrafts": "View drafts",
     "clearFinished": "Clear finished"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Change theme"
   }
 }

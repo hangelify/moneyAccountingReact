@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/i18n';
 import type * as ApiClientModule from '@/auth/apiClient';
 import App from './App';
@@ -32,13 +33,15 @@ describe('App', () => {
   it('renders without crashing', async () => {
     const queryClient = createTestQueryClient();
     render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
 
     // Wait for lazy-loaded components
@@ -50,13 +53,15 @@ describe('App', () => {
   it('renders Header component', async () => {
     const queryClient = createTestQueryClient();
     render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
 
     await waitFor(() => {
@@ -70,13 +75,15 @@ describe('App', () => {
   it('renders navigation links in Header', async () => {
     const queryClient = createTestQueryClient();
     render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
 
     await waitFor(() => {
@@ -97,16 +104,37 @@ describe('App', () => {
     });
   });
 
+  it('offers guests a theme switch in the header', async () => {
+    const queryClient = createTestQueryClient();
+    render(
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
+
+    expect(
+      await screen.findByRole('button', { name: 'Change theme' })
+    ).toBeInTheDocument();
+  });
+
   it('renders Home page content', async () => {
     const queryClient = createTestQueryClient();
     render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     );
 
     await waitFor(() => {

@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { HouseholdProvider } from '@/contexts/HouseholdContext';
 import { BillEventsProvider } from '@/contexts/BillEventsContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
 import './index.css';
 import '@/i18n';
@@ -27,17 +28,19 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <HouseholdProvider>
-            <BillEventsProvider>
-              <App />
-              <Toaster />
-            </BillEventsProvider>
-          </HouseholdProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <HouseholdProvider>
+              <BillEventsProvider>
+                <App />
+                <Toaster />
+              </BillEventsProvider>
+            </HouseholdProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>
 );
