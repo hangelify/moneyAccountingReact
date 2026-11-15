@@ -11,7 +11,6 @@ export function Section(): ReactElement {
       <Input aria-label="Default" defaultValue="Text" />
       <Input aria-label="Placeholder" placeholder="Placeholder" />
       <Input aria-label="Disabled" defaultValue="Disabled" disabled />
-      <Input aria-label="Invalid" defaultValue="Invalid" aria-invalid />
     </div>
   );
 }
