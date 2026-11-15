@@ -12,7 +12,7 @@ export const RADII = {
 } as const;
 
 export const PALETTE_SIZE = 8;
-export const UNCATEGORIZED_KEY = 'uncategorized';
+const UNCATEGORIZED_KEY = 'uncategorized';
 
 export interface SunburstArc {
   key: string;

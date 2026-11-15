@@ -168,7 +168,7 @@ One command runs every check — for people, for the AI agent and (as parallel j
 npm run verify
 ```
 
-It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `arch` → `test:run`.
+It runs, in order and stopping at the first failure: `type-check` → `lint` → `format:check` → `arch` → `knip` → `test:run`.
 "Done" means `npm run verify` is green. CI (`.github/workflows/ci.yml`) runs the same scripts as
 separate jobs plus `build`; keep both in sync when a step is added.
 
@@ -186,6 +186,12 @@ pages (+ App, main)  →  components / hooks / stores / contexts  →  api / aut
 - no circular imports, no orphan files. Tests and `src/test/` are exempt from layering.
 
 The most common rules are mirrored in ESLint (`no-restricted-imports`) so the editor shows them.
+
+### Unused code (`npm run knip`)
+
+[Knip](knip.json) fails on unused files, exports and dependencies. Delete what is unused; if a symbol is
+used only in its own file, drop the `export`. shadcn components in `components/ui` are exempt from the
+unused-export check (they ship more parts than the app uses).
 
 ## Git Hooks
 

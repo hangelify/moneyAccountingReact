@@ -1,5 +1,3 @@
-import type { SubCategoryRef } from './bills';
-
 export interface CategoryResponse {
   id: string;
   name: string;
@@ -16,8 +14,4 @@ export interface SubCategoryResponse {
   category_name: string;
   created_at: string;
   updated_at: string;
-}
-
-export function toSubCategoryRef(sc: SubCategoryResponse): SubCategoryRef {
-  return { id: sc.id, name: sc.name, category_name: sc.category_name };
 }

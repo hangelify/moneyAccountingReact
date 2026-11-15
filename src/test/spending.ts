@@ -7,7 +7,7 @@ import type {
   UnconvertedBucket,
 } from '@/types/dashboard';
 
-export const FOOD: SpendingCategory = {
+const FOOD: SpendingCategory = {
   id: 'food',
   name: 'Food',
   total: 910.4,
@@ -33,7 +33,7 @@ export const FOOD: SpendingCategory = {
   ],
 };
 
-export const UNCATEGORIZED: SpendingCategory = {
+const UNCATEGORIZED: SpendingCategory = {
   id: null,
   name: 'Uncategorized',
   total: 340,
@@ -81,7 +81,7 @@ export const breakdown = (
  * The no-sub-category slice as the API sends it: id null. The client
  * translates its name, so the raw one here differs from the translation.
  */
-export const noSub = (
+const noSub = (
   total: number,
   share_of_category: number,
   lines = 1

@@ -1,20 +1,14 @@
 /**
- * Language Code constants (erasable syntax)
+ * Language codes the API accepts for a user's `language_code`.
  */
-export const LANGUAGE_CODE = {
-  EN: 'EN',
-  ES: 'ES',
-  FR: 'FR',
-  DE: 'DE',
-  IT: 'IT',
-  PT: 'PT',
-  RU: 'RU',
-  ZH: 'ZH',
-  JA: 'JA',
-  KO: 'KO',
-} as const;
-
-/**
- * Language Code type (union of all language code values)
- */
-export type LanguageCode = (typeof LANGUAGE_CODE)[keyof typeof LANGUAGE_CODE];
+export type LanguageCode =
+  | 'EN'
+  | 'ES'
+  | 'FR'
+  | 'DE'
+  | 'IT'
+  | 'PT'
+  | 'RU'
+  | 'ZH'
+  | 'JA'
+  | 'KO';

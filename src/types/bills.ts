@@ -1,6 +1,6 @@
 import type { Currency } from '@/const/currency';
 
-export type BillUnit = 'kg' | 'g' | 'l' | 'ml' | 'piece';
+type BillUnit = 'kg' | 'g' | 'l' | 'ml' | 'piece';
 
 export interface SubCategoryRef {
   id: string;
@@ -29,7 +29,7 @@ export interface ParsedBillItem {
   category_reasoning?: string;
 }
 
-export type DuplicateMatch = 'fiscal' | 'strong' | 'weak';
+type DuplicateMatch = 'fiscal' | 'strong' | 'weak';
 
 // Another bill that may be the same purchase, or the original of a duplicate.
 export interface PossibleDuplicate {
@@ -43,7 +43,7 @@ export interface PossibleDuplicate {
 }
 
 // Fiscal ids printed on the receipt; null when not read.
-export interface ReceiptIdentity {
+interface ReceiptIdentity {
   fiscal_register_id: string | null;
   fiscal_receipt_number: string | null;
   purchase_time: string | null; // HH:MM
@@ -180,13 +180,13 @@ export interface BillEdits {
   purchase_time: string;
 }
 
-export interface MarketRef {
+interface MarketRef {
   id: string;
   name: string;
   city: string | null;
 }
 
-export interface ExchangeRate {
+interface ExchangeRate {
   rate: number; // household currency per 1 unit of the bill's currency
   rate_date: string; // YYYY-MM-DD, up to 7 days before bill_date
 }
@@ -212,7 +212,7 @@ export interface BillResponseDto {
   duplicate_of_id?: string | null;
 }
 
-export interface DraftBillItem {
+interface DraftBillItem {
   id: string;
   raw_name: string;
   sub_category: SubCategoryRef | null;
