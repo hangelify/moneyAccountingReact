@@ -30,7 +30,7 @@ const UI_ONLY_LIB = {
 // HAN-105: colors come from semantic tokens, never the raw Tailwind palette (see docs/ui.md).
 // esquery regex: no `/` inside.
 const RAW_COLOR =
-  '(^|[\\s:])(bg|text|border|ring|ring-offset|fill|stroke|from|via|to|outline|divide|placeholder|decoration|shadow|accent|caret)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)\\b';
+  '(^|[\\s:])(bg|text|border(-[xytrblse])?|ring|ring-offset|fill|stroke|from|via|to|outline|divide|placeholder|decoration|shadow|accent|caret)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)\\b';
 const RAW_COLOR_MESSAGE =
   'Raw Tailwind palette colors are not allowed: use semantic tokens (bg-card, text-muted-foreground, bg-warning/10 …). See docs/ui.md.';
 

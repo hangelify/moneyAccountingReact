@@ -175,6 +175,7 @@ describe('eslint config', () => {
       '<p className={`p-2 ${String(1)} border-gray-200`}>x</p>',
     ],
     ['overlay outside dialog/sheet', '<p className="bg-black/80">x</p>'],
+    ['side border', '<p className="border-b-gray-200 border-t-red-500">x</p>'],
   ])('flags a raw palette color: %s', async (_, jsx) => {
     const messages = (await lintAs('src/App.tsx', component(jsx))).join('\n');
     expect(messages).not.toContain('Parsing error');
