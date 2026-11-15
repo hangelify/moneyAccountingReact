@@ -15,6 +15,7 @@ shadcn/ui (Radix), i18next, Vitest + Testing Library.
 4. `src/lib/`, `src/types/`, `src/const/`, `src/i18n/` — pure helpers, types, constants.
 
 `src/components/ui/` is the design system: it imports only `lib/` and packages.
+Colors come only from semantic tokens (no raw Tailwind palette): see `docs/ui.md`.
 
 ## Commands
 
