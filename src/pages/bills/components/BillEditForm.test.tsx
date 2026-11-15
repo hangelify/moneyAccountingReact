@@ -194,4 +194,26 @@ describe('BillEditForm', () => {
       expect(qty).toHaveAttribute('aria-invalid', 'true');
     });
   });
+  describe('currency', () => {
+    const currencySelect = (): HTMLSelectElement =>
+      screen.getByLabelText<HTMLSelectElement>(/^currency$/i);
+
+    it('lists grouped currencies', () => {
+      renderForm();
+      expect(currencySelect().value).toBe('EUR');
+      expect(currencySelect().querySelector('optgroup')).not.toBeNull();
+    });
+
+    it('can be cleared to the empty option', async () => {
+      renderForm();
+      await userEvent.selectOptions(currencySelect(), '');
+      expect(currencySelect().value).toBe('');
+      expect(currencySelect().selectedOptions[0]?.text).toBe('—');
+    });
+
+    it('shows the empty option for an unknown code', () => {
+      renderForm(makeEdits({ currency: 'XXX' }));
+      expect(currencySelect().selectedOptions[0]?.text).toBe('—');
+    });
+  });
 });

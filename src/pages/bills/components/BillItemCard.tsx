@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import {
@@ -66,9 +67,8 @@ export function BillItemCard({
         </div>
         <div className="space-y-1">
           <Label htmlFor={`item-${index}-unit`}>{cols.unit}</Label>
-          <select
+          <Select
             id={`item-${index}-unit`}
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
             value={item.unit}
             onChange={(e) =>
               onChange({ unit: e.target.value as BillEditItem['unit'] })
@@ -79,7 +79,7 @@ export function BillItemCard({
                 {u || '—'}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
       <div className="space-y-1">

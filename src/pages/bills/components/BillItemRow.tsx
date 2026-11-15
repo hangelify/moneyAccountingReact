@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
@@ -52,8 +53,7 @@ export function BillItemRow({
         />
       </td>
       <td className="px-2 py-2">
-        <select
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+        <Select
           value={item.unit}
           onChange={(e) =>
             onChange({ unit: e.target.value as BillEditItem['unit'] })
@@ -64,7 +64,7 @@ export function BillItemRow({
               {u || '—'}
             </option>
           ))}
-        </select>
+        </Select>
       </td>
       <td className="px-2 py-2">
         <DecimalInput

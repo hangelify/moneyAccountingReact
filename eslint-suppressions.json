@@ -632,11 +632,6 @@
       "count": 1
     }
   },
-  "src/pages/bills/components/BillReviewFields.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/pages/bills/components/BillsTabs.test.tsx": {
     "@typescript-eslint/explicit-function-return-type": {
       "count": 1
