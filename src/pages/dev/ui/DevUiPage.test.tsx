@@ -19,7 +19,19 @@ describe('DevUiPage', () => {
   // conflicting over one exact list.
   it('includes the built-in sections', () => {
     expect(sections.map((s) => s.id)).toEqual(
-      expect.arrayContaining(['colors'])
+      expect.arrayContaining([
+        'colors',
+        'button',
+        'input',
+        'decimal-input',
+        'date-range-picker',
+        'dialog',
+        'sheet',
+        'dropdown-menu',
+        'tooltip',
+        'toast',
+        'confirm-dialog',
+      ])
     );
   });
 
