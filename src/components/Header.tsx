@@ -7,6 +7,7 @@ import { DesktopNav } from '@/components/header/DesktopNav';
 import { MobileNav } from '@/components/header/MobileNav';
 import { UserMenu } from '@/components/header/UserMenu';
 import { BatchBell } from '@/components/header/BatchBell';
+import { ThemeToggle } from '@/components/header/ThemeToggle';
 import { NewBillModal } from '@/components/bills/NewBillModal';
 
 export function Header(): ReactElement {
@@ -40,6 +41,7 @@ export function Header(): ReactElement {
             </>
           ) : (
             <>
+              <ThemeToggle />
               <Button variant="ghost" asChild>
                 <Link to="/login">{t('auth.login')}</Link>
               </Button>
