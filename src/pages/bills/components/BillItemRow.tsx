@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DecimalInput } from '@/components/common/DecimalInput';
 import { Input } from '@/components/ui/input';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { CategoryPicker } from '@/components/categories/CategoryPicker';
 import { OverflowTooltip } from '@/components/common/OverflowTooltip';
 import {
@@ -32,8 +33,8 @@ export function BillItemRow({
     string
   >;
   return (
-    <tr className="border-t">
-      <td className="px-2 py-2">
+    <TableRow>
+      <TableCell>
         <OverflowTooltip text={item.name}>
           <Input
             data-row-name={index}
@@ -41,39 +42,39 @@ export function BillItemRow({
             onChange={(e) => onChange({ name: e.target.value })}
           />
         </OverflowTooltip>
-      </td>
-      <td className="px-2 py-2">
+      </TableCell>
+      <TableCell>
         <DecimalInput
           aria-label={cols.quantity}
           value={item.quantity}
           onValueChange={(quantity) => onChange({ quantity })}
           missingMessage={t('review.missing.quantity')}
         />
-      </td>
-      <td className="px-2 py-2">
+      </TableCell>
+      <TableCell>
         <UnitSelect
           className="px-2"
           value={item.unit}
           onChange={(unit) => onChange({ unit })}
         />
-      </td>
-      <td className="px-2 py-2">
+      </TableCell>
+      <TableCell>
         <DecimalInput
           aria-label={cols.weightKg}
           disabled={item.unit !== 'kg'}
           value={item.weight_kg}
           onValueChange={(weight_kg) => onChange({ weight_kg })}
         />
-      </td>
-      <td className="px-2 py-2">
+      </TableCell>
+      <TableCell>
         <DecimalInput
           aria-label={cols.pricePerKg}
           disabled={item.unit !== 'kg'}
           value={item.price_per_kg}
           onValueChange={(price_per_kg) => onChange({ price_per_kg })}
         />
-      </td>
-      <td className="px-2 py-2">
+      </TableCell>
+      <TableCell>
         <DecimalInput
           aria-label={cols.finalPrice}
           data-testid={`item-final-price-${index}`}
@@ -81,8 +82,8 @@ export function BillItemRow({
           onValueChange={(final_price) => onChange({ final_price })}
           missingMessage={t('review.missing.amount')}
         />
-      </td>
-      <td className="px-2 py-2 text-muted-foreground">
+      </TableCell>
+      <TableCell className="text-muted-foreground">
         <div className="flex items-center gap-1.5">
           {item.category_confidence < 0.5 &&
             (item.sub_category || item.category) && (
@@ -123,9 +124,9 @@ export function BillItemRow({
             </Tooltip>
           )}
         </div>
-      </td>
+      </TableCell>
       {onDelete && (
-        <td className="px-2 py-2 w-12">
+        <TableCell className="w-12">
           <button
             type="button"
             aria-label={t('review.items.deleteAria')}
@@ -134,8 +135,8 @@ export function BillItemRow({
           >
             <Trash2 className="h-4 w-4" />
           </button>
-        </td>
+        </TableCell>
       )}
-    </tr>
+    </TableRow>
   );
 }
