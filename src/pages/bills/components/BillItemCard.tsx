@@ -116,7 +116,7 @@ export function BillItemCard({
         {item.category_confidence < 0.5 &&
           (item.sub_category || item.category) && (
             <AlertTriangle
-              className="mt-2 h-4 w-4 shrink-0 text-yellow-600"
+              className="mt-2 h-4 w-4 shrink-0 text-warning"
               aria-label={t('review.items.lowConfidence')}
             />
           )}

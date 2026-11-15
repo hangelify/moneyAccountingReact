@@ -27,6 +27,13 @@ const UI_ONLY_LIB = {
     'components/ui imports only lib/ and packages. Pass app data in through props.',
 };
 
+// HAN-105: colors come from semantic tokens, never the raw Tailwind palette (see docs/ui.md).
+// esquery regex: no `/` inside.
+const RAW_COLOR =
+  '(^|[\\s:])(bg|text|border(-[xytrblse])?|ring|ring-offset|fill|stroke|from|via|to|outline|divide|placeholder|decoration|shadow|accent|caret)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|black|white)\\b';
+const RAW_COLOR_MESSAGE =
+  'Raw Tailwind palette colors are not allowed: use semantic tokens (bg-card, text-muted-foreground, bg-warning/10 …). See docs/ui.md.';
+
 export default defineConfig([
   globalIgnores(['dist', 'node_modules', 'build', 'coverage', '*.config.js']),
   {
@@ -155,6 +162,28 @@ export default defineConfig([
       // fixtures, not secrets
       'sonarjs/no-hardcoded-passwords': 'off',
     },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: TESTS,
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: `Literal[value=/${RAW_COLOR}/]`,
+          message: RAW_COLOR_MESSAGE,
+        },
+        {
+          selector: `TemplateElement[value.raw=/${RAW_COLOR}/]`,
+          message: RAW_COLOR_MESSAGE,
+        },
+      ],
+    },
+  },
+  {
+    // the modal overlay `bg-black/80` is the one allowed raw color
+    files: ['src/components/ui/dialog.tsx', 'src/components/ui/sheet.tsx'],
+    rules: { 'no-restricted-syntax': 'off' },
   },
   {
     files: ['src/**/*.{ts,tsx}'],

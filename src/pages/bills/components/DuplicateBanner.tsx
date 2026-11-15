@@ -21,7 +21,7 @@ export interface DuplicateBannerProps {
 }
 
 const BOX =
-  'flex flex-col gap-2 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900';
+  'flex flex-col gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning';
 
 // Warns that a bill may already be added. Callers decide what Mark and
 // Keep both do: a pending link on drafts, an API call on confirmed bills.

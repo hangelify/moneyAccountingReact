@@ -48,6 +48,7 @@ const REQUIRED_ERRORS = [
   'max-params',
   'max-depth',
   'no-nested-ternary',
+  'no-restricted-syntax',
 ];
 
 // a component file of `n` short lines (HAN-127 size limit is 250 for .tsx)
@@ -57,6 +58,11 @@ function bigComponent(n: number): string {
     (_, i) => `const C${String(i)} = ${String(i)};`
   ).join('\n');
   return `import type { ReactElement } from 'react';\n${consts}\nexport function Big(): ReactElement {\n  return <p>{C0}</p>;\n}\n`;
+}
+
+// a one-line component returning `jsx`
+function component(jsx: string): string {
+  return `import type { ReactElement } from 'react';\nexport function Probe(): ReactElement {\n  return ${jsx};\n}\n`;
 }
 
 const PROBE = `import { useEffect, useState, type ReactElement } from 'react';
@@ -158,4 +164,41 @@ describe('eslint config', () => {
     expect(testFile).not.toContain('Parsing error');
     expect(testFile).not.toContain('max-lines');
   });
+
+  // HAN-105: only semantic color tokens, see docs/ui.md
+  it.each([
+    ['className', '<p className="bg-yellow-50">x</p>'],
+    ['dark: prefix', '<p className="text-sm dark:text-green-50">x</p>'],
+    ['group variant', '<p className="group-[.destructive]:text-red-300">x</p>'],
+    [
+      'template literal',
+      '<p className={`p-2 ${String(1)} border-gray-200`}>x</p>',
+    ],
+    ['overlay outside dialog/sheet', '<p className="bg-black/80">x</p>'],
+    ['side border', '<p className="border-b-gray-200 border-t-red-500">x</p>'],
+  ])('flags a raw palette color: %s', async (_, jsx) => {
+    const messages = (await lintAs('src/App.tsx', component(jsx))).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).toContain('no-restricted-syntax');
+    expect(messages).toContain('docs/ui.md');
+  });
+
+  it('allows semantic tokens', async () => {
+    const jsx =
+      '<p className="bg-warning/10 text-warning-foreground border-border ring-ring text-sm bg-chart-1 bg-background">x</p>';
+    const messages = (await lintAs('src/App.tsx', component(jsx))).join('\n');
+    expect(messages).not.toContain('Parsing error');
+    expect(messages).not.toContain('no-restricted-syntax');
+  });
+
+  it.each(['src/components/ui/dialog.tsx', 'src/components/ui/sheet.tsx'])(
+    'allows the overlay in %s',
+    async (rel) => {
+      const messages = (
+        await lintAs(rel, component('<p className="bg-black/80">x</p>'))
+      ).join('\n');
+      expect(messages).not.toContain('Parsing error');
+      expect(messages).not.toContain('no-restricted-syntax');
+    }
+  );
 });
