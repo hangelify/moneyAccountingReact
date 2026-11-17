@@ -282,5 +282,8 @@
     "hidePhoto": "Hide photo",
     "retryFailed": "Could not retry this receipt",
     "deleteFailed": "Could not delete this receipt"
+  },
+  "move": {
+    "forbidden": "You no longer have access to “{{name}}”"
   }
 }
