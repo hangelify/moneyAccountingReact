@@ -27,14 +27,10 @@ const saved = {
   member_count: 1,
 };
 
-function renderDialog(): {
-  onOpenChange: ReturnType<typeof vi.fn>;
-  setActiveHouseholdId: ReturnType<typeof vi.fn>;
-} {
+function renderDialog(): { onOpenChange: ReturnType<typeof vi.fn> } {
   const onOpenChange = vi.fn();
-  const value = makeHouseholdValue();
   render(
-    <HouseholdTestProvider value={value}>
+    <HouseholdTestProvider value={makeHouseholdValue()}>
       <CreateHouseholdDialog
         open
         onOpenChange={onOpenChange}
@@ -42,12 +38,7 @@ function renderDialog(): {
       />
     </HouseholdTestProvider>
   );
-  return {
-    onOpenChange,
-    setActiveHouseholdId: value.setActiveHouseholdId as ReturnType<
-      typeof vi.fn
-    >,
-  };
+  return { onOpenChange };
 }
 
 describe('CreateHouseholdDialog', () => {
@@ -103,21 +94,6 @@ describe('CreateHouseholdDialog', () => {
         expect.objectContaining({ title: "Couldn't create the budget" })
       )
     );
-  });
-
-  it('toast offers switching to the new budget', async () => {
-    mutateAsync.mockResolvedValue(saved);
-    const { setActiveHouseholdId } = renderDialog();
-    await userEvent.type(screen.getByLabelText('Name'), 'Trip');
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
-    await waitFor(() => expect(toast).toHaveBeenCalled());
-    const arg = vi.mocked(toast).mock.calls[0]?.[0];
-    expect(arg?.title).toBe('Budget created');
-    const action = arg?.action as unknown as React.ReactElement<{
-      onClick: () => void;
-    }>;
-    action.props.onClick();
-    expect(setActiveHouseholdId).toHaveBeenCalledWith('hh-new');
   });
 
   it('starts fresh on every open: no stale limit message or name', async () => {

@@ -22,10 +22,10 @@ globalThis.setTimeout = ((
   pendingTimers.add(id);
   return id;
 }) as typeof setTimeout;
-globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
+globalThis.clearTimeout = (id?: ReturnType<typeof setTimeout>) => {
   if (id !== undefined) pendingTimers.delete(id);
   realClearTimeout(id);
-}) as typeof clearTimeout;
+};
 
 // Cleanup after each test
 afterEach(() => {
@@ -55,5 +55,14 @@ if (!('ResizeObserver' in globalThis)) {
   };
 }
 Element.prototype.scrollIntoView = (): void => {
+  // no-op
+};
+
+// jsdom lacks pointer capture; Radix Toast's swipe handler calls it on pointerdown.
+Element.prototype.hasPointerCapture = (): boolean => false;
+Element.prototype.setPointerCapture = (): void => {
+  // no-op
+};
+Element.prototype.releasePointerCapture = (): void => {
   // no-op
 };

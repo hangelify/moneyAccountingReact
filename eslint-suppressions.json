@@ -705,11 +705,6 @@
       "count": 1
     }
   },
-  "src/test/setup.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    }
-  },
   "src/test/spending.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 2
