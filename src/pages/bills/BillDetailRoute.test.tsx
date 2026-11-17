@@ -3,7 +3,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import {
+  Link,
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
 import type { ReactElement } from 'react';
 import { apiClient } from '@/auth/apiClient';
@@ -215,6 +221,7 @@ describe('BillDetailRoute: budget from the link', () => {
     mock.onGet(/\/markets$/).reply(200, []);
     mock.onGet('/households/hh-1/bills/b1').reply(200, confirmed);
     mock.onGet('/households/hh-2/bills/b1').reply(200, confirmed);
+    mock.onGet(/\/bills\/b2$/).reply(200, { ...confirmed, id: 'b2' });
   });
   afterEach(() => {
     mock.restore();
@@ -223,7 +230,8 @@ describe('BillDetailRoute: budget from the link', () => {
 
   function renderLink(
     initial: string,
-    value: HouseholdContextValue
+    value: HouseholdContextValue,
+    nextLink = '/bills/b2?hid=hh-2'
   ): (next: HouseholdContextValue) => void {
     const qc = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -233,6 +241,7 @@ describe('BillDetailRoute: budget from the link', () => {
         <HouseholdTestProvider value={v}>
           <MemoryRouter initialEntries={[initial]}>
             <LocationProbe />
+            <Link to={nextLink}>next link</Link>
             <Routes>
               <Route path="/bills/:id" element={<BillDetailRoute />} />
             </Routes>
@@ -283,6 +292,51 @@ describe('BillDetailRoute: budget from the link', () => {
     );
     expect(setActiveHouseholdId).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('loc').textContent).toBe('/bills/b1');
+  });
+
+  it('a second link to the same budget switches again', async () => {
+    const setActiveHouseholdId = vi.fn();
+    const value = makeHouseholdValue({ setActiveHouseholdId });
+    const rerender = renderLink('/bills/b1?hid=hh-2', value);
+    await waitFor(() =>
+      expect(screen.getByTestId('loc').textContent).toBe('/bills/b1')
+    );
+    rerender({ ...value, activeHousehold: family });
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    // A manual switch back, then another link into Family Budget.
+    rerender({ ...value, activeHousehold: personal });
+    await userEvent.click(screen.getByRole('link', { name: 'next link' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('loc').textContent).toBe('/bills/b2')
+    );
+    expect(setActiveHouseholdId).toHaveBeenCalledTimes(2);
+    expect(setActiveHouseholdId).toHaveBeenLastCalledWith('hh-2');
+  });
+
+  it('a second link to the same unknown budget refetches again', async () => {
+    const value = makeHouseholdValue();
+    renderLink('/bills/b1?hid=hh-gone', value, '/bills/b2?hid=hh-gone');
+    await screen.findByText("This bill is in a budget you can't access.");
+    await userEvent.click(screen.getByRole('link', { name: 'next link' }));
+    await waitFor(() => expect(value.refetch).toHaveBeenCalledTimes(2));
+    expect(
+      await screen.findByText("This bill is in a budget you can't access.")
+    ).toBeInTheDocument();
+  });
+
+  it('a switch that does not land ends as inaccessible, not Loading', async () => {
+    const value = makeHouseholdValue();
+    const rerender = renderLink('/bills/b1?hid=hh-2', value);
+    await waitFor(() =>
+      expect(value.setActiveHouseholdId).toHaveBeenCalledWith('hh-2')
+    );
+    // Family Budget is gone before the switch lands.
+    rerender({ ...value, households: [personal] });
+    expect(
+      await screen.findByText("This bill is in a budget you can't access.")
+    ).toBeInTheDocument();
+    expect(value.refetch).toHaveBeenCalledTimes(1);
+    expect(detailRequests()).toEqual([]);
   });
 
   it('refetches once for an unknown budget, then shows inaccessible', async () => {

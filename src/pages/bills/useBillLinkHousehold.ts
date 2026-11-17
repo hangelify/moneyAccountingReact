@@ -6,10 +6,30 @@ import { useHouseholds } from '@/contexts/HouseholdContext';
 
 export type BillLinkState = 'ready' | 'pending' | 'inaccessible';
 
+/** A link's budget, tagged with the history entry the link opened. */
+interface BillLink {
+  hid: string;
+  key: string;
+}
+
+const LINK_STATE = 'billLink';
+
+function readPendingLink(state: unknown): BillLink | null {
+  if (typeof state !== 'object' || state === null) return null;
+  const link = (state as Record<string, unknown>)[LINK_STATE];
+  if (typeof link !== 'object' || link === null) return null;
+  const { hid, key } = link as Record<string, unknown>;
+  return typeof hid === 'string' && typeof key === 'string'
+    ? { hid, key }
+    : null;
+}
+
 /**
- * Applies the budget a bill link carries (`?hid=`): switches to it once,
- * then drops `hid` from the address so a later manual switch sticks. An
- * unknown budget triggers one list refetch before it counts as inaccessible.
+ * Applies the budget a bill link carries (`?hid=`): switches to it once per
+ * link, then drops `hid` from the address so a later manual switch sticks.
+ * Until the switch lands, the link waits in history state. An unknown
+ * budget triggers one list refetch per link before it counts as
+ * inaccessible.
  */
 export function useBillLinkHousehold(): BillLinkState {
   const { t } = useTranslation('households');
@@ -17,47 +37,52 @@ export function useBillLinkHousehold(): BillLinkState {
     useHouseholds();
   const location = useLocation();
   const navigate = useNavigate();
-  const hid = new URLSearchParams(location.search).get('hid');
+  const urlHid = new URLSearchParams(location.search).get('hid');
+  const link: BillLink | null =
+    urlHid === null
+      ? readPendingLink(location.state)
+      : { hid: urlHid, key: location.key };
+  const linkHid = link?.hid ?? null;
+  const linkKey = link?.key ?? null;
   const activeId = activeHousehold?.id ?? null;
-  const target = households.find((h) => h.id === hid);
+  const target = households.find((h) => h.id === linkHid);
   const ready = status === 'ready';
 
-  // The budget switched to, until it becomes the active one.
-  const [awaiting, setAwaiting] = useState<string | null>(null);
-  if (ready && hid !== null && target && hid !== activeId && awaiting !== hid) {
-    setAwaiting(hid);
-  }
-  if (awaiting !== null && awaiting === activeId) setAwaiting(null);
-
   const [refetchedFor, setRefetchedFor] = useState<string | null>(null);
+  // Keyed by the link's history entry, so each new link gets its own try.
   const switched = useRef<string | null>(null);
   const refetched = useRef<string | null>(null);
 
   useEffect(() => {
-    if (hid === null || !ready) return;
-    const dropHid = (): void => {
+    if (linkHid === null || linkKey === null || !ready) return;
+    // Drops hid from the address; `pending` keeps the link until it lands.
+    const settle = (pending: BillLink | null): void => {
       const params = new URLSearchParams(location.search);
       params.delete('hid');
       const qs = params.toString();
       void navigate(
         { search: qs ? `?${qs}` : '', hash: location.hash },
-        { replace: true }
+        {
+          replace: true,
+          state: pending === null ? null : { [LINK_STATE]: pending },
+        }
       );
     };
-    if (hid === activeId) {
-      dropHid();
+    if (linkHid === activeId) {
+      settle(null);
     } else if (target) {
-      if (switched.current === hid) return;
-      switched.current = hid;
-      setActiveHouseholdId(hid);
+      if (switched.current === linkKey) return;
+      switched.current = linkKey;
+      setActiveHouseholdId(linkHid);
       toast({ title: t('switchedTo', { name: target.name }) });
-      dropHid();
-    } else if (refetched.current !== hid) {
-      refetched.current = hid;
-      void refetch().finally(() => setRefetchedFor(hid));
+      settle({ hid: linkHid, key: linkKey });
+    } else if (refetched.current !== linkKey) {
+      refetched.current = linkKey;
+      void refetch().finally(() => setRefetchedFor(linkKey));
     }
   }, [
-    hid,
+    linkHid,
+    linkKey,
     ready,
     activeId,
     target,
@@ -69,10 +94,9 @@ export function useBillLinkHousehold(): BillLinkState {
     t,
   ]);
 
-  if (awaiting !== null) return 'pending';
-  if (hid === null) return 'ready';
+  if (linkHid === null) return 'ready';
   if (!ready) return 'pending';
-  if (hid === activeId) return 'ready';
-  if (target || refetchedFor !== hid) return 'pending';
+  if (linkHid === activeId) return 'ready';
+  if (target || refetchedFor !== linkKey) return 'pending';
   return 'inaccessible';
 }
