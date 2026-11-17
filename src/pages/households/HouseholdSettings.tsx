@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { ApiError } from '@/auth/apiError';
 import { LoadingFallback } from '@/components/common/LoadingFallback';
-import { CurrencySelect } from '@/components/currency/CurrencySelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,6 +24,7 @@ import {
 } from '@/lib/validation-schemas';
 import type { Household } from '@/types/households';
 import { changedFields } from './changedFields';
+import { CurrencyField } from './CurrencyField';
 
 export function HouseholdSettings(): ReactElement {
   const { t } = useTranslation('households');
@@ -134,26 +134,11 @@ function SettingsForm({ household }: { household: Household }): ReactElement {
           </FormItem>
         )}
       />
-      <FormField
+      <CurrencyField
         control={form.control}
         name="currency"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('settings.currency')}</FormLabel>
-            <FormControl>
-              <CurrencySelect
-                required
-                value={field.value}
-                onChange={(c) => field.onChange(c ?? '')}
-                disabled={mutation.isPending}
-              />
-            </FormControl>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.currencyHint')}
-            </p>
-            <FormMessage />
-          </FormItem>
-        )}
+        disabled={mutation.isPending}
+        hint={t('settings.currencyHint')}
       />
       {formError && (
         <p role="alert" className="text-sm font-medium text-destructive">

@@ -40,7 +40,6 @@
   "create": {
     "title": "New budget",
     "name": "Name",
-    "currency": "Currency",
     "submit": "Create",
     "creating": "Creating…",
     "cancel": "Cancel",

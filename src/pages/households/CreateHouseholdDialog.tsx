@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { householdErrorReason } from '@/auth/householdErrorReason';
-import { CurrencySelect } from '@/components/currency/CurrencySelect';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -30,6 +29,7 @@ import {
   createHouseholdSchema,
   type CreateHouseholdFormData,
 } from '@/lib/validation-schemas';
+import { CurrencyField } from './CurrencyField';
 
 interface CreateHouseholdDialogProps {
   open: boolean;
@@ -163,24 +163,10 @@ function CreateFields({
           </FormItem>
         )}
       />
-      <FormField
+      <CurrencyField
         control={form.control}
         name="currency"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('create.currency')}</FormLabel>
-            <FormControl>
-              <CurrencySelect
-                aria-label={t('create.currency')}
-                disabled={disabled}
-                value={field.value}
-                onChange={(c) => field.onChange(c ?? '')}
-                required
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        disabled={disabled}
       />
     </>
   );
