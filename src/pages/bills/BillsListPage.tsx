@@ -1,6 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ConfirmedBillsFilters } from './components/ConfirmedBillsFilters';
@@ -32,8 +32,6 @@ export function BillsListPage({
   renderBills,
 }: BillsListPageProps): ReactElement {
   const { t } = useTranslation('bills');
-  const navigate = useNavigate();
-  const location = useLocation();
   const { filters, page, limit, setFilters, setPage, clearFilters } =
     useConfirmedBillsFilters();
   const q = useConfirmedBills(filters, page, limit);
@@ -62,12 +60,7 @@ export function BillsListPage({
     filters.amount_min != null ||
     filters.amount_max != null;
 
-  const { outlet, pageMode, rememberOpen } = useDetailOutlet();
-
-  const openBill = (id: string): void => {
-    rememberOpen(id);
-    void navigate({ pathname: `./${id}`, search: location.search });
-  };
+  const { outlet, pageMode, openBill } = useDetailOutlet();
 
   // On desktop an open bill is a page of its own, so the list steps aside.
   if (pageMode && outlet) return outlet;

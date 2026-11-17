@@ -7,7 +7,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
 import { BillsCards } from './BillsCards';
-import { BillDetailDrawer } from './BillDetailDrawer';
+import { BillDetailRoute } from './BillDetailRoute';
 import type { BillResponseDto } from '@/types/bills';
 import type { ReactElement } from 'react';
 import '@/i18n';
@@ -34,7 +34,7 @@ function renderApp(initial: string): void {
           <LocationProbe />
           <Routes>
             <Route path="/bills" element={<BillsCards />}>
-              <Route path=":id" element={<BillDetailDrawer />} />
+              <Route path=":id" element={<BillDetailRoute />} />
             </Route>
           </Routes>
         </MemoryRouter>

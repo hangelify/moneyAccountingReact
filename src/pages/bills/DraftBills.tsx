@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useDraftBills } from '@/hooks/useDraftBills';
@@ -16,8 +16,6 @@ import { useDetailOutlet } from './useDetailOutlet';
 // so this tab has no filters.
 export function DraftBills(): ReactElement {
   const { t } = useTranslation('bills');
-  const navigate = useNavigate();
-  const location = useLocation();
   const [sp, setSp] = useSearchParams();
   const page = useMemo(() => parseBillsSearchParams(sp).page, [sp]);
   const q = useDraftBills(page, DEFAULT_LIMIT);
@@ -26,12 +24,7 @@ export function DraftBills(): ReactElement {
     setSp(next > 1 ? { page: String(next) } : {});
   };
 
-  const { outlet, pageMode, rememberOpen } = useDetailOutlet();
-
-  const openBill = (id: string): void => {
-    rememberOpen(id);
-    void navigate({ pathname: `./${id}`, search: location.search });
-  };
+  const { outlet, pageMode, openBill } = useDetailOutlet();
 
   // On desktop an open bill is a page of its own, so the list steps aside.
   if (pageMode && outlet) return outlet;

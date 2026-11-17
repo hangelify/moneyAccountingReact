@@ -13,6 +13,7 @@ import { useHouseholds } from '@/contexts/HouseholdContext';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
 import { billsApi } from '@/api/bills';
+import { billPath } from '@/lib/billPath';
 import {
   buildConfirmPayload,
   buildCreatePayload,
@@ -22,10 +23,11 @@ import {
 } from './buildConfirmPayload';
 
 export function NewBillReview(): ReactElement | null {
-  const { t } = useTranslation(['bills', 'common', 'errors']);
+  const { t } = useTranslation(['bills', 'common', 'errors', 'households']);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { households, activeHousehold, handleForbidden } = useHouseholds();
+  const { households, activeHousehold, setActiveHouseholdId, handleForbidden } =
+    useHouseholds();
 
   const file = useBillDraftStore((s) => s.file);
   const previewUrl = useBillDraftStore((s) => s.previewUrl);
@@ -82,9 +84,13 @@ export function NewBillReview(): ReactElement | null {
       });
       // A created bill is checked for look-alikes after the save; its detail
       // shows the warning.
-      if (mode === 'create' && saved?.possible_duplicates?.length) {
+      if (
+        mode === 'create' &&
+        savedHid !== null &&
+        saved?.possible_duplicates?.length
+      ) {
         toast({ title: t('bills:duplicates.savedWithCandidates') });
-        void navigate(`/bills/confirmed/${saved.id}`);
+        void navigate(billPath('confirmed', saved.id, savedHid));
         return;
       }
       toast({ title: t('bills:review.saved') });
@@ -245,13 +251,25 @@ export function NewBillReview(): ReactElement | null {
                 : {})}
             />
             {otherHousehold && (
-              <p role="alert" className="text-sm text-destructive">
-                {otherHouseholdName === undefined
-                  ? t('bills:review.otherHouseholdUnknown')
-                  : t('bills:review.otherHousehold', {
-                      name: otherHouseholdName,
-                    })}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p role="alert" className="text-sm text-destructive">
+                  {otherHouseholdName === undefined
+                    ? t('bills:review.otherHouseholdUnknown')
+                    : t('bills:review.otherHousehold', {
+                        name: otherHouseholdName,
+                      })}
+                </p>
+                {hid !== null && otherHouseholdName !== undefined && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setActiveHouseholdId(hid)}
+                  >
+                    {t('households:switchTo', { name: otherHouseholdName })}
+                  </Button>
+                )}
+              </div>
             )}
             {receiptInvalid && (
               <p role="alert" className="text-sm text-destructive">

@@ -87,6 +87,7 @@ function BatchSection({
         <BatchItemRow
           key={item.id}
           item={item}
+          hid={tracked.hid}
           thumbnail={tracked.thumbnails[item.position]}
           waiting={tracked.waiting.includes(item.position)}
         />

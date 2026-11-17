@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { HouseholdTestProvider } from '@/test/household';
 import type { PossibleDuplicate } from '@/types/bills';
 import { DuplicateOfBadge } from './DuplicateOfBadge';
 
@@ -19,21 +20,23 @@ describe('DuplicateOfBadge', () => {
   it('links to the original and unmarks', async () => {
     const onUnmark = vi.fn();
     render(
-      <MemoryRouter initialEntries={['/bills/confirmed/b1?page=2']}>
-        <Routes>
-          <Route
-            path="/bills/confirmed/:id"
-            element={
-              <DuplicateOfBadge original={original} onUnmark={onUnmark} />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <HouseholdTestProvider>
+        <MemoryRouter initialEntries={['/bills/confirmed/b1?page=2']}>
+          <Routes>
+            <Route
+              path="/bills/confirmed/:id"
+              element={
+                <DuplicateOfBadge original={original} onUnmark={onUnmark} />
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </HouseholdTestProvider>
     );
     const link = screen.getByRole('link', {
       name: "Duplicate of Ana's bill on Oct 3",
     });
-    expect(link).toHaveAttribute('href', '/bills/confirmed/b0?page=2');
+    expect(link).toHaveAttribute('href', '/bills/confirmed/b0?page=2&hid=hh-1');
     await userEvent.click(screen.getByRole('button', { name: 'Unmark' }));
     expect(onUnmark).toHaveBeenCalled();
   });

@@ -2,6 +2,9 @@
   "accessLost": "You no longer have access to this budget.",
   "loadFailed": "Could not load your budgets.",
   "retry": "Try again",
+  "switchedTo": "Switched to budget {{name}}",
+  "billInaccessible": "This bill is in a budget you can't access.",
+  "switchTo": "Switch to {{name}}",
   "settings": {
     "title": "Budget settings",
     "name": "Name",

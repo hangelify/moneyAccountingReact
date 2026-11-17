@@ -2,17 +2,21 @@ import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { billPath } from '@/lib/billPath';
 import type { BillBatchItem } from '@/types/bills';
 import type { ReactElement } from 'react';
 
 interface BatchItemRowProps {
   item: BillBatchItem;
+  /** Budget of the batch, so the link opens the draft in it. */
+  hid: string;
   thumbnail?: string | undefined;
   waiting: boolean;
 }
 
 export function BatchItemRow({
   item,
+  hid,
   thumbnail,
   waiting,
 }: BatchItemRowProps): ReactElement {
@@ -51,7 +55,7 @@ export function BatchItemRow({
         )}
         {item.status === 'done' && item.bill_id && (
           <DropdownMenuItem asChild className="shrink-0 py-0.5">
-            <Link to={`/bills/drafts/${item.bill_id}`}>
+            <Link to={billPath('drafts', item.bill_id, hid)}>
               {t('batches.review')}
             </Link>
           </DropdownMenuItem>

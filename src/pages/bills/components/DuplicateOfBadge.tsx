@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import type { PossibleDuplicate } from '@/types/bills';
 import { addedBy, shortBillDate } from '../describeDuplicate';
+import { useWithActiveHid } from '../useWithActiveHid';
 
 export interface DuplicateOfBadgeProps {
   original: PossibleDuplicate;
@@ -20,6 +21,7 @@ export function DuplicateOfBadge({
 }: DuplicateOfBadgeProps): ReactElement {
   const { t, i18n } = useTranslation('bills');
   const location = useLocation();
+  const withActiveHid = useWithActiveHid();
   return (
     <div
       role="status"
@@ -27,7 +29,10 @@ export function DuplicateOfBadge({
     >
       <Copy className="h-4 w-4" aria-hidden />
       <Link
-        to={{ pathname: `../${original.id}`, search: location.search }}
+        to={{
+          pathname: `../${original.id}`,
+          search: withActiveHid(location.search),
+        }}
         relative="path"
         className="font-medium underline underline-offset-4"
       >
