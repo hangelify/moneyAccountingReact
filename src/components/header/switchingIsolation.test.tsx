@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
 import { HOUSEHOLDS_KEY, HouseholdProvider } from '@/contexts/HouseholdContext';
 import { HouseholdSwitcher } from './HouseholdSwitcher';
+import { useBillDetail } from '@/hooks/useBillDetail';
 import { ConfirmedBills } from '@/pages/bills/ConfirmedBills';
 import { householdsApi } from '@/api/households';
 import { billsApi } from '@/api/bills';
@@ -20,7 +21,9 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ isAuthenticated: true }),
 }));
 vi.mock('@/api/households', () => ({ householdsApi: { list: vi.fn() } }));
-vi.mock('@/api/bills', () => ({ billsApi: { list: vi.fn() } }));
+vi.mock('@/api/bills', () => ({
+  billsApi: { list: vi.fn(), detail: vi.fn() },
+}));
 vi.mock('@/components/ui/use-toast', async (importOriginal) => {
   const actual = await importOriginal<typeof toastModule>();
   return { ...actual, toast: vi.fn() };
@@ -28,6 +31,7 @@ vi.mock('@/components/ui/use-toast', async (importOriginal) => {
 
 const list = vi.mocked(householdsApi.list);
 const billsList = vi.mocked(billsApi.list);
+const billDetail = vi.mocked(billsApi.detail);
 
 function page(description: string): Paginated<BillResponseDto> {
   return {
@@ -63,6 +67,12 @@ function renderApp(): QueryClient {
   );
   render(tree);
   return qc;
+}
+
+function DetailProbe(): ReactElement {
+  const { id } = useParams();
+  useBillDetail(id);
+  return <p>Bill {id}</p>;
 }
 
 describe('budget switching isolation', () => {
@@ -113,5 +123,34 @@ describe('budget switching isolation', () => {
       expect(localStorage.getItem('activeHouseholdId')).toBe('hh-2')
     );
     expect(toast).not.toHaveBeenCalled();
+  });
+
+  it('a switch on a bill page never fetches that bill in the new budget', async () => {
+    billDetail.mockReset().mockReturnValue(new Promise(() => undefined));
+    const qc = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={qc}>
+        <HouseholdProvider>
+          <MemoryRouter initialEntries={['/bills/confirmed/b1']}>
+            <HouseholdSwitcher />
+            <Routes>
+              <Route path="/bills/confirmed/:id" element={<DetailProbe />} />
+              <Route path="/bills/confirmed" element={<ConfirmedBills />} />
+            </Routes>
+          </MemoryRouter>
+        </HouseholdProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(billDetail).toHaveBeenCalledWith('hh-1', 'b1'));
+
+    await userEvent.click(screen.getByRole('button', { name: /Budget:/ }));
+    await userEvent.click(
+      await screen.findByRole('menuitemradio', { name: /Family Budget/ })
+    );
+
+    expect(await screen.findByText('Beta')).toBeInTheDocument();
+    expect(billDetail).not.toHaveBeenCalledWith('hh-2', 'b1');
   });
 });

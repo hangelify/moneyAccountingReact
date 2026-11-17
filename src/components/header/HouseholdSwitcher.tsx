@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import { billDetailParent } from '@/lib/billDetailParent';
-import type { ReactElement } from 'react';
+import { startTransition, type ReactElement } from 'react';
 
 export function HouseholdSwitcher(): ReactElement | null {
   const { t } = useTranslation('households');
@@ -26,14 +26,22 @@ export function HouseholdSwitcher(): ReactElement | null {
   if (status !== 'ready' || !activeHousehold) return null;
 
   const handleSelect = (id: string): void => {
-    setActiveHouseholdId(id);
+    // Radix fires onValueChange for the checked item too.
+    if (id === activeHousehold.id) return;
     const parent = billDetailParent(location.pathname);
     if (parent !== null) {
       const params = new URLSearchParams(location.search);
       params.delete('hid');
       const qs = params.toString();
-      void navigate({ pathname: parent, search: qs ? `?${qs}` : '' });
+      // Replace: Back must not land on the old budget's bill.
+      void navigate(
+        { pathname: parent, search: qs ? `?${qs}` : '' },
+        { replace: true }
+      );
     }
+    // The router commits navigation in a transition; switching in one too
+    // lands both together, so the bill page never renders with the new budget.
+    startTransition(() => setActiveHouseholdId(id));
   };
 
   return (
@@ -48,7 +56,7 @@ export function HouseholdSwitcher(): ReactElement | null {
           <span className="hidden max-w-[10rem] truncate text-sm font-medium md:inline">
             {activeHousehold.name}
           </span>
-          <ChevronDown className="h-4 w-4" />
+          <ChevronDown className="hidden h-4 w-4 md:block" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
