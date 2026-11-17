@@ -20,7 +20,7 @@ import {
   type MoveOutcome,
 } from './types';
 
-export interface MoveFailureContext {
+interface MoveFailureContext {
   bills: MoveBillRef[];
   onUnselect?: (ids: string[]) => void;
   // Runs before "Show duplicates" leaves for the list (e.g. closes a detail).

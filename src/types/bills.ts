@@ -315,7 +315,7 @@ export interface MoveBillsRequest {
 }
 
 /** A bill of the move response; counts are 0 when already_moved. */
-export interface MovedBill {
+interface MovedBill {
   id: string;
   lines_total: number;
   // Kept the category, lost the subcategory.
