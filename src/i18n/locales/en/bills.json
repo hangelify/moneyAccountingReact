@@ -284,6 +284,13 @@
     "deleteFailed": "Could not delete this receipt"
   },
   "move": {
-    "forbidden": "You no longer have access to “{{name}}”"
+    "forbidden": "You no longer have access to “{{name}}”",
+    "dialog": {
+      "title_one": "Move {{count}} bill to…",
+      "title_other": "Move {{count}} bills to…",
+      "hint": "Categories are matched by name. Items with no match will be left without a category.",
+      "legend": "Budget",
+      "submit": "Move"
+    }
   }
 }
