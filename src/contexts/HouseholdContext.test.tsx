@@ -235,10 +235,10 @@ describe('HouseholdProvider', () => {
         </>
       )
     );
-    await screen.findByText('You no longer have access to this household.');
+    await screen.findByText('You no longer have access to this budget.');
     expect(list).toHaveBeenCalledTimes(2);
     expect(
-      screen.getAllByText('You no longer have access to this household.')
+      screen.getAllByText('You no longer have access to this budget.')
     ).toHaveLength(1);
   });
 

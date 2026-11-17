@@ -39,7 +39,7 @@ describe('UserMenu', () => {
     renderMenu();
     await userEvent.click(screen.getByRole('button', { name: 'User menu' }));
     expect(
-      await screen.findByRole('menuitem', { name: 'Household settings' })
+      await screen.findByRole('menuitem', { name: 'Budgets' })
     ).toHaveAttribute('href', '/households/settings');
   });
 

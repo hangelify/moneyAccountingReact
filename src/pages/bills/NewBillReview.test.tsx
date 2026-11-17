@@ -361,7 +361,7 @@ describe('NewBillReview', () => {
       renderReview();
       expect(
         screen.getByText(
-          'This draft belongs to a household you can no longer access.'
+          'This draft belongs to a budget you can no longer access.'
         )
       ).toBeInTheDocument();
       expect(screen.queryByText(/hh-gone/)).toBeNull();

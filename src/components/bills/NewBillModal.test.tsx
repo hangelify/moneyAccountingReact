@@ -293,18 +293,18 @@ describe('NewBillModal', () => {
   it('hides the household picker with one household', () => {
     const one = TEST_HOUSEHOLDS.slice(0, 1);
     renderModal(vi.fn(), makeHouseholdValue({ households: one }));
-    expect(screen.queryByLabelText('Household')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Budget')).not.toBeInTheDocument();
   });
 
   it('shows it with two', () => {
     renderModal();
-    expect(screen.getByLabelText('Household')).toBeInTheDocument();
+    expect(screen.getByLabelText('Budget')).toBeInTheDocument();
   });
 
   it("switching the picker calls setActiveHouseholdId('hh-2')", async () => {
     const value = makeHouseholdValue();
     renderModal(vi.fn(), value);
-    await userEvent.selectOptions(screen.getByLabelText('Household'), 'hh-2');
+    await userEvent.selectOptions(screen.getByLabelText('Budget'), 'hh-2');
     expect(value.setActiveHouseholdId).toHaveBeenCalledWith('hh-2');
   });
 
@@ -527,7 +527,7 @@ describe('NewBillModal', () => {
         activeHousehold: null,
       })
     );
-    expect(screen.getByText(/No household available/i)).toBeInTheDocument();
+    expect(screen.getByText(/No budget available/i)).toBeInTheDocument();
   });
 
   it('offers a retry when households failed to load', async () => {
@@ -538,7 +538,7 @@ describe('NewBillModal', () => {
     });
     renderModal(vi.fn(), value);
     expect(
-      screen.getByText('Could not load your households.')
+      screen.getByText('Could not load your budgets.')
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(value.refetch).toHaveBeenCalled();

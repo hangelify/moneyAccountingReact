@@ -44,7 +44,7 @@ function renderPage(household: Household = owner): {
 }
 
 const save = (): HTMLElement => screen.getByRole('button', { name: 'Save' });
-const OWNER_ONLY = 'Only the household owner can change these.';
+const OWNER_ONLY = 'Only the budget owner can change these.';
 const forbidden = (): ApiError =>
   new ApiError(403, null, {}, 'Forbidden', { url: '/households/hh-1' });
 
@@ -64,7 +64,7 @@ describe('HouseholdSettings', () => {
     );
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Household updated' })
+        expect.objectContaining({ title: 'Budget updated' })
       )
     );
   });
