@@ -8,6 +8,7 @@ import {
   OWN_FORBIDDEN_META,
 } from '@/contexts/HouseholdContext';
 import { householdsApi } from '@/api/households';
+import { ApiError } from '@/auth/apiError';
 import type {
   CreateHouseholdRequest,
   Household,
@@ -54,17 +55,42 @@ export function useUpdateMyHouseholdName(
   });
 }
 
-/** DELETE a household (variable is its id) and drop everything cached for it. */
-export function useDeleteHousehold(): UseMutationResult<void, unknown, string> {
+/** Resolves to true when the household was already gone (404). */
+async function removeHousehold(hid: string): Promise<boolean> {
+  try {
+    await householdsApi.remove(hid);
+    return false;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return true;
+    throw error;
+  }
+}
+
+/**
+ * DELETE a household (variable is its id) and drop everything cached for it.
+ * A 404 (deleted elsewhere, e.g. another tab) counts as done; the list is
+ * refetched since the cached one was stale.
+ */
+export function useDeleteHousehold(): UseMutationResult<
+  boolean,
+  unknown,
+  string
+> {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (hid: string) => householdsApi.remove(hid),
+    mutationFn: removeHousehold,
     meta: OWN_FORBIDDEN_META,
-    onSuccess: (_data, hid) => {
+    onSuccess: (alreadyGone, hid) => {
       queryClient.setQueryData<Household[]>(HOUSEHOLDS_KEY, (list) =>
         list?.filter((h) => h.id !== hid)
       );
       queryClient.removeQueries({ queryKey: ['households', hid] });
+      if (alreadyGone) {
+        void queryClient.invalidateQueries({
+          queryKey: HOUSEHOLDS_KEY,
+          exact: true,
+        });
+      }
     },
   });
 }

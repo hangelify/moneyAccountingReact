@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { householdsApi } from '@/api/households';
+import { ApiError } from '@/auth/apiError';
 import { TEST_HOUSEHOLDS } from '@/test/household';
 import type { Household } from '@/types/households';
 import {
@@ -93,6 +94,33 @@ describe('household mutations', () => {
       client.getQueryState(['households', 'hh-1', 'bills'])
     ).toBeUndefined();
     expect(client.getQueryState(['households', 'hh-2', 'bills'])).toBeDefined();
+  });
+
+  it('delete of a budget that is already gone (404) drops it and refetches the list', async () => {
+    const { client, wrapper } = setup();
+    client.setQueryData(['households', 'hh-1', 'bills'], { data: [] });
+    vi.mocked(householdsApi.remove).mockRejectedValue(
+      new ApiError(404, null, {}, 'Not Found')
+    );
+    const { result } = renderHook(() => useDeleteHousehold(), { wrapper });
+    await result.current.mutateAsync('hh-1');
+
+    const list = client.getQueryData<Household[]>(['households']);
+    expect(list?.map((h) => h.id)).toEqual(['hh-2']);
+    expect(
+      client.getQueryState(['households', 'hh-1', 'bills'])
+    ).toBeUndefined();
+    expect(client.getQueryState(['households'])?.isInvalidated).toBe(true);
+  });
+
+  it('delete still fails on other errors', async () => {
+    const { client, wrapper } = setup();
+    vi.mocked(householdsApi.remove).mockRejectedValue(
+      new ApiError(500, null, {}, 'Server Error')
+    );
+    const { result } = renderHook(() => useDeleteHousehold(), { wrapper });
+    await expect(result.current.mutateAsync('hh-1')).rejects.toThrow();
+    expect(client.getQueryData<Household[]>(['households'])).toHaveLength(2);
   });
 
   it('all mutations are flagged ownForbidden', async () => {
