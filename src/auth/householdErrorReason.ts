@@ -1,15 +1,12 @@
-import { ApiError } from '@/auth/apiError';
+import { ApiError } from './apiError';
 
-export type HouseholdErrorReason =
-  | 'household_limit'
-  | 'last_household'
-  | 'household_has_members';
-
-const REASONS: readonly string[] = [
+const REASONS = [
   'household_limit',
   'last_household',
   'household_has_members',
-];
+] as const;
+
+export type HouseholdErrorReason = (typeof REASONS)[number];
 
 /** The machine-readable reason of a 409 from the households API, else null. */
 export function householdErrorReason(
@@ -20,7 +17,8 @@ export function householdErrorReason(
     typeof err.body === 'object' && err.body !== null
       ? (err.body as { reason?: unknown }).reason
       : undefined;
-  return typeof reason === 'string' && REASONS.includes(reason)
+  return typeof reason === 'string' &&
+    (REASONS as readonly string[]).includes(reason)
     ? (reason as HouseholdErrorReason)
     : null;
 }

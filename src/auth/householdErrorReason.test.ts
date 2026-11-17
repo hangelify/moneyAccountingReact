@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ApiError } from '@/auth/apiError';
+import { ApiError } from './apiError';
 import { householdErrorReason } from './householdErrorReason';
 
 describe('householdErrorReason', () => {
