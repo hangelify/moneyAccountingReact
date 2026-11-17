@@ -35,12 +35,12 @@ function renderMenu(): void {
 }
 
 describe('UserMenu', () => {
-  it('links to household settings', async () => {
+  it('links to budgets', async () => {
     renderMenu();
     await userEvent.click(screen.getByRole('button', { name: 'User menu' }));
     expect(
       await screen.findByRole('menuitem', { name: 'Budgets' })
-    ).toHaveAttribute('href', '/households/settings');
+    ).toHaveAttribute('href', '/households');
   });
 
   it('switches the theme from the Theme submenu', async () => {

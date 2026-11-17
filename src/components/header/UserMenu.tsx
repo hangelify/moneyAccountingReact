@@ -1,4 +1,4 @@
-import { LogOut, Moon, Settings, Sun, User } from 'lucide-react';
+import { LogOut, Moon, Sun, User, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -78,8 +78,8 @@ export function UserMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/households/settings">
-            <Settings className="mr-2 h-4 w-4" />
+          <Link to="/households">
+            <Wallet className="mr-2 h-4 w-4" />
             {t('menu.budgets')}
           </Link>
         </DropdownMenuItem>

@@ -1,14 +1,14 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { Header } from '@/components/Header';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { LoadingFallback } from '@/components/common/LoadingFallback';
 
 // Lazy load pages
-const HouseholdSettings = lazy(() =>
-  import('@/pages/households/HouseholdSettings').then((m) => ({
-    default: m.HouseholdSettings,
+const HouseholdsPage = lazy(() =>
+  import('@/pages/households/HouseholdsPage').then((m) => ({
+    default: m.HouseholdsPage,
   }))
 );
 const Home = lazy(() =>
@@ -64,6 +64,10 @@ const DevUi = import.meta.env.DEV
     )
   : null;
 
+const guard = (page: ReactElement): ReactElement => (
+  <RequireAuth>{page}</RequireAuth>
+);
+
 function App(): ReactElement {
   return (
     <div className="min-h-screen flex flex-col">
@@ -72,67 +76,25 @@ function App(): ReactElement {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route
-              path="/dashboard"
-              element={
-                <RequireAuth>
-                  <Dashboard />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/bills/review"
-              element={
-                <RequireAuth>
-                  <NewBillReview />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/bills/confirmed"
-              element={
-                <RequireAuth>
-                  <ConfirmedBills />
-                </RequireAuth>
-              }
-            >
+            <Route path="/dashboard" element={guard(<Dashboard />)} />
+            <Route path="/bills/review" element={guard(<NewBillReview />)} />
+            <Route path="/bills/confirmed" element={guard(<ConfirmedBills />)}>
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
-            <Route
-              path="/bills/drafts"
-              element={
-                <RequireAuth>
-                  <DraftBills />
-                </RequireAuth>
-              }
-            >
+            <Route path="/bills/drafts" element={guard(<DraftBills />)}>
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
             <Route
               path="/bills/duplicates"
-              element={
-                <RequireAuth>
-                  <DuplicateSuggestions />
-                </RequireAuth>
-              }
+              element={guard(<DuplicateSuggestions />)}
             />
-            <Route
-              path="/bills"
-              element={
-                <RequireAuth>
-                  <BillsCards />
-                </RequireAuth>
-              }
-            >
+            <Route path="/bills" element={guard(<BillsCards />)}>
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
+            <Route path="/households" element={guard(<HouseholdsPage />)} />
             <Route
               path="/households/settings"
-              element={
-                <RequireAuth>
-                  <HouseholdSettings />
-                </RequireAuth>
-              }
+              element={<Navigate to="/households" replace />}
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
