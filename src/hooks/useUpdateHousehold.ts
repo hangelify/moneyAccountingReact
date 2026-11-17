@@ -13,6 +13,7 @@ import type {
   HouseholdResponse,
   UpdateHouseholdRequest,
 } from '@/types/households';
+import { mergeHouseholdResponse } from './mergeHouseholdResponse';
 
 /**
  * PUT the household. Converted amounts depend on its currency, so every
@@ -27,7 +28,7 @@ export function useUpdateHousehold(
     meta: OWN_FORBIDDEN_META,
     onSuccess: (saved) => {
       queryClient.setQueryData<Household[]>(HOUSEHOLDS_KEY, (list) =>
-        list?.map((h) => (h.id === saved.id ? { ...h, ...saved } : h))
+        mergeHouseholdResponse(list, saved)
       );
       void queryClient.invalidateQueries({ queryKey: ['households', hid] });
     },
