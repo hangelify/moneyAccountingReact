@@ -2,11 +2,17 @@ import '@/i18n';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type * as UseToastModule from '@/components/ui/use-toast';
 import { ApiError } from '@/auth/apiError';
+import { toast } from '@/components/ui/use-toast';
 import { TEST_HOUSEHOLDS, HouseholdTestProvider } from '@/test/household';
 import type { Household } from '@/types/households';
 import { HouseholdEditor } from './HouseholdEditor';
 
+vi.mock('@/components/ui/use-toast', async (importOriginal) => {
+  const actual = await importOriginal<typeof UseToastModule>();
+  return { ...actual, toast: vi.fn() };
+});
 const update = vi.fn();
 const updateMine = vi.fn();
 vi.mock('@/hooks/useUpdateHousehold', () => ({
@@ -42,6 +48,7 @@ const named: Household = { ...owner, name: 'Mine', original_name: 'Personal' };
 
 describe('HouseholdEditor', () => {
   beforeEach(() => {
+    vi.mocked(toast).mockReset();
     update.mockReset().mockResolvedValue({});
     updateMine.mockReset().mockResolvedValue({});
   });
@@ -78,6 +85,59 @@ describe('HouseholdEditor', () => {
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
     await userEvent.click(saveAt(0));
     expect(await screen.findByText(OWNER_ONLY)).toBeInTheDocument();
+  });
+
+  it('a 400 shows the invalid message and logs', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    update.mockRejectedValue(new ApiError(400, null, {}, 'Bad Request'));
+    renderEditor();
+    await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
+    await userEvent.click(saveAt(0));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Couldn't save — check the values"
+    );
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it('a generic error shows the failure toast', async () => {
+    update.mockRejectedValue(new Error('boom'));
+    renderEditor();
+    await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
+    await userEvent.click(saveAt(0));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: "Couldn't save the budget",
+        })
+      )
+    );
+  });
+
+  it('a successful save shows the saved toast', async () => {
+    renderEditor();
+    await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
+    await userEvent.click(saveAt(0));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Budget updated' })
+      )
+    );
+  });
+
+  it('own name: a failure shows a toast', async () => {
+    updateMine.mockRejectedValue(new Error('boom'));
+    renderEditor(named);
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: 'destructive',
+          title: "Couldn't save your name",
+        })
+      )
+    );
   });
 
   it('owner also gets the own name form and delete', () => {

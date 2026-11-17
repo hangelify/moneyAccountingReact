@@ -60,20 +60,41 @@ describe('DeleteHouseholdButton', () => {
     expect(screen.getByText("This can't be undone.")).toBeInTheDocument();
   });
 
-  it('disabled for the only budget', () => {
-    renderButton(owner, [owner]);
-    expect(
-      screen.getByRole('button', { name: 'Delete budget' })
-    ).toBeDisabled();
+  it.each([
+    ['only budget', owner, [owner], "You can't delete your only budget"],
+    [
+      'other members',
+      { ...owner, member_count: 3 },
+      TEST_HOUSEHOLDS,
+      'Remove other members first',
+    ],
+  ])('disabled for %s, with a hint', async (_n, h, list, hint) => {
+    renderButton(h, list);
+    const button = screen.getByRole('button', { name: 'Delete budget' });
+    expect(button).toBeDisabled();
+    const wrapper = button.parentElement;
+    if (!wrapper) throw new Error('no wrapper');
+    await userEvent.hover(wrapper);
+    expect(await screen.findByRole('tooltip', { name: hint })).toBeVisible();
   });
 
-  it('disabled with other members', () => {
-    renderButton({ ...owner, member_count: 3 });
-    expect(
-      screen.getByRole('button', { name: 'Delete budget' })
-    ).toBeDisabled();
+  it.each([
+    [
+      new ApiError(403, null, {}, 'Forbidden'),
+      'Only the owner can delete this budget',
+    ],
+    [new Error('boom'), "Couldn't delete the budget"],
+  ])('%# shows its failure text', async (error, text) => {
+    remove.mockRejectedValue(error);
+    renderButton();
+    await open();
+    await confirm();
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive', title: text })
+      )
+    );
   });
-
   it.each([
     ['last_household', "You can't delete your only budget"],
     ['household_has_members', 'Remove other members first'],
