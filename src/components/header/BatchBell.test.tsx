@@ -177,7 +177,7 @@ describe('BatchBell', () => {
     await open();
     expect(
       await screen.findByRole('menuitem', { name: 'Review' })
-    ).toHaveAttribute('href', '/bills/drafts/bill-9');
+    ).toHaveAttribute('href', `/bills/drafts/bill-9?hid=${TEST_HID}`);
     expect(screen.getByText('Not a receipt')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Open' })).toHaveAttribute(
       'href',

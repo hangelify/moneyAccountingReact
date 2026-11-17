@@ -171,3 +171,31 @@ describe('App /dev/ui', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('App routes', () => {
+  it('redirects /households/settings to /households', async () => {
+    window.history.pushState({}, '', '/households/settings');
+    render(
+      <ThemeProvider>
+        <QueryClientProvider client={createTestQueryClient()}>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
+    );
+
+    // Signed out: RequireAuth sends us to login remembering where we were
+    // headed, and the legacy path must already be redirected by then.
+    await waitFor(() => {
+      expect(window.location.pathname).toBe('/login');
+    });
+    expect(
+      (window.history.state as { usr?: { from?: { pathname?: string } } }).usr
+        ?.from?.pathname
+    ).toBe('/households');
+    window.history.pushState({}, '', '/');
+  });
+});

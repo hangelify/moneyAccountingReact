@@ -356,15 +356,25 @@ describe('NewBillReview', () => {
       expect(saveButton()).toBeDisabled();
     });
 
+    it("offers to switch to the draft's budget", async () => {
+      seedDraft({ hid: 'hh-2', items: [item(CAT)] });
+      renderReview();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Switch to Family Budget' })
+      );
+      expect(household.setActiveHouseholdId).toHaveBeenCalledWith('hh-2');
+    });
+
     it("doesn't show a raw id when the draft's household is unknown", () => {
       seedDraft({ hid: 'hh-gone', items: [item(CAT)] });
       renderReview();
       expect(
         screen.getByText(
-          'This draft belongs to a household you can no longer access.'
+          'This draft belongs to a budget you can no longer access.'
         )
       ).toBeInTheDocument();
       expect(screen.queryByText(/hh-gone/)).toBeNull();
+      expect(screen.queryByRole('button', { name: /^Switch to/ })).toBeNull();
       expect(saveButton()).toBeDisabled();
     });
 

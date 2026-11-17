@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DesktopNav } from '@/components/header/DesktopNav';
 import { MobileNav } from '@/components/header/MobileNav';
 import { UserMenu } from '@/components/header/UserMenu';
+import { HouseholdSwitcher } from '@/components/header/HouseholdSwitcher';
 import { BatchBell } from '@/components/header/BatchBell';
 import { ThemeToggle } from '@/components/header/ThemeToggle';
 import { NewBillModal } from '@/components/bills/NewBillModal';
@@ -31,6 +32,7 @@ export function Header(): ReactElement {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
+              <HouseholdSwitcher />
               <BatchBell />
               <div className="hidden md:block">
                 <UserMenu />

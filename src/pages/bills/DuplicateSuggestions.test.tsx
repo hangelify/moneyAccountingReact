@@ -76,7 +76,7 @@ describe('DuplicateSuggestions', () => {
       within(card)
         .getAllByRole('link')
         .map((a) => a.getAttribute('href'))
-    ).toEqual(['/bills/confirmed/a1', '/bills/confirmed/b2']);
+    ).toEqual(['/bills/confirmed/a1?hid=hh-1', '/bills/confirmed/b2?hid=hh-1']);
   });
 
   it('This one is the copy under the right bill marks it against the left', async () => {

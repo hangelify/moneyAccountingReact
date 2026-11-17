@@ -375,11 +375,6 @@
       "count": 1
     }
   },
-  "src/hooks/useUpdateHousehold.test.tsx": {
-    "@typescript-eslint/explicit-function-return-type": {
-      "count": 1
-    }
-  },
   "src/lib/applyBatchEvent.test.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
@@ -695,14 +690,6 @@
       "count": 1
     }
   },
-  "src/pages/households/HouseholdSettings.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    },
-    "react-hooks/incompatible-library": {
-      "count": 1
-    }
-  },
   "src/stores/billBatchStore.test.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
@@ -715,11 +702,6 @@
   },
   "src/stores/billDraftStore.ts": {
     "max-lines-per-function": {
-      "count": 1
-    }
-  },
-  "src/test/setup.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
     }
   },

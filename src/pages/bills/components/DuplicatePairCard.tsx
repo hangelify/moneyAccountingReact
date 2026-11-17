@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { formatAmount } from '@/lib/format';
 import type { DuplicateSuggestionPair, PossibleDuplicate } from '@/types/bills';
 import { addedBy } from '../describeDuplicate';
+import { useWithActiveHid } from '../useWithActiveHid';
 
 export interface DuplicatePairCardProps {
   pair: DuplicateSuggestionPair;
@@ -68,11 +69,15 @@ function PairSide({
 }): ReactElement {
   const { t, i18n } = useTranslation('bills');
   const detailsId = useId();
+  const withActiveHid = useWithActiveHid();
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3 text-sm">
       <div id={detailsId} className="flex flex-col gap-2">
         <Link
-          to={`/bills/confirmed/${bill.id}`}
+          to={{
+            pathname: `/bills/confirmed/${bill.id}`,
+            search: withActiveHid(''),
+          }}
           className="font-medium underline-offset-4 hover:underline"
         >
           {bill.market_name ?? t('cards.noMarket')} ·{' '}

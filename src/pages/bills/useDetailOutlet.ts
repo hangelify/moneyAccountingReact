@@ -1,14 +1,16 @@
 // src/pages/bills/useDetailOutlet.ts
 import { useEffect, useRef, type ReactElement } from 'react';
-import { useOutlet } from 'react-router-dom';
+import { useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { useMediaQuery } from '@/lib/useMediaQuery';
+import { useWithActiveHid } from './useWithActiveHid';
 
 export interface DetailOutlet {
   outlet: ReactElement | null;
   // Desktop with a bill open: the list renders only the outlet.
   pageMode: boolean;
-  // Call before opening a bill so Back can restore the list's place.
-  rememberOpen: (id: string) => void;
+  // Opens a bill (with the list's search and budget) so Back can restore
+  // the list's place.
+  openBill: (id: string) => void;
 }
 
 // The nested bill detail of a list page. On desktop the detail replaces the
@@ -29,9 +31,16 @@ export function useDetailOutlet(): DetailOutlet {
       ?.focus();
   }, [pageMode]);
 
-  const rememberOpen = (id: string): void => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const withActiveHid = useWithActiveHid();
+  const openBill = (id: string): void => {
     opened.current = { id, scrollY: window.scrollY };
+    void navigate({
+      pathname: `./${id}`,
+      search: withActiveHid(location.search),
+    });
   };
 
-  return { outlet, pageMode, rememberOpen };
+  return { outlet, pageMode, openBill };
 }

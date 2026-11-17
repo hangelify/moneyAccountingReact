@@ -6,3 +6,6 @@ export const ACTIVE_HOUSEHOLD_STORAGE_KEY = 'activeHouseholdId';
 
 export const householdPath = (hid: string, path = ''): string =>
   `/households/${encodeURIComponent(hid)}${path}`;
+
+/** The most budgets (households) one user can belong to, own or invited; the API enforces it too. */
+export const MAX_HOUSEHOLDS = 5;

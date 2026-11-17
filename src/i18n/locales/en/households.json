@@ -1,17 +1,74 @@
 {
-  "accessLost": "You no longer have access to this household.",
-  "loadFailed": "Could not load your households.",
+  "accessLost": "You no longer have access to this budget.",
+  "loadFailed": "Could not load your budgets.",
   "retry": "Try again",
+  "switchedTo": "Switched to budget {{name}}",
+  "billInaccessible": "This bill is in a budget you can't access.",
+  "switchTo": "Switch to {{name}}",
   "settings": {
-    "title": "Household settings",
     "name": "Name",
     "currency": "Currency",
     "currencyHint": "Bills, the dashboard and totals will be shown in this currency. Original receipt amounts are kept.",
     "save": "Save",
     "saving": "Saving…",
-    "saved": "Household updated",
-    "ownerOnly": "Only the household owner can change these.",
+    "saved": "Budget updated",
     "invalid": "Couldn't save — check the values",
-    "failed": "Couldn't save the household"
+    "failed": "Couldn't save the budget"
+  },
+  "switcher": {
+    "label": "Budget: {{name}}",
+    "title": "Budgets",
+    "manage": "Manage budgets"
+  },
+  "limitReached": "You can have up to 5 budgets",
+  "list": {
+    "title": "Budgets",
+    "new": "New budget",
+    "emptyTitle": "You have no budgets"
+  },
+  "card": {
+    "owner": "Owner",
+    "member": "Member",
+    "active": "Active",
+    "makeActive": "Make active",
+    "originalName": "Original name: {{name}}",
+    "edit": "Edit",
+    "makeActiveLabel": "Make active: {{name}}",
+    "editLabel": "Edit {{name}}"
+  },
+  "billCount_one": "{{count}} bill",
+  "billCount_other": "{{count}} bills",
+  "create": {
+    "title": "New budget",
+    "name": "Name",
+    "submit": "Create",
+    "creating": "Creating…",
+    "cancel": "Cancel",
+    "limit": "You already have 5 budgets",
+    "created": "Budget created",
+    "switch": "Switch to it",
+    "failed": "Couldn't create the budget",
+    "description": "Give the budget a name and pick its currency."
+  },
+  "editor": {
+    "ownerOnly": "Only the owner can change name and currency",
+    "ownName": "Your name for this budget",
+    "ownNameSave": "Save my name",
+    "ownNameReset": "Reset",
+    "ownNameSaved": "Name updated",
+    "ownNameFailed": "Couldn't save your name"
+  },
+  "delete": {
+    "button": "Delete budget",
+    "title": "Delete “{{name}}”?",
+    "withBills_one": "It has {{count}} bill. This can't be undone.",
+    "withBills_other": "It has {{count}} bills. This can't be undone.",
+    "noBills": "This can't be undone.",
+    "confirm": "Delete",
+    "done": "Budget deleted",
+    "onlyOne": "You can't delete your only budget",
+    "hasMembers": "Remove other members first",
+    "forbidden": "Only the owner can delete this budget",
+    "failed": "Couldn't delete the budget"
   }
 }

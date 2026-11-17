@@ -20,4 +20,12 @@ describe('changedFields', () => {
       currency: 'MDL',
     });
   });
+
+  it('compares the name with original_name', () => {
+    const own = { ...h, name: 'Mine', original_name: 'Family' };
+    expect(changedFields(own, { name: 'Family', currency: 'EUR' })).toEqual({});
+    expect(changedFields(own, { name: 'Mine', currency: 'EUR' })).toEqual({
+      name: 'Mine',
+    });
+  });
 });

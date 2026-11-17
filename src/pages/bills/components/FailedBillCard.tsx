@@ -21,6 +21,7 @@ import { useTrackBatch } from '@/hooks/useBillBatch';
 import type { DraftBillDto } from '@/types/bills';
 import { billsApi } from '@/api/bills';
 import { toBatchUploadFailure } from '@/api/batchUploadError';
+import { useWithActiveHid } from '../useWithActiveHid';
 
 const BUDGET_PREFIX = 'Daily AI budget';
 
@@ -29,6 +30,7 @@ export function FailedBillCard({ bill }: { bill: DraftBillDto }): ReactElement {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hid = useActiveHouseholdId();
+  const withActiveHid = useWithActiveHid();
   const { handleForbidden } = useHouseholds();
   const trackBatch = useTrackBatch();
   const image = useBillImage(bill.id);
@@ -110,7 +112,12 @@ export function FailedBillCard({ bill }: { bill: DraftBillDto }): ReactElement {
       key="manual"
       size="sm"
       variant={canRetry && !isBudget ? 'outline' : 'default'}
-      onClick={() => void navigate(`/bills/drafts/${bill.id}`)}
+      onClick={() =>
+        void navigate({
+          pathname: `/bills/drafts/${bill.id}`,
+          search: withActiveHid(''),
+        })
+      }
     >
       {t('failed.enterManually')}
     </Button>

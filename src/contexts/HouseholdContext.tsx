@@ -100,13 +100,16 @@ export function HouseholdProvider({
     await refetchList();
   }, [refetchList]);
 
+  // Validates against the cache at call time, not the render-time list, so a
+  // long-lived closure (e.g. a toast action after a create) still works.
   const setActiveHouseholdId = useCallback(
     (id: string) => {
-      if (!households.some((h) => h.id === id)) return;
+      const latest = queryClient.getQueryData<Household[]>(HOUSEHOLDS_KEY);
+      if (!latest?.some((h) => h.id === id)) return;
       setRememberedId(id);
       writeRememberedHouseholdId(id);
     },
-    [households]
+    [queryClient]
   );
 
   // Parallel 403s share one refetch and one toast.
