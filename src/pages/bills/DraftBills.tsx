@@ -11,10 +11,19 @@ import { BillsTabs } from './components/BillsTabs';
 import { FailedBillsGroup } from './components/FailedBillsGroup';
 import { Pagination } from './components/Pagination';
 import { useDetailOutlet } from './useDetailOutlet';
+import { MoveResultProvider } from './move/MoveResultProvider';
 
 // Drafts (bills waiting for review). The endpoint takes only page and limit,
-// so this tab has no filters.
+// so this tab has no filters. A draft moved from its detail is reported here.
 export function DraftBills(): ReactElement {
+  return (
+    <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+      <DraftBillsBody />
+    </MoveResultProvider>
+  );
+}
+
+function DraftBillsBody(): ReactElement {
   const { t } = useTranslation('bills');
   const [sp, setSp] = useSearchParams();
   const page = useMemo(() => parseBillsSearchParams(sp).page, [sp]);

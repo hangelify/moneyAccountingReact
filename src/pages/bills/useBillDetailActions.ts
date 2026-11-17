@@ -5,7 +5,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useBillDetail } from '@/hooks/useBillDetail';
 import { useDuplicateMutations } from '@/hooks/useDuplicateMutations';
-import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
+import {
+  useActiveHouseholdId,
+  useHouseholds,
+} from '@/contexts/HouseholdContext';
 import { toast } from '@/components/ui/use-toast';
 import { ApiError } from '@/auth/apiError';
 import { isHouseholdForbidden } from '@/auth/isHouseholdForbidden';
@@ -16,6 +19,10 @@ import type {
   UpdateBillRequest,
 } from '@/types/bills';
 import { billsApi } from '@/api/bills';
+import type { Household } from '@/types/households';
+import { useMoveResult } from './move/MoveResultProvider';
+import { MoveError, toMoveBillRef } from './move/types';
+import { useMoveBills } from './move/useMoveBills';
 import {
   billToEdits,
   buildDetailConfirmPayload,
@@ -59,6 +66,14 @@ export interface BillDetailActions {
   unmarkDuplicate: () => void;
   keepBoth: (other: PossibleDuplicate) => void;
   isDuplicateBusy: boolean;
+  // Move to another budget: shown with more than one budget, for a draft or
+  // a confirmed bill.
+  moveVisible: boolean;
+  move: (target: Household) => Promise<void>;
+  isMoving: boolean;
+  canMove: boolean;
+  // Unsaved edits or a pending duplicate mark would be lost by a move.
+  moveBlockedByEdits: boolean;
 }
 
 // Edit and confirm state shared by the detail drawer and the detail page.
@@ -94,6 +109,9 @@ export function useBillDetailActions(
   const pendingDuplicateOf =
     pending !== null && pending.id === id ? pending.original : null;
   const duplicates = useDuplicateMutations(hid);
+  const { households } = useHouseholds();
+  const mover = useMoveBills();
+  const moveReport = useMoveResult();
 
   const close = (): void => {
     void navigate({ pathname: '..', search: location.search });
@@ -274,13 +292,36 @@ export function useBillDetailActions(
     else setEdit({ id, edits: billToEdits(bill) });
   };
 
+  const move = async (target: Household): Promise<void> => {
+    if (!bill) return;
+    const ref = toMoveBillRef(bill);
+    try {
+      const outcome = await mover.move([ref], target);
+      close();
+      moveReport.reportSuccess(outcome);
+    } catch (err) {
+      if (!(err instanceof MoveError)) throw err;
+      if (err.failure.kind === 'missing') {
+        toast({ title: t('move.billGone') });
+        close();
+      } else {
+        // The detail stays open behind a conflicts dialog.
+        moveReport.reportFailure(err.failure, {
+          bills: [ref],
+          beforeShowDuplicates: close,
+        });
+      }
+    }
+  };
+
   const isDuplicateBusy =
     duplicates.mark.isPending ||
     duplicates.unmark.isPending ||
     duplicates.dismiss.isPending ||
     confirmMutation.isPending ||
     saveMutation.isPending ||
-    removeMutation.isPending;
+    removeMutation.isPending ||
+    mover.isPending;
 
   const canConfirm =
     hid !== null &&
@@ -304,7 +345,14 @@ export function useBillDetailActions(
     bill !== undefined &&
     !confirmMutation.isPending &&
     !saveMutation.isPending &&
-    !removeMutation.isPending;
+    !removeMutation.isPending &&
+    !mover.isPending;
+
+  const moveVisible =
+    households.length > 1 &&
+    (bill?.status === 'draft' || bill?.status === 'confirmed');
+  const moveBlockedByEdits = isEdited || pendingDuplicateOf !== null;
+  const canMove = moveVisible && !moveBlockedByEdits && !isDuplicateBusy;
 
   return {
     bill,
@@ -343,5 +391,10 @@ export function useBillDetailActions(
         duplicates.dismiss.mutate({ id: bill.id, otherBillId: other.id });
     },
     isDuplicateBusy,
+    moveVisible,
+    move,
+    isMoving: mover.isPending,
+    canMove,
+    moveBlockedByEdits,
   };
 }

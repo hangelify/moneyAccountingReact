@@ -15,6 +15,7 @@ import { BillDetailContent } from './components/BillDetailContent';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
 import { FailedBillNotice } from './components/FailedBillNotice';
 import { DeleteBillButton } from './components/DeleteBillButton';
+import { MoveBillButton } from './components/MoveBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
 export function BillDetailDrawer(): ReactElement | null {
@@ -39,6 +40,10 @@ export function BillDetailDrawer(): ReactElement | null {
     isRemoving,
     canRemove,
     close,
+    moveVisible,
+    move,
+    canMove,
+    moveBlockedByEdits,
   } = actions;
 
   if (!id) return null;
@@ -102,12 +107,21 @@ export function BillDetailDrawer(): ReactElement | null {
         )}
         <BillDetailContent id={id} edits={edits} onEditsChange={setEdits} />
         {bill && (
-          <DeleteBillButton
-            bill={bill}
-            onDelete={remove}
-            disabled={!canRemove}
-            className="mt-auto w-full"
-          />
+          <div className="mt-auto flex flex-col gap-2">
+            {moveVisible && (
+              <MoveBillButton
+                onMove={move}
+                disabled={!canMove}
+                blockedByEdits={moveBlockedByEdits}
+              />
+            )}
+            <DeleteBillButton
+              bill={bill}
+              onDelete={remove}
+              disabled={!canRemove}
+              className="w-full"
+            />
+          </div>
         )}
       </SheetContent>
     </Sheet>
