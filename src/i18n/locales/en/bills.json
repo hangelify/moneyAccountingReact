@@ -291,6 +291,31 @@
       "hint": "Categories are matched by name. Items with no match will be left without a category.",
       "legend": "Budget",
       "submit": "Move"
+    },
+    "done_one": "Moved {{count}} bill to “{{name}}”",
+    "done_other": "Moved {{count}} bills to “{{name}}”",
+    "lostCategory_one": "{{count}} item left without a category",
+    "lostCategory_other": "{{count}} items left without a category",
+    "missing": "Some bills were not found — the list is updated",
+    "failed": "Couldn't move the bills",
+    "reason": {
+      "status_not_movable": "Duplicates and unreadable receipts can't be moved",
+      "has_duplicates": "Other bills are marked as its duplicates — unmark them first",
+      "draft_image_conflict": "The target budget already has a draft of this photo",
+      "client_batch_conflict": "This bill can't be moved to that budget",
+      "unknown": "This bill can't be moved to that budget"
+    },
+    "result": {
+      "movedTo": "Moved to “{{name}}”",
+      "nothingMoved": "Nothing was moved",
+      "withoutCategory_one": "{{count}} without category",
+      "withoutCategory_other": "{{count}} without category",
+      "withoutSubCategory_one": "{{count}} without subcategory",
+      "withoutSubCategory_other": "{{count}} without subcategory",
+      "open": "Open",
+      "unselect": "Unselect these",
+      "showDuplicates": "Show duplicates",
+      "done": "Done"
     }
   }
 }

@@ -4,6 +4,7 @@ import type {
   MoveConflict,
 } from '@/types/bills';
 import type { Household } from '@/types/households';
+import { billPath } from '@/lib/billPath';
 
 /** A bill as it was on screen when the move started. */
 export interface MoveBillRef {
@@ -59,4 +60,13 @@ export class MoveError extends Error {
     this.name = 'MoveError';
     this.failure = failure;
   }
+}
+
+/** A link to a moved bill in its new budget. */
+export function movedBillHref(bill: MoveBillRef, targetId: string): string {
+  return billPath(
+    bill.status === 'draft' ? 'drafts' : 'all',
+    bill.id,
+    targetId
+  );
 }
