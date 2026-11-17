@@ -119,4 +119,55 @@ describe('CreateHouseholdDialog', () => {
     action.props.onClick();
     expect(setActiveHouseholdId).toHaveBeenCalledWith('hh-new');
   });
+
+  it('starts fresh on every open: no stale limit message or name', async () => {
+    mutateAsync.mockRejectedValue(
+      new ApiError(409, { reason: 'household_limit' })
+    );
+    const value = makeHouseholdValue();
+    const ui = (open: boolean): React.JSX.Element => (
+      <HouseholdTestProvider value={value}>
+        <CreateHouseholdDialog
+          open={open}
+          onOpenChange={vi.fn()}
+          defaultCurrency="EUR"
+        />
+      </HouseholdTestProvider>
+    );
+    const { rerender } = render(ui(true));
+    await userEvent.type(screen.getByLabelText('Name'), 'Trip');
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await screen.findByText('You already have 5 budgets');
+    rerender(ui(false));
+    rerender(ui(true));
+    expect(
+      screen.queryByText('You already have 5 budgets')
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+  });
+
+  it('defaults to the current active currency on reopen', async () => {
+    mutateAsync.mockResolvedValue(saved);
+    const value = makeHouseholdValue();
+    const ui = (open: boolean, currency: string): React.JSX.Element => (
+      <HouseholdTestProvider value={value}>
+        <CreateHouseholdDialog
+          open={open}
+          onOpenChange={vi.fn()}
+          defaultCurrency={currency}
+        />
+      </HouseholdTestProvider>
+    );
+    const { rerender } = render(ui(false, 'EUR'));
+    rerender(ui(false, 'MDL'));
+    rerender(ui(true, 'MDL'));
+    await userEvent.type(screen.getByLabelText('Name'), 'Trip');
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        name: 'Trip',
+        currency: 'MDL',
+      })
+    );
+  });
 });

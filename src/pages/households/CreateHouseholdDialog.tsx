@@ -37,11 +37,28 @@ interface CreateHouseholdDialogProps {
   defaultCurrency: string;
 }
 
+/** The content mounts only while open, so every open starts fresh. */
 export function CreateHouseholdDialog({
   open,
   onOpenChange,
   defaultCurrency,
 }: CreateHouseholdDialogProps): ReactElement {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {open && (
+        <CreateDialogContent
+          onOpenChange={onOpenChange}
+          defaultCurrency={defaultCurrency}
+        />
+      )}
+    </Dialog>
+  );
+}
+
+function CreateDialogContent({
+  onOpenChange,
+  defaultCurrency,
+}: Omit<CreateHouseholdDialogProps, 'open'>): ReactElement {
   const { t } = useTranslation('households');
   const { setActiveHouseholdId } = useHouseholds();
   const mutation = useCreateHousehold();
@@ -57,7 +74,6 @@ export function CreateHouseholdDialog({
     try {
       const saved = await mutation.mutateAsync(values);
       onOpenChange(false);
-      form.reset({ name: '', currency: defaultCurrency });
       toast({
         variant: 'success',
         title: t('create.created'),
@@ -80,44 +96,42 @@ export function CreateHouseholdDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t('create.title')}</DialogTitle>
-        </DialogHeader>
-        <Form
-          form={form}
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4"
-        >
-          <CreateFields form={form} disabled={mutation.isPending} />
-          {limitReached && (
-            <p role="alert" className="text-sm font-medium text-destructive">
-              {t('create.limit')}
-            </p>
-          )}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t('create.cancel')}
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('create.creating')}
-                </>
-              ) : (
-                t('create.submit')
-              )}
-            </Button>
-          </DialogFooter>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>{t('create.title')}</DialogTitle>
+      </DialogHeader>
+      <Form
+        form={form}
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
+        <CreateFields form={form} disabled={mutation.isPending} />
+        {limitReached && (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {t('create.limit')}
+          </p>
+        )}
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            {t('create.cancel')}
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('create.creating')}
+              </>
+            ) : (
+              t('create.submit')
+            )}
+          </Button>
+        </DialogFooter>
+      </Form>
+    </DialogContent>
   );
 }
 
@@ -152,15 +166,15 @@ function CreateFields({
       <FormField
         control={form.control}
         name="currency"
-        render={({ field: f }) => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>{t('create.currency')}</FormLabel>
             <FormControl>
               <CurrencySelect
                 aria-label={t('create.currency')}
                 disabled={disabled}
-                value={f.value}
-                onChange={(c) => f.onChange(c ?? '')}
+                value={field.value}
+                onChange={(c) => field.onChange(c ?? '')}
                 required
               />
             </FormControl>
