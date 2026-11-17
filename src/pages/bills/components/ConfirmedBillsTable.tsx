@@ -12,7 +12,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { BillResponseDto } from '@/types/bills';
-import type { BillSelectionView } from '../move/useBillSelection';
+import {
+  selectBillLabel,
+  type BillSelectionView,
+} from '../move/useBillSelection';
 import { SelectMark } from './SelectMark';
 
 export interface ConfirmedBillsTableProps {
@@ -59,7 +62,7 @@ function rowProps(
   const toggle = (): void => selection.toggle(b.id);
   return {
     role: 'checkbox',
-    'aria-label': t('move.selectBill'),
+    'aria-label': selectBillLabel(t, b),
     'aria-checked': selection.isSelected(b.id),
     tabIndex: 0,
     onClick: toggle,

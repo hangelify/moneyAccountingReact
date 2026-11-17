@@ -109,6 +109,16 @@ describe('MoveResultProvider', () => {
     expect(screen.getByRole('dialog')).toBeVisible();
   });
 
+  it('Open in the losses dialog closes it and goes to the bill', async () => {
+    renderProvider();
+    run((api) => api.reportSuccess(outcome([info('a', 2), info('b', 1)])));
+    const [open] = screen.getAllByRole('link', { name: /open/i });
+    if (!open) throw new Error('no link');
+    await userEvent.click(open);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByTestId('where')).toHaveTextContent('/bills/a?hid=hh-2');
+  });
+
   it('missing and other toast', () => {
     renderProvider();
     fail({ kind: 'missing', ids: ['a'] });

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { TFunction } from 'i18next';
 import type { BillResponseDto } from '@/types/bills';
 
 /** What a list view needs to draw and change the selection. */
@@ -80,4 +81,13 @@ export function useBillSelection(resetKey: string): BillSelection {
         for (const id of ids) s.delete(id);
       }),
   };
+}
+
+/** The name of a bill's checkbox: what it is, not just "select". */
+export function selectBillLabel(t: TFunction, bill: BillResponseDto): string {
+  return t('bills:move.selectNamed', {
+    market: bill.market?.name ?? t('bills:cards.noMarket'),
+    date: bill.bill_date.slice(0, 10),
+    amount: `${bill.total_amount.toFixed(2)} ${bill.currency ?? ''}`.trim(),
+  });
 }

@@ -323,9 +323,9 @@
     "selected_one": "{{count}} selected",
     "selected_other": "{{count}} selected",
     "moveSelected": "Move…",
-    "selectBill": "Select bill",
     "action": "Move to budget…",
     "saveFirst": "Save or cancel your changes first",
-    "billGone": "This bill is no longer here"
+    "billGone": "This bill is no longer here",
+    "selectNamed": "Select {{market}}, {{date}}, {{amount}}"
   }
 }

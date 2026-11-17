@@ -141,7 +141,10 @@ function BillsListPageBody({
     }
   };
 
-  const selectionView: BillSelectionView | undefined = selection.selecting
+  // Off as soon as moving is impossible (one budget left, only duplicates),
+  // so the list never stays stuck with no way out.
+  const selecting = selection.selecting && canSelect;
+  const selectionView: BillSelectionView | undefined = selecting
     ? {
         isSelected: (id) => selection.selected.has(id),
         toggle: selection.toggle,
@@ -169,9 +172,9 @@ function BillsListPageBody({
             <Button
               variant="outline"
               size="sm"
-              onClick={selection.selecting ? selection.cancel : selection.start}
+              onClick={selecting ? selection.cancel : selection.start}
             >
-              {selection.selecting ? t('move.cancel') : t('move.select')}
+              {selecting ? t('move.cancel') : t('move.select')}
             </Button>
           </div>
         )}
@@ -225,7 +228,7 @@ function BillsListPageBody({
           </>
         )}
 
-        {selection.selecting && canSelect && (
+        {selecting && (
           <SelectionBar
             count={pickedCount}
             allState={allState}

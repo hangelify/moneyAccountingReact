@@ -46,7 +46,14 @@ function BillLabel({ bill }: { bill: MoveBillRef }): ReactElement {
   );
 }
 
-function LossesBody({ outcome }: { outcome: MoveOutcome }): ReactElement {
+function LossesBody({
+  outcome,
+  onOpen,
+}: {
+  outcome: MoveOutcome;
+  // The bill opens over the same list: the dialog gets out of the way.
+  onOpen: () => void;
+}): ReactElement {
   const { t } = useTranslation('bills');
   return (
     <ul className="flex flex-col gap-2">
@@ -71,7 +78,7 @@ function LossesBody({ outcome }: { outcome: MoveOutcome }): ReactElement {
             </span>
           </span>
           <Button asChild variant="outline" size="sm">
-            <Link to={movedBillHref(b, outcome.target.id)}>
+            <Link to={movedBillHref(b, outcome.target.id)} onClick={onOpen}>
               {t('move.result.open')}
             </Link>
           </Button>
@@ -136,7 +143,7 @@ export function MoveResultDialog({
             </DialogTitle>
           </DialogHeader>
           {view.mode === 'losses' ? (
-            <LossesBody outcome={view.outcome} />
+            <LossesBody outcome={view.outcome} onOpen={onClose} />
           ) : (
             <ConflictsBody conflicts={view.conflicts} bills={view.bills} />
           )}

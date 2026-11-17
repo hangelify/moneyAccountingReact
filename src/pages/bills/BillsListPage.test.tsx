@@ -23,8 +23,9 @@ vi.mock('@/components/ui/use-toast', () => ({ toast: vi.fn() }));
 
 function renderList(opts: { households?: Household[]; hid?: string } = {}): {
   switchTo: (next: string) => void;
+  setHouseholds: (next: Household[]) => void;
 } {
-  const households = opts.households ?? TEST_HOUSEHOLDS;
+  let households = opts.households ?? TEST_HOUSEHOLDS;
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
@@ -44,8 +45,15 @@ function renderList(opts: { households?: Household[]; hid?: string } = {}): {
       </HouseholdTestProvider>
     </QueryClientProvider>
   );
-  const { rerender } = render(tree(opts.hid ?? TEST_HID));
-  return { switchTo: (next) => rerender(tree(next)) };
+  const hid = opts.hid ?? TEST_HID;
+  const { rerender } = render(tree(hid));
+  return {
+    switchTo: (next) => rerender(tree(next)),
+    setHouseholds: (next) => {
+      households = next;
+      rerender(tree(hid));
+    },
+  };
 }
 
 function fixture(
@@ -141,7 +149,7 @@ describe('BillsListPage selection', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: /^select$/i })
     );
-    const [first] = screen.getAllByRole('checkbox', { name: /select bill/i });
+    const [first] = screen.getAllByRole('checkbox', { name: /^select lidl/i });
     if (!first) throw new Error('no row');
     await userEvent.click(first);
     expect(screen.getByText(/1 selected/i)).toBeVisible();
@@ -149,6 +157,23 @@ describe('BillsListPage selection', () => {
     expect((all as HTMLInputElement).indeterminate).toBe(true);
     await userEvent.click(all);
     expect(screen.getByText(/2 selected/i)).toBeVisible();
+  });
+
+  it('leaves selection mode when moving is no longer possible', async () => {
+    mock.onGet('/households/hh-1/bills').reply(() => page([fixture('b1')]));
+    const { setHouseholds } = renderList();
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^select$/i })
+    );
+    expect(screen.getAllByRole('checkbox', { name: /^select /i })).not.toEqual(
+      []
+    );
+    // The target budget went away (e.g. after a 403): one budget is left.
+    setHouseholds(TEST_HOUSEHOLDS.slice(0, 1));
+    expect(screen.queryAllByRole('checkbox', { name: /^select /i })).toEqual(
+      []
+    );
+    expect(screen.getByRole('button', { name: /view bill/i })).toBeVisible();
   });
 
   it('changing page clears selection', async () => {

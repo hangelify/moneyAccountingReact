@@ -53,6 +53,7 @@ describe('BillCardGrid selection', () => {
       HTMLElement,
     ];
     expect(a).toHaveAttribute('aria-checked', 'true');
+    expect(b).toHaveAccessibleName('Select Shop b, 2026-05-19, 10.00 EUR');
     expect(b).toHaveAttribute('aria-checked', 'false');
     await userEvent.click(b);
     expect(selection.toggle).toHaveBeenCalledWith('b');
@@ -96,7 +97,9 @@ describe('ConfirmedBillsTable selection', () => {
         selection={selection}
       />
     );
-    const row = screen.getByRole('checkbox', { name: /select bill/i });
+    const row = screen.getByRole('checkbox', {
+      name: 'Select Shop a, 2026-05-19, 10.00 EUR',
+    });
     expect(row).toHaveAttribute('aria-checked', 'false');
     await userEvent.click(row);
     row.focus();

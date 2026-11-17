@@ -4,7 +4,10 @@ import { AlertTriangle, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HouseholdAmount } from '@/components/currency/HouseholdAmount';
 import type { BillResponseDto, DraftBillDto } from '@/types/bills';
-import type { BillSelectionView } from '../move/useBillSelection';
+import {
+  selectBillLabel,
+  type BillSelectionView,
+} from '../move/useBillSelection';
 import { SelectMark } from './SelectMark';
 
 // A confirmed summary, or a draft with its receipt fields and items.
@@ -37,7 +40,7 @@ export function BillCard({
   const openLabel = isDuplicate
     ? t('duplicates.openDuplicate')
     : t('cards.open');
-  const label = selection ? t('move.selectBill') : openLabel;
+  const label = selection ? selectBillLabel(t, bill) : openLabel;
   const handleClick = (): void => {
     if (!selection) onClick(bill.id);
     else if (selectable) selection.toggle(bill.id);
