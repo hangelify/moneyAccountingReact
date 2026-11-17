@@ -118,6 +118,12 @@ function BillsListPageBody({
   const allState: boolean | 'mixed' =
     pickedCount === 0 ? false : pickedCount === movable.length || 'mixed';
 
+  const toggleAll = (): void =>
+    selection.setMany(
+      movable.map((b) => b.id),
+      allState !== true
+    );
+
   const moveSelected = async (target: Household): Promise<void> => {
     const refs = movable
       .filter((b) => selection.selected.has(b.id))
@@ -223,12 +229,7 @@ function BillsListPageBody({
           <SelectionBar
             count={pickedCount}
             allState={allState}
-            onToggleAll={() =>
-              selection.setMany(
-                movable.map((b) => b.id),
-                allState !== true
-              )
-            }
+            onToggleAll={toggleAll}
             onMove={() => setMoveOpen(true)}
             disabled={mover.isPending}
           />

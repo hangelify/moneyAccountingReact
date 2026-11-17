@@ -28,8 +28,12 @@ export function BillsCards(): ReactElement {
           </div>
         ) : undefined
       }
-      renderBills={(bills, openBill) => (
-        <BillCardGrid bills={bills} onCardClick={openBill} />
+      renderBills={(bills, openBill, selection) => (
+        <BillCardGrid
+          bills={bills}
+          onCardClick={openBill}
+          selection={selection}
+        />
       )}
     />
   );
