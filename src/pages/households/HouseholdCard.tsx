@@ -1,8 +1,9 @@
-import { useId, type ReactElement } from 'react';
+import { useId, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import type { Household } from '@/types/households';
+import { HouseholdEditor } from './HouseholdEditor';
 
 interface HouseholdCardProps {
   household: Household;
@@ -16,6 +17,8 @@ export function HouseholdCard({
   const { t } = useTranslation('households');
   const { setActiveHouseholdId } = useHouseholds();
   const titleId = useId();
+  const [editing, setEditing] = useState(false);
+  const editorId = useId();
 
   return (
     <article
@@ -48,15 +51,32 @@ export function HouseholdCard({
         <span>{household.currency}</span>
         <span>{t('billCount', { count: household.bill_count })}</span>
       </p>
-      {!active && (
+      <div className="flex gap-2">
+        {!active && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveHouseholdId(household.id)}
+          >
+            {t('card.makeActive')}
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setActiveHouseholdId(household.id)}
+          aria-expanded={editing}
+          aria-controls={editorId}
+          onClick={() => setEditing((v) => !v)}
         >
-          {t('card.makeActive')}
+          {t('card.edit')}
         </Button>
+      </div>
+      {editing && (
+        <div id={editorId}>
+          <HouseholdEditor household={household} />
+        </div>
       )}
     </article>
   );

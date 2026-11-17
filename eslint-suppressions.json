@@ -690,14 +690,6 @@
       "count": 1
     }
   },
-  "src/pages/households/HouseholdSettings.tsx": {
-    "max-lines-per-function": {
-      "count": 1
-    },
-    "react-hooks/incompatible-library": {
-      "count": 1
-    }
-  },
   "src/stores/billBatchStore.test.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1

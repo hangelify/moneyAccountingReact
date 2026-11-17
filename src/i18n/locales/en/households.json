@@ -33,7 +33,8 @@
     "member": "Member",
     "active": "Active",
     "makeActive": "Make active",
-    "originalName": "Original name: {{name}}"
+    "originalName": "Original name: {{name}}",
+    "edit": "Edit"
   },
   "billCount_one": "{{count}} bill",
   "billCount_other": "{{count}} bills",
@@ -47,5 +48,26 @@
     "created": "Budget created",
     "switch": "Switch to it",
     "failed": "Couldn't create the budget"
+  },
+  "editor": {
+    "ownerOnly": "Only the owner can change name and currency",
+    "ownName": "Your name for this budget",
+    "ownNameSave": "Save",
+    "ownNameReset": "Reset",
+    "ownNameSaved": "Name updated",
+    "ownNameFailed": "Couldn't save your name"
+  },
+  "delete": {
+    "button": "Delete budget",
+    "title": "Delete “{{name}}”?",
+    "withBills_one": "It has {{count}} bill. This can't be undone.",
+    "withBills_other": "It has {{count}} bills. This can't be undone.",
+    "noBills": "This can't be undone.",
+    "confirm": "Delete",
+    "done": "Budget deleted",
+    "onlyOne": "You can't delete your only budget",
+    "hasMembers": "Remove other members first",
+    "forbidden": "Only the owner can delete this budget",
+    "failed": "Couldn't delete the budget"
   }
 }
