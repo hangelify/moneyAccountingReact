@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useHouseholds } from '@/contexts/HouseholdContext';
 import { cn } from '@/lib/utils';
 
 interface MobileNavProps {
@@ -26,6 +27,8 @@ const linkClass = ({ isActive }: { isActive: boolean }): string =>
 
 export function MobileNav({ onOpenNewBill }: MobileNavProps): ReactElement {
   const { t } = useTranslation('header');
+  const { t: tHouseholds } = useTranslation('households');
+  const { activeHousehold } = useHouseholds();
   const [open, setOpen] = useState(false);
 
   const close = (): void => setOpen(false);
@@ -51,6 +54,15 @@ export function MobileNav({ onOpenNewBill }: MobileNavProps): ReactElement {
         <SheetHeader>
           <SheetTitle>{t('brand')}</SheetTitle>
         </SheetHeader>
+        {activeHousehold && (
+          <Link
+            to="/households"
+            onClick={close}
+            className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            {tHouseholds('switcher.label', { name: activeHousehold.name })}
+          </Link>
+        )}
         <nav className="flex flex-col gap-1">
           <NavLink to="/" end className={linkClass} onClick={close}>
             {t('nav.home')}

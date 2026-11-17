@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { HouseholdTestProvider } from '@/test/household';
 import { Header } from './Header';
 
 const auth = vi.hoisted(() => ({ isAuthenticated: true }));
@@ -26,9 +27,11 @@ vi.mock('@/components/bills/NewBillModal', () => ({
 function renderHeader(): void {
   render(
     <ThemeProvider>
-      <MemoryRouter>
-        <Header />
-      </MemoryRouter>
+      <HouseholdTestProvider>
+        <MemoryRouter>
+          <Header />
+        </MemoryRouter>
+      </HouseholdTestProvider>
     </ThemeProvider>
   );
 }
