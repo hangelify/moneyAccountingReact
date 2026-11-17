@@ -133,6 +133,24 @@ describe('BillsListPage selection', () => {
     expect(screen.queryByText(/selected/i)).toBeNull();
   });
 
+  it('select all is mixed when some rows are picked', async () => {
+    mock
+      .onGet('/households/hh-1/bills')
+      .reply(() => page([fixture('b1'), fixture('b2')]));
+    renderList();
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^select$/i })
+    );
+    const [first] = screen.getAllByRole('checkbox', { name: /select bill/i });
+    if (!first) throw new Error('no row');
+    await userEvent.click(first);
+    expect(screen.getByText(/1 selected/i)).toBeVisible();
+    const all = screen.getByRole('checkbox', { name: /select all on page/i });
+    expect((all as HTMLInputElement).indeterminate).toBe(true);
+    await userEvent.click(all);
+    expect(screen.getByText(/2 selected/i)).toBeVisible();
+  });
+
   it('changing page clears selection', async () => {
     mock.onGet('/households/hh-1/bills').reply((config) => {
       const p = config.params as Record<string, unknown>;
