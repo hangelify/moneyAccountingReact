@@ -13,6 +13,7 @@ export const BILLS_ENDPOINTS = {
   UNMARK_DUPLICATE: (id: string): string => `/bills/${id}/unmark-duplicate`,
   DISMISS_DUPLICATE: (id: string): string => `/bills/${id}/dismiss-duplicate`,
   DUPLICATE_SUGGESTIONS: '/bills/duplicate-suggestions',
+  MOVE: '/bills/move',
 } as const;
 
 export const BILL_IMAGE_MIME_TYPES = [

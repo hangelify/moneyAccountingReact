@@ -10,6 +10,8 @@ import type {
   DraftBillDto,
   DuplicateRange,
   DuplicateSuggestionsResponse,
+  MoveBillsRequest,
+  MoveBillsResponse,
   ParsePhotoResponse,
   UpdateBillRequest,
 } from '@/types/bills';
@@ -202,6 +204,17 @@ export const billsApi = {
   },
 
   // "Keep both": the pair is never suggested again.
+  move: async (
+    hid: string,
+    body: MoveBillsRequest
+  ): Promise<MoveBillsResponse> => {
+    const { data } = await apiClient.post<MoveBillsResponse>(
+      householdPath(hid, BILLS_ENDPOINTS.MOVE),
+      body
+    );
+    return data;
+  },
+
   dismissDuplicate: async (
     hid: string,
     id: string,

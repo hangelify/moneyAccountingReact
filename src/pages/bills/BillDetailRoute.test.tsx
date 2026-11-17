@@ -13,6 +13,7 @@ import {
 import MockAdapter from 'axios-mock-adapter';
 import type { ReactElement } from 'react';
 import { apiClient } from '@/auth/apiClient';
+import { MoveResultProvider } from './move/MoveResultProvider';
 import type * as UseToastModule from '@/components/ui/use-toast';
 import { toast } from '@/components/ui/use-toast';
 import type { HouseholdContextValue } from '@/contexts/HouseholdContext';
@@ -51,14 +52,16 @@ function renderApp(initial: string): void {
       <HouseholdTestProvider>
         <MemoryRouter initialEntries={[initial]}>
           <LocationProbe />
-          <Routes>
-            <Route path="/bills/drafts" element={<DraftBills />}>
-              <Route path=":id" element={<BillDetailRoute />} />
-            </Route>
-            <Route path="/bills/confirmed" element={<ConfirmedBills />}>
-              <Route path=":id" element={<BillDetailRoute />} />
-            </Route>
-          </Routes>
+          <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+            <Routes>
+              <Route path="/bills/drafts" element={<DraftBills />}>
+                <Route path=":id" element={<BillDetailRoute />} />
+              </Route>
+              <Route path="/bills/confirmed" element={<ConfirmedBills />}>
+                <Route path=":id" element={<BillDetailRoute />} />
+              </Route>
+            </Routes>
+          </MoveResultProvider>
         </MemoryRouter>
       </HouseholdTestProvider>
     </QueryClientProvider>
@@ -242,9 +245,11 @@ describe('BillDetailRoute: budget from the link', () => {
           <MemoryRouter initialEntries={[initial]}>
             <LocationProbe />
             <Link to={nextLink}>next link</Link>
-            <Routes>
-              <Route path="/bills/:id" element={<BillDetailRoute />} />
-            </Routes>
+            <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+              <Routes>
+                <Route path="/bills/:id" element={<BillDetailRoute />} />
+              </Routes>
+            </MoveResultProvider>
           </MemoryRouter>
         </HouseholdTestProvider>
       </QueryClientProvider>

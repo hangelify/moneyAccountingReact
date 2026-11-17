@@ -307,3 +307,39 @@ export interface BatchCompletedData {
 }
 
 export type BillEventData = ItemEventData | BatchCompletedData;
+
+/** Body of POST /households/:hid/bills/move. */
+export interface MoveBillsRequest {
+  bill_ids: string[];
+  target_household_id: string;
+}
+
+/** A bill of the move response; counts are 0 when already_moved. */
+interface MovedBill {
+  id: string;
+  lines_total: number;
+  // Kept the category, lost the subcategory.
+  lines_lost_sub_category: number;
+  // Lost the category (and so the subcategory).
+  lines_lost_category: number;
+  // The bill was already in the target budget (a repeated request).
+  already_moved: boolean;
+}
+
+export interface MoveBillsResponse {
+  target_household_id: string;
+  // In the order of bill_ids.
+  bills: MovedBill[];
+}
+
+export type MoveConflictReason =
+  | 'status_not_movable'
+  | 'has_duplicates'
+  | 'draft_image_conflict'
+  | 'client_batch_conflict'
+  | 'unknown';
+
+export interface MoveConflict {
+  id: string;
+  reason: MoveConflictReason;
+}

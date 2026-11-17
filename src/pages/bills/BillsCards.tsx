@@ -14,6 +14,7 @@ export function BillsCards(): ReactElement {
   const draftsTotal = drafts.data?.meta.total ?? 0;
   return (
     <BillsListPage
+      listPath="/bills"
       title={t('cards.title')}
       header={<BillsTabs />}
       emptyNoBills={
@@ -27,8 +28,12 @@ export function BillsCards(): ReactElement {
           </div>
         ) : undefined
       }
-      renderBills={(bills, openBill) => (
-        <BillCardGrid bills={bills} onCardClick={openBill} />
+      renderBills={(bills, openBill, selection) => (
+        <BillCardGrid
+          bills={bills}
+          onCardClick={openBill}
+          selection={selection}
+        />
       )}
     />
   );

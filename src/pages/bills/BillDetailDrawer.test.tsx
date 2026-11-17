@@ -13,6 +13,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/auth/apiClient';
+import { MoveResultProvider } from './move/MoveResultProvider';
 import { BillDetailDrawer } from './BillDetailDrawer';
 import type { ReactElement } from 'react';
 import { HouseholdTestProvider } from '@/test/household';
@@ -35,14 +36,16 @@ function renderAt(path: string): void {
     <QueryClientProvider client={qc}>
       <HouseholdTestProvider>
         <MemoryRouter initialEntries={[path]}>
-          <Routes>
-            <Route path="/bills/confirmed" element={<LocationProbe />}>
-              <Route path=":id" element={<BillDetailDrawer />} />
-            </Route>
-            <Route path="/bills/drafts" element={<LocationProbe />}>
-              <Route path=":id" element={<BillDetailDrawer />} />
-            </Route>
-          </Routes>
+          <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+            <Routes>
+              <Route path="/bills/confirmed" element={<LocationProbe />}>
+                <Route path=":id" element={<BillDetailDrawer />} />
+              </Route>
+              <Route path="/bills/drafts" element={<LocationProbe />}>
+                <Route path=":id" element={<BillDetailDrawer />} />
+              </Route>
+            </Routes>
+          </MoveResultProvider>
         </MemoryRouter>
         <Toaster />
       </HouseholdTestProvider>

@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MockAdapter from 'axios-mock-adapter';
 import type { ReactElement } from 'react';
 import { apiClient } from '@/auth/apiClient';
+import { MoveResultProvider } from './move/MoveResultProvider';
 import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import { Toaster } from '@/components/ui/toaster';
 import { BillDetailPage } from './BillDetailPage';
@@ -35,14 +36,16 @@ function renderAt(path: string, household = makeHouseholdValue()): void {
     <QueryClientProvider client={qc}>
       <HouseholdTestProvider value={household}>
         <MemoryRouter initialEntries={[path]}>
-          <Routes>
-            <Route path="/bills/confirmed" element={<LocationProbe />}>
-              <Route path=":id" element={<BillDetailPage />} />
-            </Route>
-            <Route path="/bills/drafts" element={<LocationProbe />}>
-              <Route path=":id" element={<BillDetailPage />} />
-            </Route>
-          </Routes>
+          <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+            <Routes>
+              <Route path="/bills/confirmed" element={<LocationProbe />}>
+                <Route path=":id" element={<BillDetailPage />} />
+              </Route>
+              <Route path="/bills/drafts" element={<LocationProbe />}>
+                <Route path=":id" element={<BillDetailPage />} />
+              </Route>
+            </Routes>
+          </MoveResultProvider>
         </MemoryRouter>
         <Toaster />
       </HouseholdTestProvider>
@@ -349,14 +352,16 @@ describe('BillDetailPage duplicates', () => {
       <QueryClientProvider client={qc}>
         <HouseholdTestProvider value={makeHouseholdValue()}>
           <MemoryRouter initialEntries={[path]}>
-            <Routes>
-              <Route path="/bills/confirmed" element={<Probe />}>
-                <Route path=":id" element={<BillDetailPage />} />
-              </Route>
-              <Route path="/bills/drafts" element={<Probe />}>
-                <Route path=":id" element={<BillDetailPage />} />
-              </Route>
-            </Routes>
+            <MoveResultProvider showDuplicatesHref="/bills/confirmed?include_duplicates=true">
+              <Routes>
+                <Route path="/bills/confirmed" element={<Probe />}>
+                  <Route path=":id" element={<BillDetailPage />} />
+                </Route>
+                <Route path="/bills/drafts" element={<Probe />}>
+                  <Route path=":id" element={<BillDetailPage />} />
+                </Route>
+              </Routes>
+            </MoveResultProvider>
           </MemoryRouter>
           <Toaster />
         </HouseholdTestProvider>

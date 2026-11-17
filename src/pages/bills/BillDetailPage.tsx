@@ -14,6 +14,7 @@ import { BillDetailViews } from './components/BillDetailViews';
 import { BillDuplicateSection } from './components/BillDuplicateSection';
 import { FailedBillNotice } from './components/FailedBillNotice';
 import { DeleteBillButton } from './components/DeleteBillButton';
+import { MoveBillButton } from './components/MoveBillButton';
 import { useBillDetailActions } from './useBillDetailActions';
 
 // Desktop layout of a bill: a full page with the items in a table.
@@ -39,6 +40,10 @@ export function BillDetailPage(): ReactElement | null {
     isRemoving,
     canRemove,
     close,
+    moveVisible,
+    move,
+    canMove,
+    moveBlockedByEdits,
   } = actions;
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -148,12 +153,20 @@ export function BillDetailPage(): ReactElement | null {
       {renderBody()}
 
       {bill && (
-        <DeleteBillButton
-          bill={bill}
-          onDelete={remove}
-          disabled={!canRemove}
-          className="self-end"
-        />
+        <div className="flex flex-wrap items-start justify-end gap-2">
+          {moveVisible && (
+            <MoveBillButton
+              onMove={move}
+              disabled={!canMove}
+              blockedByEdits={moveBlockedByEdits}
+            />
+          )}
+          <DeleteBillButton
+            bill={bill}
+            onDelete={remove}
+            disabled={!canRemove}
+          />
+        </div>
       )}
     </div>
   );
