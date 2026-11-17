@@ -316,6 +316,12 @@
       "unselect": "Unselect these",
       "showDuplicates": "Show duplicates",
       "done": "Done"
-    }
+    },
+    "select": "Select",
+    "cancel": "Cancel",
+    "selectAll": "Select all on page",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "moveSelected": "Move…"
   }
 }

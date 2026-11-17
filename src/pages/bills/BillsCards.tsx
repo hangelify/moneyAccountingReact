@@ -14,6 +14,7 @@ export function BillsCards(): ReactElement {
   const draftsTotal = drafts.data?.meta.total ?? 0;
   return (
     <BillsListPage
+      listPath="/bills"
       title={t('cards.title')}
       header={<BillsTabs />}
       emptyNoBills={

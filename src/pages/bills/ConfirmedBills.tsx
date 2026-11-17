@@ -7,6 +7,7 @@ export function ConfirmedBills(): ReactElement {
   const { t } = useTranslation('bills');
   return (
     <BillsListPage
+      listPath="/bills/confirmed"
       title={t('confirmed.title')}
       renderBills={(bills, openBill) => (
         <ConfirmedBillsTable bills={bills} onRowClick={openBill} />
