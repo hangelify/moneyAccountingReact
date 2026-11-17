@@ -89,7 +89,7 @@ describe('HouseholdSettings', () => {
   it('a 403 switches to read-only', async () => {
     const { role: _omit, ...noRole } = owner;
     update.mockRejectedValue(forbidden());
-    const { handleForbidden } = renderPage(noRole);
+    const { handleForbidden } = renderPage(noRole as Household);
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
     await userEvent.click(save());
     expect(await screen.findByText(OWNER_ONLY)).toBeInTheDocument();

@@ -9,9 +9,12 @@ import {
 const h = (id: string): Household => ({
   id,
   name: id,
+  original_name: id,
   currency: 'EUR',
+  role: 'owner',
   created_at: '2026-06-03T12:00:00.000Z',
   member_count: 1,
+  bill_count: 0,
 });
 
 describe('pickActiveHousehold', () => {

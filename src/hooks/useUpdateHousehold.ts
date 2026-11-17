@@ -8,7 +8,11 @@ import {
   OWN_FORBIDDEN_META,
 } from '@/contexts/HouseholdContext';
 import { householdsApi } from '@/api/households';
-import type { Household, UpdateHouseholdRequest } from '@/types/households';
+import type {
+  Household,
+  HouseholdResponse,
+  UpdateHouseholdRequest,
+} from '@/types/households';
 
 /**
  * PUT the household. Converted amounts depend on its currency, so every
@@ -16,14 +20,14 @@ import type { Household, UpdateHouseholdRequest } from '@/types/households';
  */
 export function useUpdateHousehold(
   hid: string
-): UseMutationResult<Household, unknown, UpdateHouseholdRequest> {
+): UseMutationResult<HouseholdResponse, unknown, UpdateHouseholdRequest> {
   const queryClient = useQueryClient();
-  return useMutation<Household, unknown, UpdateHouseholdRequest>({
+  return useMutation<HouseholdResponse, unknown, UpdateHouseholdRequest>({
     mutationFn: (body) => householdsApi.update(hid, body),
     meta: OWN_FORBIDDEN_META,
     onSuccess: (saved) => {
       queryClient.setQueryData<Household[]>(HOUSEHOLDS_KEY, (list) =>
-        list?.map((h) => (h.id === saved.id ? saved : h))
+        list?.map((h) => (h.id === saved.id ? { ...h, ...saved } : h))
       );
       void queryClient.invalidateQueries({ queryKey: ['households', hid] });
     },
