@@ -21,5 +21,32 @@
     "label": "Budget: {{name}}",
     "title": "Budgets",
     "manage": "Manage budgets"
+  },
+  "limitReached": "You can have up to 5 budgets",
+  "list": {
+    "title": "Budgets",
+    "new": "New budget",
+    "emptyTitle": "You have no budgets"
+  },
+  "card": {
+    "owner": "Owner",
+    "member": "Member",
+    "active": "Active",
+    "makeActive": "Make active",
+    "originalName": "Original name: {{name}}"
+  },
+  "billCount_one": "{{count}} bill",
+  "billCount_other": "{{count}} bills",
+  "create": {
+    "title": "New budget",
+    "name": "Name",
+    "currency": "Currency",
+    "submit": "Create",
+    "creating": "Creating…",
+    "cancel": "Cancel",
+    "limit": "You already have 5 budgets",
+    "created": "Budget created",
+    "switch": "Switch to it",
+    "failed": "Couldn't create the budget"
   }
 }
