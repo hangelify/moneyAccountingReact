@@ -24,6 +24,8 @@ export interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: 'default' | 'destructive';
   onConfirm: () => void | Promise<void>;
+  /** Radix close/unmount auto-focus; preventDefault to move focus yourself. */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 export function ConfirmDialog({
@@ -35,6 +37,7 @@ export function ConfirmDialog({
   cancelLabel,
   variant = 'default',
   onConfirm,
+  onCloseAutoFocus,
 }: ConfirmDialogProps): ReactElement {
   const { t } = useTranslation('common');
   const [pending, setPending] = useState(false);
@@ -50,7 +53,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={pending ? noop : onOpenChange}>
-      <DialogContent>
+      <DialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

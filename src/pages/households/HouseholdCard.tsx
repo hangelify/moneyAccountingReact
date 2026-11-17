@@ -8,11 +8,13 @@ import { HouseholdEditor } from './HouseholdEditor';
 interface HouseholdCardProps {
   household: Household;
   active: boolean;
+  onDeleted?: () => void;
 }
 
 export function HouseholdCard({
   household,
   active,
+  onDeleted,
 }: HouseholdCardProps): ReactElement {
   const { t } = useTranslation('households');
   const { setActiveHouseholdId } = useHouseholds();
@@ -57,6 +59,7 @@ export function HouseholdCard({
             type="button"
             variant="outline"
             size="sm"
+            aria-label={t('card.makeActiveLabel', { name: household.name })}
             onClick={() => setActiveHouseholdId(household.id)}
           >
             {t('card.makeActive')}
@@ -66,6 +69,7 @@ export function HouseholdCard({
           type="button"
           variant="outline"
           size="sm"
+          aria-label={t('card.editLabel', { name: household.name })}
           aria-expanded={editing}
           aria-controls={editorId}
           onClick={() => setEditing((v) => !v)}
@@ -75,7 +79,7 @@ export function HouseholdCard({
       </div>
       {editing && (
         <div id={editorId}>
-          <HouseholdEditor household={household} />
+          <HouseholdEditor household={household} onDeleted={onDeleted} />
         </div>
       )}
     </article>

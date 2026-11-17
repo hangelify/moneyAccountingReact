@@ -32,7 +32,9 @@
     "active": "Active",
     "makeActive": "Make active",
     "originalName": "Original name: {{name}}",
-    "edit": "Edit"
+    "edit": "Edit",
+    "makeActiveLabel": "Make active: {{name}}",
+    "editLabel": "Edit {{name}}"
   },
   "billCount_one": "{{count}} bill",
   "billCount_other": "{{count}} bills",
@@ -45,12 +47,13 @@
     "limit": "You already have 5 budgets",
     "created": "Budget created",
     "switch": "Switch to it",
-    "failed": "Couldn't create the budget"
+    "failed": "Couldn't create the budget",
+    "description": "Give the budget a name and pick its currency."
   },
   "editor": {
     "ownerOnly": "Only the owner can change name and currency",
     "ownName": "Your name for this budget",
-    "ownNameSave": "Save",
+    "ownNameSave": "Save my name",
     "ownNameReset": "Reset",
     "ownNameSaved": "Name updated",
     "ownNameFailed": "Couldn't save your name"

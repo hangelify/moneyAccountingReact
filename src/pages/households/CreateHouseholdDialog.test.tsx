@@ -64,6 +64,13 @@ describe('CreateHouseholdDialog', () => {
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 
+  it('the dialog has a description', () => {
+    renderDialog();
+    expect(screen.getByRole('dialog')).toHaveAccessibleDescription(
+      'Give the budget a name and pick its currency.'
+    );
+  });
+
   it('requires a name', async () => {
     renderDialog();
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));

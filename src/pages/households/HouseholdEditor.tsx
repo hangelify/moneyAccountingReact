@@ -2,9 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
 import { ApiError } from '@/auth/apiError';
-import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { toast } from '@/components/ui/use-toast';
 import { useUpdateHousehold } from '@/hooks/useUpdateHousehold';
@@ -18,18 +16,21 @@ import { CurrencyField } from './CurrencyField';
 import { DeleteHouseholdButton } from './DeleteHouseholdButton';
 import { NameField } from './NameField';
 import { OwnNameForm } from './OwnNameForm';
+import { SaveButton } from './SaveButton';
 
 export function HouseholdEditor({
   household,
+  onDeleted,
 }: {
   household: Household;
+  onDeleted?: (() => void) | undefined;
 }): ReactElement {
   return (
     <div className="space-y-4 border-t pt-4">
       <MainFields household={household} />
       <OwnNameForm household={household} />
       {household.role === 'owner' && (
-        <DeleteHouseholdButton household={household} />
+        <DeleteHouseholdButton household={household} onDeleted={onDeleted} />
       )}
     </div>
   );
@@ -126,29 +127,9 @@ function OwnerFields({
           {formError}
         </p>
       )}
-      <SaveButton disabled={unchanged} pending={mutation.isPending} />
+      <SaveButton disabled={unchanged} pending={mutation.isPending}>
+        {t('settings.save')}
+      </SaveButton>
     </Form>
-  );
-}
-
-function SaveButton({
-  disabled,
-  pending,
-}: {
-  disabled: boolean;
-  pending: boolean;
-}): ReactElement {
-  const { t } = useTranslation('households');
-  return (
-    <Button type="submit" size="sm" disabled={disabled || pending}>
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {t('settings.saving')}
-        </>
-      ) : (
-        t('settings.save')
-      )}
-    </Button>
   );
 }

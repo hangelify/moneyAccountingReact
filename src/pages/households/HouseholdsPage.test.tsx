@@ -57,9 +57,21 @@ describe('HouseholdsPage', () => {
     const value = renderPage();
     const family = screen.getByRole('article', { name: /Family Budget/ });
     await userEvent.click(
-      within(family).getByRole('button', { name: 'Make active' })
+      within(family).getByRole('button', {
+        name: 'Make active: Family Budget',
+      })
     );
     expect(value.setActiveHouseholdId).toHaveBeenCalledWith('hh-2');
+  });
+
+  it('Edit buttons are named after their budget', () => {
+    renderPage();
+    expect(
+      screen.getByRole('button', { name: 'Edit Personal' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Edit Family Budget' })
+    ).toBeInTheDocument();
   });
 
   it('new budget is disabled at the limit', () => {
@@ -71,8 +83,10 @@ describe('HouseholdsPage', () => {
       original_name: `B${String(i)}`,
     }));
     renderPage({ households: five });
-    expect(screen.getByRole('button', { name: 'New budget' })).toBeDisabled();
+    const button = screen.getByRole('button', { name: 'New budget' });
+    expect(button).toBeDisabled();
     expect(screen.getByText('You can have up to 5 budgets')).toBeVisible();
+    expect(button).toHaveAccessibleDescription('You can have up to 5 budgets');
   });
 
   it('new budget is enabled below the limit', () => {
@@ -94,6 +108,9 @@ describe('HouseholdsPage', () => {
     expect(
       screen.getByText('Could not load your budgets.')
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Budgets' })
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(value.refetch).toHaveBeenCalled();
   });
@@ -101,6 +118,9 @@ describe('HouseholdsPage', () => {
   it('shows the empty state with a create button', () => {
     renderPage({ status: 'empty', households: [], activeHousehold: null });
     expect(screen.getByText('You have no budgets')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Budgets' })
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New budget' })).toBeEnabled();
   });
 });

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -99,6 +100,9 @@ function CreateDialogContent({
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{t('create.title')}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {t('create.description')}
+        </DialogDescription>
       </DialogHeader>
       <Form
         form={form}

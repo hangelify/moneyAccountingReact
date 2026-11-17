@@ -15,13 +15,14 @@ vi.mock('@/components/ui/use-toast', async (importOriginal) => {
 });
 const update = vi.fn();
 const updateMine = vi.fn();
+let minePending = false;
 vi.mock('@/hooks/useUpdateHousehold', () => ({
   useUpdateHousehold: () => ({ mutateAsync: update, isPending: false }),
 }));
 vi.mock('@/hooks/useHouseholdMutations', () => ({
   useUpdateMyHouseholdName: () => ({
     mutateAsync: updateMine,
-    isPending: false,
+    isPending: minePending,
   }),
   useDeleteHousehold: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
@@ -36,13 +37,9 @@ function renderEditor(h: Household = owner): void {
   );
 }
 
-const saves = (): HTMLElement[] =>
-  screen.getAllByRole('button', { name: 'Save' });
-const saveAt = (i: number): HTMLElement => {
-  const el = saves()[i];
-  if (!el) throw new Error(`no Save button at ${String(i)}`);
-  return el;
-};
+const save = (): HTMLElement => screen.getByRole('button', { name: 'Save' });
+const saveMine = (): HTMLElement =>
+  screen.getByRole('button', { name: 'Save my name' });
 const OWNER_ONLY = 'Only the owner can change name and currency';
 const named: Household = { ...owner, name: 'Mine', original_name: 'Personal' };
 
@@ -51,18 +48,19 @@ describe('HouseholdEditor', () => {
     vi.mocked(toast).mockReset();
     update.mockReset().mockResolvedValue({});
     updateMine.mockReset().mockResolvedValue({});
+    minePending = false;
   });
 
   it('owner form starts from original_name', () => {
     renderEditor(named);
     expect(screen.getByLabelText('Name')).toHaveValue('Personal');
-    expect(saves()[0]).toBeDisabled();
+    expect(save()).toBeDisabled();
   });
 
   it('owner saves only changed fields', async () => {
     renderEditor(named);
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
-    await userEvent.click(saveAt(0));
+    await userEvent.click(save());
     await waitFor(() =>
       expect(update).toHaveBeenCalledWith({ currency: 'MDL' })
     );
@@ -76,14 +74,15 @@ describe('HouseholdEditor', () => {
     expect(screen.queryByLabelText('Name')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete budget' })).toBeNull();
     // only the own-name Save remains
-    expect(saves()).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+    expect(saveMine()).toBeInTheDocument();
   });
 
   it('403 on save switches to read-only', async () => {
     update.mockRejectedValue(new ApiError(403, null, {}, 'Forbidden'));
     renderEditor();
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
-    await userEvent.click(saveAt(0));
+    await userEvent.click(save());
     expect(await screen.findByText(OWNER_ONLY)).toBeInTheDocument();
   });
 
@@ -92,7 +91,7 @@ describe('HouseholdEditor', () => {
     update.mockRejectedValue(new ApiError(400, null, {}, 'Bad Request'));
     renderEditor();
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
-    await userEvent.click(saveAt(0));
+    await userEvent.click(save());
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "Couldn't save — check the values"
     );
@@ -104,7 +103,7 @@ describe('HouseholdEditor', () => {
     update.mockRejectedValue(new Error('boom'));
     renderEditor();
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
-    await userEvent.click(saveAt(0));
+    await userEvent.click(save());
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -118,7 +117,7 @@ describe('HouseholdEditor', () => {
   it('a successful save shows the saved toast', async () => {
     renderEditor();
     await userEvent.selectOptions(screen.getByLabelText('Currency'), 'MDL');
-    await userEvent.click(saveAt(0));
+    await userEvent.click(save());
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Budget updated' })
@@ -152,17 +151,38 @@ describe('HouseholdEditor', () => {
       screen.getByLabelText('Your name for this budget'),
       '  Mine  '
     );
-    await userEvent.click(saveAt(1));
+    await userEvent.click(saveMine());
     await waitFor(() =>
       expect(updateMine).toHaveBeenCalledWith({ display_name: 'Mine' })
     );
   });
 
-  it('own name: empty is rejected', async () => {
-    renderEditor();
-    await userEvent.click(saveAt(1));
+  it('own name: clearing it is rejected (Reset is the way back)', async () => {
+    renderEditor(named);
+    await userEvent.clear(screen.getByLabelText('Your name for this budget'));
+    await userEvent.click(saveMine());
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(updateMine).not.toHaveBeenCalled();
+  });
+
+  it('own name: Save is disabled until the name changes', async () => {
+    renderEditor(named);
+    expect(saveMine()).toBeDisabled();
+    const input = screen.getByLabelText('Your name for this budget');
+    await userEvent.type(input, '  ');
+    expect(saveMine()).toBeDisabled();
+    await userEvent.type(input, 'x');
+    expect(saveMine()).toBeEnabled();
+  });
+
+  it('own name: shows the pending state while saving', () => {
+    minePending = true;
+    renderEditor(named);
+    const pending = screen.getByRole('button', { name: 'Saving…' });
+    expect(pending).toBeDisabled();
+    expect(pending.closest('form')).toContainElement(
+      screen.getByLabelText('Your name for this budget')
+    );
   });
 
   it('own name: reset sends null, only with an own name', async () => {

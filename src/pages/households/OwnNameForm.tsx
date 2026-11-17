@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
 } from '@/lib/validation-schemas';
 import type { Household } from '@/types/households';
 import { NameField } from './NameField';
+import { SaveButton } from './SaveButton';
 
 /** The caller's own name for a budget; empty/Reset falls back to the original. */
 export function OwnNameForm({
@@ -26,6 +27,9 @@ export function OwnNameForm({
     resolver: zodResolver(ownHouseholdNameSchema),
     defaultValues: { display_name: hasOwnName ? household.name : '' },
   });
+  const value = useWatch({ control: form.control, name: 'display_name' });
+  const unchanged =
+    value.trim() === (form.formState.defaultValues?.display_name ?? '');
 
   const send = async (display_name: string | null): Promise<void> => {
     try {
@@ -50,9 +54,9 @@ export function OwnNameForm({
         disabled={mutation.isPending}
       />
       <div className="flex gap-2">
-        <Button type="submit" size="sm" disabled={mutation.isPending}>
+        <SaveButton disabled={unchanged} pending={mutation.isPending}>
           {t('editor.ownNameSave')}
-        </Button>
+        </SaveButton>
         {hasOwnName && (
           <Button
             type="button"
