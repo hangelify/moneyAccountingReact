@@ -1,0 +1,28 @@
+{
+  "period": {
+    "MONTHLY": "Month",
+    "QUARTERLY": "Quarter",
+    "SEMI_ANNUAL": "Half-year",
+    "YEARLY": "Year"
+  },
+  "form": {
+    "amount": "Amount",
+    "period": "Period",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "hint": {
+    "from": "Applies from {{period}}. Past periods don't change.",
+    "lost_MONTHLY": "{{periods}} will be left without a monthly limit.",
+    "lost_QUARTERLY": "{{periods}} will be left without a quarterly limit.",
+    "lost_SEMI_ANNUAL": "{{periods}} will be left without a half-year limit.",
+    "lost_YEARLY": "{{periods}} will be left without a yearly limit.",
+    "two": "{{first}} and {{second}}",
+    "range": "{{first}} to {{last}}"
+  },
+  "errors": {
+    "exists": "This category already has a limit — the list was refreshed.",
+    "gone": "The category was deleted or the limit no longer exists — the list was refreshed.",
+    "saveFailed": "Could not save the limit. Please try again."
+  }
+}

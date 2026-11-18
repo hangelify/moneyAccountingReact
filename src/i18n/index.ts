@@ -8,10 +8,20 @@ import auth from './locales/en/auth.json';
 import errors from './locales/en/errors.json';
 import households from './locales/en/households.json';
 import dashboard from './locales/en/dashboard.json';
+import limits from './locales/en/limits.json';
 
 void i18n.use(initReactI18next).init({
   resources: {
-    en: { common, header, bills, auth, errors, households, dashboard },
+    en: {
+      common,
+      header,
+      bills,
+      auth,
+      errors,
+      households,
+      dashboard,
+      limits,
+    },
   },
   lng: 'en',
   fallbackLng: 'en',
@@ -24,6 +34,7 @@ void i18n.use(initReactI18next).init({
     'errors',
     'households',
     'dashboard',
+    'limits',
   ],
   interpolation: { escapeValue: false },
 });

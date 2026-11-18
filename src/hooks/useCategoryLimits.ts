@@ -50,6 +50,21 @@ function storeLimit(
   });
 }
 
+/** Refetches the limits (and the categories, after a 404) of `hid`. */
+export function useRefreshCategoryLimits(
+  hid: string
+): (withCategories: boolean) => void {
+  const client = useQueryClient();
+  return (withCategories) => {
+    void client.invalidateQueries({ queryKey: categoryLimitsKey(hid) });
+    if (withCategories) {
+      void client.invalidateQueries({
+        queryKey: ['households', hid, 'categories'],
+      });
+    }
+  };
+}
+
 export function useSaveCategoryLimit(
   hid: string
 ): UseMutationResult<CategoryLimit, unknown, SaveCategoryLimitVars> {

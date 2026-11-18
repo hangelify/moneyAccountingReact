@@ -8,19 +8,20 @@ import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import type { UseFormReturn } from 'react-hook-form';
 
-interface FormProps<T extends FieldValues> {
-  form: UseFormReturn<T>;
+interface FormProps<T extends FieldValues, TOut extends FieldValues = T> {
+  // TOut: values after the resolver's transforms (zod `z.output`).
+  form: UseFormReturn<T, unknown, TOut>;
   onSubmit?: (e?: React.BaseSyntheticEvent) => Promise<void> | void;
   className?: string;
   children: React.ReactNode;
 }
 
-const Form = <T extends FieldValues>({
+const Form = <T extends FieldValues, TOut extends FieldValues = T>({
   form,
   onSubmit,
   className,
   children,
-}: FormProps<T>) => {
+}: FormProps<T, TOut>) => {
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     if (onSubmit) {
@@ -52,9 +53,10 @@ const FormFieldContext = React.createContext<FormFieldContextValue | null>(
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformedValues = TFieldValues,
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: ControllerProps<TFieldValues, TName, TTransformedValues>) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
@@ -137,9 +139,7 @@ const FormControl = React.forwardRef<
       ref={ref}
       id={formItemId}
       aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
+        !error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
       {...props}

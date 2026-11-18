@@ -234,9 +234,6 @@
     "@typescript-eslint/no-deprecated": {
       "count": 2
     },
-    "@typescript-eslint/no-unnecessary-template-expression": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 1
     },
