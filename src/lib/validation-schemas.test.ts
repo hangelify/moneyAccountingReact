@@ -4,6 +4,7 @@ import {
   registerSchema,
   firstNameSchema,
   householdSettingsSchema,
+  categoryLimitSchema,
 } from './validation-schemas';
 
 const base = {
@@ -88,5 +89,41 @@ describe('householdSettingsSchema', () => {
     expect(
       householdSettingsSchema.parse({ name: ' Home ', currency: 'EUR' }).name
     ).toBe('Home');
+  });
+});
+
+describe('categoryLimitSchema', () => {
+  const parse = (
+    amount: string,
+    period_type = 'MONTHLY'
+  ): ReturnType<typeof categoryLimitSchema.safeParse> =>
+    categoryLimitSchema.safeParse({ amount, period_type });
+
+  it.each([
+    ['400', 400],
+    ['12,5', 12.5],
+    [' 99.99 ', 99.99],
+    ['1000000000000', 1e12],
+  ])('accepts %j as %d', (input, expected) => {
+    const result = parse(input);
+    expect(result.success && result.data.amount).toBe(expected);
+  });
+
+  it.each([
+    ['', 'Enter an amount'],
+    ['abc', 'Enter a number'],
+    ['0', 'Amount must be greater than 0'],
+    ['-5', 'Amount must be greater than 0'],
+    ['12,555', 'At most 2 decimal places'],
+    ['1000000000000.01', 'Amount is too large'],
+  ])('rejects %j with %j', (input, message) => {
+    const result = parse(input);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(['amount']);
+    expect(result.error?.issues[0]?.message).toBe(message);
+  });
+
+  it('rejects an unknown period', () => {
+    expect(parse('10', 'WEEKLY').success).toBe(false);
   });
 });
