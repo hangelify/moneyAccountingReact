@@ -96,7 +96,7 @@ export type OwnHouseholdNameFormData = z.infer<typeof ownHouseholdNameSchema>;
 export type HouseholdSettingsFormData = z.infer<typeof householdSettingsSchema>;
 
 /** Upper bound of a money amount, same as the server's `MAX_MONEY_AMOUNT`. */
-export const MAX_LIMIT_AMOUNT = 1e12;
+const MAX_LIMIT_AMOUNT = 1e12;
 
 /** Why a typed limit amount is invalid, or `null` when it is fine. */
 function limitAmountProblem(value: string): string | null {

@@ -1,7 +1,7 @@
 import type { CategoryLimit } from '@/types/categoryLimits';
 import type { CategoryResponse } from '@/types/categories';
 
-export type LimitRowState = 'none' | 'active' | 'ending' | 'archived';
+type LimitRowState = 'none' | 'active' | 'ending' | 'archived';
 
 export interface LimitRowModel {
   categoryId: string;
