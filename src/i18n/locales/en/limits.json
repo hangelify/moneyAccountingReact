@@ -46,5 +46,15 @@
     "description": "It applies until {{date}}, then it is removed. This period's balance won't carry over.",
     "confirm": "Remove",
     "failed": "Could not remove the limit. Please try again."
+  },
+  "page": {
+    "title": "{{name}} · Limits",
+    "back": "Budgets",
+    "currency": "Budget currency: {{currency}}",
+    "notFound": "Budget not found",
+    "backToList": "Back to budgets",
+    "loadFailed": "Couldn't load limits",
+    "retry": "Retry",
+    "empty": "This budget has no categories"
   }
 }

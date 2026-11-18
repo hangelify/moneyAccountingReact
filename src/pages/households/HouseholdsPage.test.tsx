@@ -2,6 +2,7 @@ import '@/i18n';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import {
   HouseholdTestProvider,
   TEST_HOUSEHOLDS,
@@ -19,14 +20,24 @@ function renderPage(
 ): ReturnType<typeof makeHouseholdValue> {
   const value = makeHouseholdValue(overrides);
   render(
-    <HouseholdTestProvider value={value}>
-      <HouseholdsPage />
-    </HouseholdTestProvider>
+    <MemoryRouter>
+      <HouseholdTestProvider value={value}>
+        <HouseholdsPage />
+      </HouseholdTestProvider>
+    </MemoryRouter>
   );
   return value;
 }
 
 describe('HouseholdsPage', () => {
+  it('links each budget to its limits page', () => {
+    renderPage();
+    const family = screen.getByRole('article', { name: /Family Budget/ });
+    expect(
+      within(family).getByRole('link', { name: 'Limits for Family Budget' })
+    ).toHaveAttribute('href', '/households/hh-2/limits');
+  });
+
   it('lists budgets with currency, role, bill count and active badge', () => {
     renderPage();
     const personal = screen.getByRole('article', { name: /Personal/ });

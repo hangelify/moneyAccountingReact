@@ -34,7 +34,9 @@
     "originalName": "Original name: {{name}}",
     "edit": "Edit",
     "makeActiveLabel": "Make active: {{name}}",
-    "editLabel": "Edit {{name}}"
+    "editLabel": "Edit {{name}}",
+    "limits": "Limits",
+    "limitsLabel": "Limits for {{name}}"
   },
   "billCount_one": "{{count}} bill",
   "billCount_other": "{{count}} bills",
