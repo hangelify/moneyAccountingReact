@@ -13,8 +13,8 @@ export interface LimitHint {
 }
 
 /**
- * What saving `newType` today does: from which period it applies and, when an
- * open limit changes type and the new period starts earlier than the old
+ * What saving `newType` today does: from which period it applies and, when a
+ * limit in force changes type and the new period starts earlier than the old
  * one's current period, which periods of the old type end up without a limit.
  */
 export function limitHint(
@@ -23,8 +23,9 @@ export function limitHint(
   today: string
 ): LimitHint {
   const start = limitPeriodStart(newType, today);
-  // No open limit (none, or ending) or the same type: nothing is lost.
-  if (current?.effective_to !== null || current.period_type === newType) {
+  // No limit or the same type: nothing is lost. An ending limit counts too —
+  // the server rewrites every version from `start` on.
+  if (current === null || current.period_type === newType) {
     return { start, lostPeriods: null };
   }
   const oldType = current.period_type;

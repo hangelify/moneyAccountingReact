@@ -118,6 +118,14 @@ describe('LimitForm', () => {
     expect(screen.getByRole('button', { name: /Saving/ })).toBeDisabled();
   });
 
+  it('sends one request when Save is clicked twice quickly', async () => {
+    mutateAsync.mockReturnValue(new Promise(() => undefined));
+    renderForm();
+    await userEvent.type(amount(), '400');
+    await userEvent.dblClick(save());
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the form and refreshes the list on 409', async () => {
     mutateAsync.mockRejectedValue(new ApiError(409, {}));
     const { onDone } = renderForm();

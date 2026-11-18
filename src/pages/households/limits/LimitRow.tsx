@@ -37,7 +37,10 @@ export function LimitRow({
 
   // The form is gone: put focus back on the row's first action.
   useEffect(() => {
-    if (wasEditing.current && !editing) {
+    // Only when focus has nowhere else to be: another row may have taken it.
+    const active = document.activeElement;
+    const orphaned = active === null || active === document.body;
+    if (wasEditing.current && !editing && orphaned) {
       actionsRef.current?.querySelector('button')?.focus();
     }
     wasEditing.current = editing;

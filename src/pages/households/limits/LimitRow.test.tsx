@@ -3,12 +3,14 @@ import { useState, type ReactElement } from 'react';
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '@/auth/apiError';
 import { LimitRow } from './LimitRow';
 import type { LimitRowModel } from './limitRows';
 import { makeLimit } from './testLimits';
 
 const saveMutate = vi.fn();
 const removeMutate = vi.fn();
+const refresh = vi.fn();
 
 vi.mock('@/hooks/useCategoryLimits', () => ({
   useSaveCategoryLimit: () => ({ mutateAsync: saveMutate, isPending: false }),
@@ -16,7 +18,7 @@ vi.mock('@/hooks/useCategoryLimits', () => ({
     mutateAsync: removeMutate,
     isPending: false,
   }),
-  useRefreshCategoryLimits: () => vi.fn(),
+  useRefreshCategoryLimits: () => refresh,
 }));
 
 const row = (overrides: Partial<LimitRowModel> = {}): LimitRowModel => ({
@@ -131,6 +133,18 @@ describe('LimitRow', () => {
     expect(removeMutate).toHaveBeenCalledWith('c1');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('refreshes the list when the limit was already removed (404)', async () => {
+    removeMutate.mockRejectedValue(new ApiError(404, {}));
+    renderRow(row());
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Remove limit for Food' })
+    );
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Remove' })
+    );
+    expect(refresh).toHaveBeenCalledWith(true);
+  });
 });
 
 function TwoRows(): ReactElement {
@@ -184,5 +198,16 @@ describe('LimitRow switching', () => {
     expect(
       screen.getByRole('button', { name: 'Set limit for Food' })
     ).toHaveFocus();
+  });
+
+  it('keeps focus in the newly opened row', async () => {
+    render(<TwoRows />);
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set limit for Food' })
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set limit for Rent' })
+    );
+    expect(screen.getByLabelText('Amount')).toHaveFocus();
   });
 });

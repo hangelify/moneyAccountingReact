@@ -14,9 +14,20 @@ import { buildLimitRows } from './limitRows';
 export function CategoryLimitsPage(): ReactElement {
   const { t } = useTranslation('limits');
   const { id = '' } = useParams();
-  const { status, households } = useHouseholds();
+  const { status, households, refetch } = useHouseholds();
 
   if (status === 'idle' || status === 'loading') return <LoadingFallback />;
+  if (status === 'error') {
+    return (
+      <PageShell>
+        <LoadFailed
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </PageShell>
+    );
+  }
   const household = households.find((h) => h.id === id);
   if (!household) {
     return (
@@ -70,18 +81,12 @@ function LimitsOf({ household }: { household: Household }): ReactElement {
     return (
       <PageShell>
         {header}
-        <div role="alert" className="flex flex-wrap items-center gap-3">
-          <p className="text-muted-foreground">{t('page.loadFailed')}</p>
-          <Button
-            size="sm"
-            onClick={() => {
-              void categories.refetch();
-              void limits.refetch();
-            }}
-          >
-            {t('page.retry')}
-          </Button>
-        </div>
+        <LoadFailed
+          onRetry={() => {
+            void categories.refetch();
+            void limits.refetch();
+          }}
+        />
       </PageShell>
     );
   }
@@ -106,12 +111,25 @@ function LimitsOf({ household }: { household: Household }): ReactElement {
                 setEditingId(row.categoryId);
               }}
               onDone={() => {
-                setEditingId(null);
+                // A late save of this row must not close another one.
+                setEditingId((cur) => (cur === row.categoryId ? null : cur));
               }}
             />
           ))}
         </ul>
       )}
     </PageShell>
+  );
+}
+
+function LoadFailed({ onRetry }: { onRetry: () => void }): ReactElement {
+  const { t } = useTranslation('limits');
+  return (
+    <div role="alert" className="flex flex-wrap items-center gap-3">
+      <p className="text-muted-foreground">{t('page.loadFailed')}</p>
+      <Button size="sm" onClick={onRetry}>
+        {t('page.retry')}
+      </Button>
+    </div>
   );
 }

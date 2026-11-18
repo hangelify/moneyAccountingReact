@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type BaseSyntheticEvent } from 'react';
 import { useForm, useWatch, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +24,7 @@ export type LimitFormApi = UseFormReturn<
 
 interface UseLimitFormResult {
   form: LimitFormApi;
-  submit: () => Promise<void>;
+  submit: (e?: BaseSyntheticEvent) => Promise<void>;
   periodType: LimitPeriodType;
   pending: boolean;
   /** Save is off: an open limit without changes. */
@@ -44,6 +44,8 @@ export function useLimitForm(
   const mutation = useSaveCategoryLimit(hid);
   const refresh = useRefreshCategoryLimits(hid);
   const [conflict, setConflict] = useState(false);
+  // isPending re-renders a tick late: a fast double click would POST twice.
+  const inFlight = useRef(false);
   const hasOpenLimit = current?.effective_to === null;
 
   const form = useForm<CategoryLimitFormInput, unknown, CategoryLimitFormData>({
@@ -73,15 +75,21 @@ export function useLimitForm(
     }
   };
 
-  const submit = form.handleSubmit(async (values) => {
+  const save = async (values: CategoryLimitFormData): Promise<void> => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setConflict(false);
     try {
       await mutation.mutateAsync({ categoryId, hasOpenLimit, body: values });
       onDone(true);
     } catch (error) {
       onError(error);
+    } finally {
+      inFlight.current = false;
     }
-  });
+  };
+  const submit = (e?: BaseSyntheticEvent): Promise<void> =>
+    form.handleSubmit(save)(e);
 
   return {
     form,

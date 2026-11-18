@@ -9,12 +9,14 @@ import { HouseholdTestProvider, makeHouseholdValue } from '@/test/household';
 import { CategoryLimitsPage } from './CategoryLimitsPage';
 import { makeCategory, makeLimit } from './testLimits';
 
+const saveMutate = vi.fn();
+
 vi.mock('@/hooks/useCategoryTree', () => ({
   useHouseholdCategories: vi.fn(),
 }));
 vi.mock('@/hooks/useCategoryLimits', () => ({
   useCategoryLimitsQuery: vi.fn(),
-  useSaveCategoryLimit: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useSaveCategoryLimit: () => ({ mutateAsync: saveMutate, isPending: false }),
   useRemoveCategoryLimit: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useRefreshCategoryLimits: () => vi.fn(),
 }));
@@ -118,5 +120,40 @@ describe('CategoryLimitsPage', () => {
     expect(
       screen.getByText('This budget has no categories')
     ).toBeInTheDocument();
+  });
+
+  it('offers a retry when the budgets list fails to load', async () => {
+    const refetch = vi.fn().mockResolvedValue(undefined);
+    renderPage('/households/hh-2/limits', {
+      status: 'error',
+      households: [],
+      refetch,
+    });
+    expect(screen.getByText("Couldn't load limits")).toBeInTheDocument();
+    expect(screen.queryByText('Budget not found')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('keeps a newly opened row open when an earlier save finishes', async () => {
+    let finish: ((v: unknown) => void) | undefined;
+    saveMutate.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      })
+    );
+    renderPage();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Edit limit for Food' })
+    );
+    await userEvent.clear(screen.getByLabelText('Amount'));
+    await userEvent.type(screen.getByLabelText('Amount'), '450');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Set limit for Transport' })
+    );
+    finish?.(makeLimit());
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.getByLabelText('Amount')).toBeInTheDocument();
   });
 });

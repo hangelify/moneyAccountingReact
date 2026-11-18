@@ -2,7 +2,11 @@ import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { toast } from '@/components/ui/use-toast';
-import { useRemoveCategoryLimit } from '@/hooks/useCategoryLimits';
+import { ApiError } from '@/auth/apiError';
+import {
+  useRefreshCategoryLimits,
+  useRemoveCategoryLimit,
+} from '@/hooks/useCategoryLimits';
 import { limitPeriodEnd, todayUtcIsoDate } from '@/lib/limitPeriods';
 import type { CategoryLimit } from '@/types/categoryLimits';
 import { formatLongDate } from './formatDate';
@@ -23,13 +27,19 @@ export function RemoveLimitDialog({
 }): ReactElement {
   const { t, i18n } = useTranslation('limits');
   const mutation = useRemoveCategoryLimit(hid);
+  const refresh = useRefreshCategoryLimits(hid);
   const end = limitPeriodEnd(limit.period_type, todayUtcIsoDate());
 
   const onConfirm = async (): Promise<void> => {
     try {
       await mutation.mutateAsync(limit.category_id);
-    } catch {
-      toast({ variant: 'destructive', title: t('remove.failed') });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        toast({ variant: 'destructive', title: t('errors.gone') });
+        refresh(true);
+      } else {
+        toast({ variant: 'destructive', title: t('remove.failed') });
+      }
     }
     onOpenChange(false);
   };

@@ -31,9 +31,12 @@ describe('limitHint', () => {
     expect(limitHint('MONTHLY', makeLimit(), TODAY).lostPeriods).toBeNull();
   });
 
-  it('loses nothing for an ending limit', () => {
+  it('warns for an ending limit too, since the server rewrites it', () => {
     const ending = makeLimit({ effective_to: '2026-12-01' });
-    expect(limitHint('QUARTERLY', ending, TODAY).lostPeriods).toBeNull();
+    expect(limitHint('QUARTERLY', ending, TODAY).lostPeriods).toEqual({
+      type: 'MONTHLY',
+      starts: ['2026-10-01', '2026-11-01'],
+    });
   });
 });
 
