@@ -24,5 +24,27 @@
     "exists": "This category already has a limit — the list was refreshed.",
     "gone": "The category was deleted or the limit no longer exists — the list was refreshed.",
     "saveFailed": "Could not save the limit. Please try again."
+  },
+  "per": {
+    "MONTHLY": "/ month",
+    "QUARTERLY": "/ quarter",
+    "SEMI_ANNUAL": "/ half-year",
+    "YEARLY": "/ year"
+  },
+  "row": {
+    "noLimit": "No limit",
+    "until": "until {{date}}",
+    "otherCurrency": "Changing it will use {{currency}}",
+    "archived": "Archived",
+    "set": "Set limit",
+    "setLabel": "Set limit for {{name}}",
+    "editLabel": "Edit limit for {{name}}",
+    "removeLabel": "Remove limit for {{name}}"
+  },
+  "remove": {
+    "title": "Remove the limit for “{{name}}”?",
+    "description": "It applies until {{date}}, then it is removed. This period's balance won't carry over.",
+    "confirm": "Remove",
+    "failed": "Could not remove the limit. Please try again."
   }
 }
