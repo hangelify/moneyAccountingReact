@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useActiveHouseholdId } from '@/contexts/HouseholdContext';
 import { categoriesApi, subCategoriesApi } from '@/api/categories';
 import { buildCategoryTree } from './categoryTree';
 import type { CategoryNode } from './categoryTree';
+import type { CategoryResponse } from '@/types/categories';
 
 export interface UseCategoryTreeResult {
   status: 'pending' | 'success' | 'error';
@@ -13,15 +14,22 @@ export interface UseCategoryTreeResult {
 
 const STALE_TIME = 5 * 60 * 1000;
 
-/** The household's categories with their sub-categories, for picking. */
-export function useCategoryTree(): UseCategoryTreeResult {
-  const hid = useActiveHouseholdId();
-  const categories = useQuery({
+/** Top-level categories of household `hid` (not deleted). */
+export function useHouseholdCategories(
+  hid: string | null
+): UseQueryResult<CategoryResponse[]> {
+  return useQuery({
     queryKey: ['households', hid, 'categories'],
     queryFn: () => categoriesApi.list(hid!),
     enabled: hid !== null,
     staleTime: STALE_TIME,
   });
+}
+
+/** The household's categories with their sub-categories, for picking. */
+export function useCategoryTree(): UseCategoryTreeResult {
+  const hid = useActiveHouseholdId();
+  const categories = useHouseholdCategories(hid);
   const subCategories = useQuery({
     queryKey: ['households', hid, 'sub-categories'],
     queryFn: () => subCategoriesApi.list(hid!),

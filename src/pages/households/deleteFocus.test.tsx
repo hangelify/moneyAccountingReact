@@ -2,6 +2,7 @@ import '@/i18n';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HouseholdProvider } from '@/contexts/HouseholdContext';
 import { householdsApi } from '@/api/households';
@@ -23,11 +24,13 @@ describe('deleting a budget on the Budgets page', () => {
       defaultOptions: { queries: { retry: false } },
     });
     render(
-      <QueryClientProvider client={qc}>
-        <HouseholdProvider>
-          <HouseholdsPage />
-        </HouseholdProvider>
-      </QueryClientProvider>
+      <MemoryRouter>
+        <QueryClientProvider client={qc}>
+          <HouseholdProvider>
+            <HouseholdsPage />
+          </HouseholdProvider>
+        </QueryClientProvider>
+      </MemoryRouter>
     );
 
     await userEvent.click(

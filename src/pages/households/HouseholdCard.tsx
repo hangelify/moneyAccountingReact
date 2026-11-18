@@ -1,5 +1,6 @@
 import { useId, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useHouseholds } from '@/contexts/HouseholdContext';
 import type { Household } from '@/types/households';
@@ -76,6 +77,7 @@ export function HouseholdCard({
         >
           {t('card.edit')}
         </Button>
+        <LimitsLink household={household} />
       </div>
       {editing && (
         <div id={editorId}>
@@ -83,5 +85,20 @@ export function HouseholdCard({
         </div>
       )}
     </article>
+  );
+}
+
+/** Opens the budget's category limits page. */
+function LimitsLink({ household }: { household: Household }): ReactElement {
+  const { t } = useTranslation('households');
+  return (
+    <Button asChild variant="outline" size="sm">
+      <Link
+        to={`/households/${household.id}/limits`}
+        aria-label={t('card.limitsLabel', { name: household.name })}
+      >
+        {t('card.limits')}
+      </Link>
+    </Button>
   );
 }

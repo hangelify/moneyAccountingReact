@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LIMIT_PERIOD_TYPES } from './limitPeriods';
 
 /**
  * Email validation schema
@@ -93,3 +94,37 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 export type CreateHouseholdFormData = z.infer<typeof createHouseholdSchema>;
 export type OwnHouseholdNameFormData = z.infer<typeof ownHouseholdNameSchema>;
 export type HouseholdSettingsFormData = z.infer<typeof householdSettingsSchema>;
+
+/** Upper bound of a money amount, same as the server's `MAX_MONEY_AMOUNT`. */
+const MAX_LIMIT_AMOUNT = 1e12;
+
+/** Why a typed limit amount is invalid, or `null` when it is fine. */
+function limitAmountProblem(value: string): string | null {
+  if (value === '') return 'Enter an amount';
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return 'Enter a number';
+  if (amount <= 0) return 'Amount must be greater than 0';
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) return 'At most 2 decimal places';
+  if (amount > MAX_LIMIT_AMOUNT) return 'Amount is too large';
+  return null;
+}
+
+/** Amount typed by a person: a comma is a decimal separator. */
+const limitAmountSchema = z
+  .string()
+  .trim()
+  .transform((raw) => raw.replace(',', '.'))
+  .superRefine((value, ctx) => {
+    const message = limitAmountProblem(value);
+    if (message !== null) ctx.addIssue({ code: 'custom', message });
+  })
+  .transform(Number);
+
+/** Inline form of a category limit. */
+export const categoryLimitSchema = z.object({
+  amount: limitAmountSchema,
+  period_type: z.enum(LIMIT_PERIOD_TYPES),
+});
+
+export type CategoryLimitFormInput = z.input<typeof categoryLimitSchema>;
+export type CategoryLimitFormData = z.output<typeof categoryLimitSchema>;

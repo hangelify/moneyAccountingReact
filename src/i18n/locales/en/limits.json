@@ -1,0 +1,60 @@
+{
+  "period": {
+    "MONTHLY": "Month",
+    "QUARTERLY": "Quarter",
+    "SEMI_ANNUAL": "Half-year",
+    "YEARLY": "Year"
+  },
+  "form": {
+    "amount": "Amount",
+    "period": "Period",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "hint": {
+    "from": "Applies from {{period}}. Past periods don't change.",
+    "lost_MONTHLY": "{{periods}} will be left without a monthly limit.",
+    "lost_QUARTERLY": "{{periods}} will be left without a quarterly limit.",
+    "lost_SEMI_ANNUAL": "{{periods}} will be left without a half-year limit.",
+    "lost_YEARLY": "{{periods}} will be left without a yearly limit.",
+    "two": "{{first}} and {{second}}",
+    "range": "{{first}} to {{last}}"
+  },
+  "errors": {
+    "exists": "This category already has a limit — the list was refreshed.",
+    "gone": "The category was deleted or the limit no longer exists — the list was refreshed.",
+    "saveFailed": "Could not save the limit. Please try again."
+  },
+  "per": {
+    "MONTHLY": "/ month",
+    "QUARTERLY": "/ quarter",
+    "SEMI_ANNUAL": "/ half-year",
+    "YEARLY": "/ year"
+  },
+  "row": {
+    "noLimit": "No limit",
+    "until": "until {{date}}",
+    "otherCurrency": "Changing it will use {{currency}}",
+    "archived": "Archived",
+    "set": "Set limit",
+    "setLabel": "Set limit for {{name}}",
+    "editLabel": "Edit limit for {{name}}",
+    "removeLabel": "Remove limit for {{name}}"
+  },
+  "remove": {
+    "title": "Remove the limit for “{{name}}”?",
+    "description": "It applies until {{date}}, then it is removed. This period's balance won't carry over.",
+    "confirm": "Remove",
+    "failed": "Could not remove the limit. Please try again."
+  },
+  "page": {
+    "title": "{{name}} · Limits",
+    "back": "Budgets",
+    "currency": "Budget currency: {{currency}}",
+    "notFound": "Budget not found",
+    "backToList": "Back to budgets",
+    "loadFailed": "Couldn't load limits",
+    "retry": "Retry",
+    "empty": "This budget has no categories"
+  }
+}

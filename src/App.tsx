@@ -11,6 +11,11 @@ const HouseholdsPage = lazy(() =>
     default: m.HouseholdsPage,
   }))
 );
+const CategoryLimitsPage = lazy(() =>
+  import('@/pages/households/limits/CategoryLimitsPage').then((m) => ({
+    default: m.CategoryLimitsPage,
+  }))
+);
 const Home = lazy(() =>
   import('@/pages/home/Home').then((m) => ({ default: m.Home }))
 );
@@ -92,6 +97,10 @@ function App(): ReactElement {
               <Route path=":id" element={<BillDetailRoute />} />
             </Route>
             <Route path="/households" element={guard(<HouseholdsPage />)} />
+            <Route
+              path="/households/:id/limits"
+              element={guard(<CategoryLimitsPage />)}
+            />
             <Route
               path="/households/settings"
               element={<Navigate to="/households" replace />}
